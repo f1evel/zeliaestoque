@@ -1,0 +1,19 @@
+# 🔐 NUNCA subir o arquivo com as credenciais do Firebase
+firebase.js
+
+# Arquivos de backup e sistema
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Pastas ocultas de editores
+.vscode/
+.idea/
+
+# Pastas de testes ou exportações
+testes/
+*.zip
+
+# Node modules, caso use pacotes no futuro
+node_modules/

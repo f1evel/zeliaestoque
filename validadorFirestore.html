@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Validador Firestore</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+    h2 {
+      margin-top: 30px;
+    }
+    .box {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      vertical-align: top;
+    }
+    th {
+      background-color: #f0f0f0;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🔎 Validador de Dados no Firestore</h1>
+  <button onclick="carregarDados()">🔄 Recarregar Dados</button>
+
+  <h2>📦 Movimentações</h2>
+  <div class="box" id="movimentacoes-container">Carregando...</div>
+
+  <h2>💸 Financeiro</h2>
+  <div class="box" id="financeiro-container">Carregando...</div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+    // 🔧 Configure com os seus dados:
+    const firebaseConfig = {
+      apiKey: "AIzaSyDlFchQ4jpvTtaR5jRRbEmmzYiXEHDlRGM",
+      authDomain: "zelia-1.firebaseapp.com",
+      projectId: "zelia-1",
+      storageBucket: "zelia-1.appspot.com",
+      messagingSenderId: "427135770253",
+      appId: "1:427135770253:web:e617d7f1879a3d00a49e53"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function carregarDados() {
+      document.getElementById("movimentacoes-container").textContent = "⏳ Carregando...";
+      document.getElementById("financeiro-container").textContent = "⏳ Carregando...";
+
+      const movimentacoesSnap = await getDocs(collection(db, "movimentacoes"));
+      const financeiroSnap = await getDocs(collection(db, "financeiro"));
+
+      const gerarTabela = (dados) => {
+        const chaves = new Set();
+        dados.forEach(d => Object.keys(d).forEach(k => chaves.add(k)));
+        const colunas = Array.from(chaves);
+
+        let html = "<table><thead><tr>";
+        colunas.forEach(col => html += `<th>${col}</th>`);
+        html += "</tr></thead><tbody>";
+
+        dados.forEach(doc => {
+          html += "<tr>";
+          colunas.forEach(col => {
+            const valor = doc[col];
+            if (valor?.seconds) {
+              html += `<td>${new Date(valor.seconds * 1000).toLocaleDateString()}</td>`;
+            } else {
+              html += `<td>${valor ?? "-"}</td>`;
+            }
+          });
+          html += "</tr>";
+        });
+
+        html += "</tbody></table>";
+        return html;
+      };
+
+      const movimentacoes = movimentacoesSnap.docs.map(d => d.data());
+      const financeiro = financeiroSnap.docs.map(d => d.data());
+
+      document.getElementById("movimentacoes-container").innerHTML = gerarTabela(movimentacoes);
+      document.getElementById("financeiro-container").innerHTML = gerarTabela(financeiro);
+    }
+
+    window.carregarDados = carregarDados;
+    carregarDados();
+  </script>
+
+</body>
+</html>

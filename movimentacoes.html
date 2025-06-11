@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Zélia - Movimentações</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo">
+        <img src="img/logo-zelia.png" alt="Logo Zélia" />
+      </div>
+      <nav>
+        <ul>
+          <li><a href="dashboard.html">🏠 Dashboard</a></li>
+          <li><a href="produtos.html">📦 Produtos</a></li>
+          <li><a href="relatorios.html">📊 Relatórios</a></li>
+        </ul>
+      </nav>
+      <button onclick="logout()">Sair</button>
+    </aside>
+
+    <!-- Conteúdo Principal -->
+    <main class="main-content">
+      <h1>🔁 Movimentações</h1>
+
+      <!-- Formulário de Movimentação -->
+      <form id="form-movimentacao">
+        <h2>Registrar Movimentação</h2>
+
+        <div class="form-grid">
+          <div style="position: relative;">
+            <label>Produto:</label>
+            <input type="text" id="nome-produto" placeholder="Nome do Produto" required>
+            <ul id="sugestoes-produto" class="autocomplete-list"></ul>
+          </div>
+
+          <div>
+            <label>Tipo:</label>
+            <select id="tipo-movimentacao" required>
+              <option value="entrada">Entrada</option>
+              <option value="saida">Saída</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Quantidade:</label>
+            <input type="number" id="quantidade" min="1" required>
+          </div>
+
+          <div>
+            <label>Preço Unitário:</label>
+            <input type="number" id="preco-unitario" min="0" step="0.01">
+          </div>
+
+          <div>
+            <label>Data:</label>
+            <input type="date" id="data-movimentacao" required>
+          </div>
+
+          <div>
+            <label>Validade:</label>
+            <input type="date" id="validade" required>
+          </div>
+
+          <!-- Select de Validades (exibido apenas em Saída com múltiplas validades) -->
+          <div id="grupo-validade-saida" style="display: none;">
+            <label>Escolha a Validade para Saída:</label>
+            <select id="select-validade-saida">
+              <option value="">-- Selecione a validade --</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Lote:</label>
+            <input type="text" id="lote">
+          </div>
+
+          <div style="grid-column: 1 / -1">
+            <label>Observações:</label>
+            <textarea id="observacoes" rows="3"></textarea>
+          </div>
+
+          <div style="grid-column: 1 / -1; text-align: left;">
+            <button type="submit">Salvar Movimentação</button>
+          </div>
+        </div>
+      </form>
+
+      <!-- Lista de Movimentações -->
+      <h2>Histórico de Movimentações</h2>
+      <input type="text" id="filtro-movimentacao" placeholder="🔍 Buscar por produto..." style="padding:6px; width: 250px; margin-bottom: 20px;">
+      <div id="lista-movimentacoes"></div>
+    </main>
+  </div>
+
+  <!-- 🔥 Modal de Confirmação -->
+  <div id="modal-confirmacao" class="modal">
+    <h3 id="titulo-confirmacao">Confirmação</h3>
+    <p id="texto-confirmacao">Deseja realizar essa ação?</p>
+    <div style="text-align:right; margin-top: 20px;">
+      <button id="btn-cancelar-confirmacao">❌ Não</button>
+      <button id="btn-confirmar-acao">✅ Sim</button>
+    </div>
+  </div>
+
+  <div id="fundo-modal-confirmacao" class="fundo-modal" onclick="cancelarConfirmacao()"></div>
+
+  <!-- 🔥 Spinner -->
+  <div id="spinner">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- 🔥 Scripts -->
+  <script type="module" src="js/auth.js"></script>
+  <script type="module" src="js/utils.js"></script>
+  <script type="module" src="js/modais.js"></script>
+  <script type="module" src="js/movimentacoes.js"></script>
+</body>
+</html>
