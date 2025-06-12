@@ -19,6 +19,7 @@ import {
   cancelarConfirmacao,
   confirmarAcao
 } from './modais.js';
+import { abrirModalEntrada } from './modalEntrada.js';
 
 // =========================
 // 🔥 Variáveis Globais
@@ -389,8 +390,24 @@ document.getElementById("form-movimentacao").addEventListener("submit", async (e
     return;
   }
 
+  if (tipo === "entrada") {
+    abrirModalEntrada({
+      id: produtoEncontrado.id,
+      nome: produto.nome,
+      categoria: produto.categoria,
+      fornecedor: produto.fornecedor,
+      unidadeMedida: produto.unidadeMedida || "unidade",
+      quantidade,
+      precoCompra: precoUnitario,
+      dataEntrada: dataMov,
+      validade,
+      lote
+    });
+    return;
+  }
+
   abrirModalConfirmacao(
-    `Deseja confirmar ${tipo === "entrada" ? "entrada" : "saída"} de ${quantidade} unidade(s) do produto "${produto.nome}"?`,
+    `Deseja confirmar saída de ${quantidade} unidade(s) do produto "${produto.nome}"?`,
     async () => {
       try {
         await updateDoc(produtoRef, { quantidade: novaQuantidade });
@@ -404,7 +421,7 @@ document.getElementById("form-movimentacao").addEventListener("submit", async (e
           categoria: produto.categoria,
           fornecedor: produto.fornecedor,
           unidadeMedida: produto.unidadeMedida || "unidade",
-          tipo,
+          tipo: "saida",
           quantidade,
           precoUnitario,
           custoTotal: quantidade * precoUnitario,
