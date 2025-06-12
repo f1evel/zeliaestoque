@@ -2,7 +2,15 @@
 
 import { db } from "./firebaseConfig.js";
 import {
-  collection, addDoc, updateDoc, doc, getDoc, Timestamp
+  collection,
+  addDoc,
+  updateDoc,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+  Timestamp
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
 import { mostrarErro, normalizarTexto } from './utils.js';
@@ -122,23 +130,44 @@ window.confirmarEntradaEstoque = async function () {
       usuario: "admin@zelia.com"
     });
 
-    // 🔸 Registra o financeiro
-    await addDoc(collection(db, "financeiro"), {
-      tipo: "pagar",
-      fornecedorOuCliente: produto.fornecedor || "Fornecedor não informado",
-      descricao: `Compra de ${quantidade} ${produto.unidadeMedida || "unidade(s)"} de ${produto.nome}`,
-      categoria: "compra",
-      formaPagamento,
-      valorTotal: custoTotal,
-      dataLancamento: dataTimestamp,
-      dataVencimento: null,
-      dataPagamento: null,
-      status: "pendente",
-      observacoes,
-      usuario: "admin@zelia.com"
-    });
+    // 🔸 Registra ou atualiza o financeiro
+    const finQuery = query(collection(db, "financeiro"), where("compraId", "==", compraId));
+    const finSnap = await getDocs(finQuery);
 
-    alert("✅ Entrada no estoque e fatura geradas com sucesso!");
+    if (!finSnap.empty) {
+      const existing = finSnap.docs[0];
+      const finRef = doc(db, "financeiro", existing.id);
+      const finData = existing.data();
+      const parcelasExistentes = Array.isArray(finData.parcelas) ? finData.parcelas : [];
+      const novasParcelas = parcelas.map((p, idx) => ({ ...p, numero: parcelasExistentes.length + idx + 1 }));
+
+      await updateDoc(finRef, {
+        valorTotal: (finData.valorTotal || 0) + custoTotal,
+        compraId,
+        identificadorPagamento,
+        parcelas: [...parcelasExistentes, ...novasParcelas]
+      });
+    } else {
+      await addDoc(collection(db, "financeiro"), {
+        tipo: "pagar",
+        fornecedorOuCliente: produto.fornecedor || "Fornecedor não informado",
+        descricao: `Compra de ${quantidade} ${produto.unidadeMedida || "unidade(s)"} de ${produto.nome}`,
+        categoria: "compra",
+        formaPagamento,
+        valorTotal: custoTotal,
+        dataLancamento: dataTimestamp,
+        dataVencimento: null,
+        dataPagamento: null,
+        status: "pendente",
+        observacoes,
+        usuario: "admin@zelia.com",
+        compraId,
+        identificadorPagamento,
+        parcelas
+      });
+    }
+
+    alert("✅ Entrada no estoque registrada e financeiro atualizado com sucesso!");
     fecharModalEntrada();
     window.location.reload();
 
