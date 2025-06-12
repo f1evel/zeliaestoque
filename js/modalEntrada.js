@@ -2,7 +2,15 @@
 
 import { db } from "./firebaseConfig.js";
 import {
-  collection, addDoc, updateDoc, doc, getDoc, Timestamp
+  collection,
+  addDoc,
+  updateDoc,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+  Timestamp
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
 import { mostrarErro } from './utils.js';
@@ -12,12 +20,39 @@ let produtoCadastroAtual = null;
 /**
  * 🔥 Abrir o Modal de Entrada
  */
-export function abrirModalEntrada(produto) {
+export async function abrirModalEntrada(produto) {
   console.log("🧪 produto recebido no modal:", produto);
   console.log("🧪 typeof dataEntrada:", typeof produto.dataEntrada);
   console.log("🧪 dataEntrada bruta:", produto.dataEntrada);
 
   produtoCadastroAtual = produto;
+
+  // Carrega IDs de compra pendentes para autocompletar
+  try {
+    const lista = document.getElementById("lista-compra-id");
+    if (lista) {
+      lista.innerHTML = "";
+      const pendentesSnap = await getDocs(
+        query(collection(db, "financeiro"), where("status", "==", "pendente"))
+      );
+      const ids = new Set();
+      pendentesSnap.forEach(docSnap => {
+        const d = docSnap.data();
+        if (
+          Array.isArray(d.parcelas) &&
+          d.parcelas.some(p => p.status === "pendente") &&
+          d.compraId
+        ) {
+          ids.add(d.compraId);
+        }
+      });
+      lista.innerHTML = Array.from(ids)
+        .map(id => `<option value="${id}"></option>`)
+        .join("\n");
+    }
+  } catch (erro) {
+    console.error("Erro ao carregar IDs de compra pendentes:", erro);
+  }
 
   document.getElementById("nome-produto-modal").textContent = `Produto: ${produto.nome}`;
   document.getElementById("entrada-forma-pagamento").value = "pix";
@@ -130,6 +165,9 @@ window.confirmarEntradaEstoque = async function () {
       dataPagamento: null,
       status: "pendente",
       observacoes,
+      compraId,
+      identificadorPagamento,
+      parcelas,
       usuario: "admin@zelia.com"
     });
 
