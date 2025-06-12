@@ -5,7 +5,7 @@ import {
   collection, addDoc, updateDoc, doc, getDoc, Timestamp
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-import { mostrarErro } from './utils.js';
+import { mostrarErro, normalizarTexto } from './utils.js';
 
 let produtoCadastroAtual = null;
 
@@ -79,6 +79,8 @@ window.confirmarEntradaEstoque = async function () {
     const produto = produtoSnap.data();
     const quantidade = produtoCadastroAtual.quantidade || 0;
     const precoUnitario = produtoCadastroAtual.precoCompra || 0;
+    const validadeEntrada = produtoCadastroAtual.validade ? new Date(produtoCadastroAtual.validade) : null;
+    const lote = produtoCadastroAtual.lote || "";
     const custoTotal = quantidade * precoUnitario;
     const dataTimestamp = Timestamp.fromDate(dataMov);
 
@@ -104,6 +106,7 @@ window.confirmarEntradaEstoque = async function () {
     await addDoc(collection(db, "movimentacoes"), {
       produtoId: produtoCadastroAtual.id,
       nomeProduto: produto.nome,
+      nomeBusca: normalizarTexto(produto.nome),
       categoria: produto.categoria,
       fornecedor: produto.fornecedor,
       unidadeMedida: produto.unidadeMedida || "-",
@@ -113,6 +116,8 @@ window.confirmarEntradaEstoque = async function () {
       custoTotal,
       dataMovimentacao: dataTimestamp,
       observacao: observacoes,
+      validade: validadeEntrada ? Timestamp.fromDate(validadeEntrada) : null,
+      lote,
       parcelas: parcelas,
       usuario: "admin@zelia.com"
     });
