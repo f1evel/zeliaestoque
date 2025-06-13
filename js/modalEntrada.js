@@ -58,6 +58,7 @@ export async function abrirModalEntrada(produto) {
   document.getElementById("entrada-forma-pagamento").value = "pix";
   document.getElementById("entrada-observacoes").value = "";
   const dataEntrada = new Date(produtoCadastroAtual.dataEntrada);
+  dataEntrada.setMonth(dataEntrada.getMonth() + 1);
   document.getElementById("entrada-primeiro-vencimento").value = dataEntrada.toISOString().split("T")[0];
   document.getElementById("modal-entrada").style.display = "block";
   document.getElementById("fundo-modal").style.display = "block";
