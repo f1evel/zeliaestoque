@@ -13,7 +13,7 @@ import {
   Timestamp
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-import { mostrarErro } from './utils.js';
+import { mostrarErro, normalizarTexto } from './utils.js';
 
 let produtoCadastroAtual = null;
 
@@ -114,6 +114,8 @@ window.confirmarEntradaEstoque = async function () {
     const produto = produtoSnap.data();
     const quantidade = produtoCadastroAtual.quantidade || 0;
     const precoUnitario = produtoCadastroAtual.precoCompra || 0;
+    const validadeEntrada = produtoCadastroAtual.validade ? new Date(produtoCadastroAtual.validade) : null;
+    const lote = produtoCadastroAtual.lote || "";
     const custoTotal = quantidade * precoUnitario;
     const dataTimestamp = Timestamp.fromDate(dataMov);
 
@@ -139,6 +141,7 @@ window.confirmarEntradaEstoque = async function () {
     await addDoc(collection(db, "movimentacoes"), {
       produtoId: produtoCadastroAtual.id,
       nomeProduto: produto.nome,
+      nomeBusca: normalizarTexto(produto.nome),
       categoria: produto.categoria,
       fornecedor: produto.fornecedor,
       unidadeMedida: produto.unidadeMedida || "-",
@@ -148,30 +151,50 @@ window.confirmarEntradaEstoque = async function () {
       custoTotal,
       dataMovimentacao: dataTimestamp,
       observacao: observacoes,
+      validade: validadeEntrada ? Timestamp.fromDate(validadeEntrada) : null,
+      lote,
       parcelas: parcelas,
       usuario: "admin@zelia.com"
     });
+    
+    // 🔸 Registra ou atualiza o financeiro
+    const finQuery = query(collection(db, "financeiro"), where("compraId", "==", compraId));
+    const finSnap = await getDocs(finQuery);
 
-    // 🔸 Registra o financeiro
-    await addDoc(collection(db, "financeiro"), {
-      tipo: "pagar",
-      fornecedorOuCliente: produto.fornecedor || "Fornecedor não informado",
-      descricao: `Compra de ${quantidade} ${produto.unidadeMedida || "unidade(s)"} de ${produto.nome}`,
-      categoria: "compra",
-      formaPagamento,
-      valorTotal: custoTotal,
-      dataLancamento: dataTimestamp,
-      dataVencimento: null,
-      dataPagamento: null,
-      status: "pendente",
-      observacoes,
-      compraId,
-      identificadorPagamento,
-      parcelas,
-      usuario: "admin@zelia.com"
-    });
+    if (!finSnap.empty) {
+      const existing = finSnap.docs[0];
+      const finRef = doc(db, "financeiro", existing.id);
+      const finData = existing.data();
+      const parcelasExistentes = Array.isArray(finData.parcelas) ? finData.parcelas : [];
+      const novasParcelas = parcelas.map((p, idx) => ({ ...p, numero: parcelasExistentes.length + idx + 1 }));
 
-    alert("✅ Entrada no estoque e fatura geradas com sucesso!");
+      await updateDoc(finRef, {
+        valorTotal: (finData.valorTotal || 0) + custoTotal,
+        compraId,
+        identificadorPagamento,
+        parcelas: [...parcelasExistentes, ...novasParcelas]
+      });
+    } else {
+      await addDoc(collection(db, "financeiro"), {
+        tipo: "pagar",
+        fornecedorOuCliente: produto.fornecedor || "Fornecedor não informado",
+        descricao: `Compra de ${quantidade} ${produto.unidadeMedida || "unidade(s)"} de ${produto.nome}`,
+        categoria: "compra",
+        formaPagamento,
+        valorTotal: custoTotal,
+        dataLancamento: dataTimestamp,
+        dataVencimento: null,
+        dataPagamento: null,
+        status: "pendente",
+        observacoes,
+        usuario: "admin@zelia.com",
+        compraId,
+        identificadorPagamento,
+        parcelas
+      });
+    }
+
+    alert("✅ Entrada no estoque registrada e financeiro atualizado com sucesso!");
     fecharModalEntrada();
     window.location.reload();
 
