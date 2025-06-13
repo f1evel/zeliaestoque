@@ -344,18 +344,12 @@ document.getElementById("form-movimentacao").addEventListener("submit", async (e
   const precoUnitario = parseFloat(document.getElementById("preco-unitario").value) || 0;
   const dataMov = new Date(document.getElementById("data-movimentacao").value);
   const observacoes = document.getElementById("observacoes").value.trim();
-  const validade = tipo === "saida"
-    ? new Date(document.getElementById("select-validade-saida").value)
-    : new Date(document.getElementById("validade").value);
-
-  if (isNaN(validade.getTime())) {
-    alert("❗ Informe a data de validade.");
-    return;
-  }
+  const validadeStr = document.getElementById("validade").value;
+  const validade = validadeStr ? new Date(validadeStr) : new Date(NaN);
 
   if (tipo === "saida") {
-    const validadeStr = validade.toISOString().split("T")[0];
-    const disponivel = mapaValidades[validadeStr] || 0;
+    const validadeKey = validade.toISOString().split("T")[0];
+    const disponivel = mapaValidades[validadeKey] || 0;
 
     if (quantidade > disponivel) {
       alert(`❌ Estoque insuficiente. Só há ${disponivel} unidade(s) disponíveis para essa validade.`);
