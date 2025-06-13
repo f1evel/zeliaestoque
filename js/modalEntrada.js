@@ -53,8 +53,8 @@ export async function abrirModalEntrada(produto) {
   } catch (erro) {
     console.error("Erro ao carregar IDs de compra pendentes:", erro);
   }
-
-  document.getElementById("nome-produto-modal").textContent = `Produto: ${produto.nome}`;
+  document.getElementById("nome-produto-modal").textContent =
+    `Produto: ${produto.nome}`;
   document.getElementById("entrada-forma-pagamento").value = "pix";
   document.getElementById("entrada-observacoes").value = "";
   const dataEntrada = new Date(produtoCadastroAtual.dataEntrada);
