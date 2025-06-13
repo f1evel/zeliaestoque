@@ -27,22 +27,16 @@ export async function abrirModalEntrada(produto) {
 
   produtoCadastroAtual = produto;
 
-  // Carrega IDs de compra pendentes para autocompletar
+  // Carrega IDs de compras já registradas para autocompletar
   try {
     const lista = document.getElementById("lista-compra-id");
     if (lista) {
       lista.innerHTML = "";
-      const pendentesSnap = await getDocs(
-        query(collection(db, "financeiro"), where("status", "==", "pendente"))
-      );
+      const comprasSnap = await getDocs(collection(db, "financeiro"));
       const ids = new Set();
-      pendentesSnap.forEach(docSnap => {
+      comprasSnap.forEach(docSnap => {
         const d = docSnap.data();
-        if (
-          Array.isArray(d.parcelas) &&
-          d.parcelas.some(p => p.status === "pendente") &&
-          d.compraId
-        ) {
+        if (d.compraId) {
           ids.add(d.compraId);
         }
       });
@@ -51,7 +45,7 @@ export async function abrirModalEntrada(produto) {
         .join("\n");
     }
   } catch (erro) {
-    console.error("Erro ao carregar IDs de compra pendentes:", erro);
+    console.error("Erro ao carregar IDs de compra:", erro);
   }
   document.getElementById("nome-produto-modal").textContent =
     `Produto: ${produto.nome}`;
@@ -167,13 +161,21 @@ window.confirmarEntradaEstoque = async function () {
       const finRef = doc(db, "financeiro", existing.id);
       const finData = existing.data();
       const parcelasExistentes = Array.isArray(finData.parcelas) ? finData.parcelas : [];
-      const novasParcelas = parcelas.map((p, idx) => ({ ...p, numero: parcelasExistentes.length + idx + 1 }));
+
+      const novoValorTotal = (finData.valorTotal || 0) + custoTotal;
+      const numParcelasTotais = parcelasExistentes.length || parcelas.length;
+      const novoValorParcela = Math.round((novoValorTotal / numParcelasTotais) * 100) / 100;
+      const parcelasAtualizadas = parcelasExistentes.map((p, idx) => ({
+        ...p,
+        numero: idx + 1,
+        valor: novoValorParcela
+      }));
 
       await updateDoc(finRef, {
-        valorTotal: (finData.valorTotal || 0) + custoTotal,
+        valorTotal: novoValorTotal,
         compraId,
         identificadorPagamento,
-        parcelas: [...parcelasExistentes, ...novasParcelas]
+        parcelas: parcelasAtualizadas
       });
     } else {
       await addDoc(collection(db, "financeiro"), {
