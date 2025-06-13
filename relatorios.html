@@ -71,6 +71,34 @@
       <div id="tabela-consumo"></div>
     </div>
 
+    <!-- 🔥 Aba Financeiro -->
+    <div id="aba-financeiro" class="aba-conteudo" style="display:none">
+      <h2>💰 Financeiro</h2>
+
+      <div class="filtros">
+        <label>Período (meses):</label>
+        <input type="number" id="input-meses-fin" value="3" min="1" style="width: 60px;">
+        <input type="text" id="filtro-descricao" placeholder="🔍 Descrição...">
+        <select id="filtro-categoria-fin"></select>
+        <select id="filtro-status-fin"></select>
+        <select id="filtro-mes-fin"></select>
+
+        <button id="botao-atualizar-fin">🔄 Atualizar</button>
+        <button id="botao-limpar-fin">🧹 Limpar</button>
+        <button id="botao-exportar-csv-fin">📄 CSV</button>
+        <button id="botao-exportar-excel-fin">📊 Excel</button>
+      </div>
+
+      <div id="cards-financeiro" class="cards">
+        <div class="card"><strong>A pagar:</strong> <span id="total-pagar">-</span></div>
+        <div class="card"><strong>A receber:</strong> <span id="total-receber">-</span></div>
+        <div class="card"><strong>Pagos:</strong> <span id="total-pagos">-</span></div>
+        <div class="card"><strong>Recebidos:</strong> <span id="total-recebidos">-</span></div>
+      </div>
+
+      <div id="tabela-financeiro"></div>
+    </div>
+
 
     <!-- 🔥 Aba Estoque -->
     <div id="aba-estoque" class="aba-conteudo" style="display: none;">
