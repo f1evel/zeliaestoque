@@ -3,7 +3,6 @@
 import { normalizarTexto } from '../utils.js';
 
 let dados = [];
-let ordemCrescente = true;
 
 // 🔥 Setar dados
 export function setDadosFinanceiro(novosDados) {
@@ -12,42 +11,56 @@ export function setDadosFinanceiro(novosDados) {
 
 // 🔍 Gerar filtros dinâmicos
 export function gerarFiltrosFinanceiro() {
-  const categorias = new Set();
-  const status = new Set();
-  const meses = new Set();
+  const fornecedores = new Set();
+  const formas = new Set();
+  const compras = new Set();
+  const statusParcelas = new Set();
 
   dados.forEach(d => {
-    if (d.categoria) categorias.add(d.categoria);
-    if (d.status) status.add(d.status);
-    if (d.mes) meses.add(d.mes);
+    if (d.fornecedorOuCliente) fornecedores.add(d.fornecedorOuCliente);
+    if (d.formaPagamento) formas.add(d.formaPagamento);
+    if (d.compraId) compras.add(d.compraId);
+    if (d.statusParcelas) statusParcelas.add(d.statusParcelas);
   });
 
-  document.getElementById("filtro-categoria-fin").innerHTML =
-    `<option value="">Todas</option>` + [...categorias].sort().map(c => `<option value="${c}">${c}</option>`).join("");
+  document.getElementById('fin-fornecedor').innerHTML =
+    `<option value="">Fornecedor</option>` +
+    [...fornecedores].sort().map(f => `<option value="${f}">${f}</option>`).join('');
 
-  document.getElementById("filtro-status-fin").innerHTML =
-    `<option value="">Todos</option>` + [...status].sort().map(s => `<option value="${s}">${s}</option>`).join("");
+  document.getElementById('fin-forma').innerHTML =
+    `<option value="">Forma</option>` +
+    [...formas].sort().map(f => `<option value="${f}">${f}</option>`).join('');
 
-  document.getElementById("filtro-mes-fin").innerHTML =
-    `<option value="">Todos</option>` + [...meses].sort().map(m => `<option value="${m}">${m}</option>`).join("");
+  document.getElementById('fin-status').innerHTML =
+    `<option value="">Status</option>` +
+    [...statusParcelas].sort().map(s => `<option value="${s}">${s}</option>`).join('');
+
+  document.getElementById('lista-compra-fin').innerHTML =
+    [...compras].sort().map(c => `<option value="${c}">`).join('');
 }
 
 // 📊 Renderizar Tabela
 export function gerarTabelaFinanceiro() {
   const lista = document.getElementById("tabela-financeiro");
 
-  const descricaoFiltro = normalizarTexto(document.getElementById("filtro-descricao").value.trim());
-  const categoriaFiltro = document.getElementById("filtro-categoria-fin").value;
-  const statusFiltro = document.getElementById("filtro-status-fin").value;
-  const mesFiltro = document.getElementById("filtro-mes-fin").value;
+  const fornecedorFiltro = document.getElementById('fin-fornecedor').value;
+  const formaFiltro = document.getElementById('fin-forma').value;
+  const compraFiltro = document.getElementById('fin-compra-id').value.trim();
+  const statusFiltro = document.getElementById('fin-status').value;
+  const inicio = document.getElementById('fin-data-inicio').value;
+  const fim = document.getElementById('fin-data-fim').value;
 
   const filtrados = dados.filter(d => {
-    const nomeMatch = normalizarTexto(d.descricao).includes(descricaoFiltro);
-    const categoriaMatch = categoriaFiltro === "" || d.categoria === categoriaFiltro;
-    const statusMatch = statusFiltro === "" || d.status === statusFiltro;
-    const mesMatch = mesFiltro === "" || d.mes === mesFiltro;
+    const fornMatch = fornecedorFiltro === '' || d.fornecedorOuCliente === fornecedorFiltro;
+    const formaMatch = formaFiltro === '' || d.formaPagamento === formaFiltro;
+    const compraMatch = compraFiltro === '' || d.compraId === compraFiltro;
+    const statusMatch = statusFiltro === '' || d.statusParcelas === statusFiltro;
 
-    return nomeMatch && categoriaMatch && statusMatch && mesMatch;
+    let dataMatch = true;
+    if (inicio) dataMatch = d.dataLancamento && d.dataLancamento >= new Date(inicio);
+    if (fim) dataMatch = dataMatch && d.dataLancamento && d.dataLancamento <= new Date(fim);
+
+    return fornMatch && formaMatch && compraMatch && statusMatch && dataMatch;
   });
 
   if (filtrados.length === 0) {
@@ -59,32 +72,30 @@ export function gerarTabelaFinanceiro() {
     <table class="tabela">
       <thead>
         <tr>
-          <th onclick="ordenarPorDescricao()" style="cursor:pointer;">Descrição ⬍</th>
-          <th>Categoria</th>
-          <th>Valor</th>
-          <th>Status</th>
-          <th>Data Lançamento</th>
-          <th>Vencimento</th>
-          <th>Pagamento</th>
+          <th>CompraID</th>
+          <th>Fornecedor</th>
+          <th>Data da compra</th>
+          <th>Forma de pagamento</th>
+          <th>Valor total</th>
+          <th>Parcelas</th>
         </tr>
       </thead>
       <tbody>
   `;
 
   filtrados.forEach(d => {
-    const lanc = d.dataLancamento?.toLocaleDateString('pt-BR') || "-";
-    const venc = d.dataVencimento?.toLocaleDateString('pt-BR') || "-";
-    const pag = d.dataPagamento?.toLocaleDateString('pt-BR') || "-";
-
+    const lanc = d.dataLancamento?.toLocaleDateString('pt-BR') || '-';
     html += `
       <tr>
-        <td>${d.descricao}</td>
-        <td>${d.categoria}</td>
-        <td>R$ ${(d.valor).toFixed(2)}</td>
-        <td>${d.status}</td>
+        <td>${d.compraId}</td>
+        <td>${d.fornecedorOuCliente}</td>
         <td>${lanc}</td>
-        <td>${venc}</td>
-        <td>${pag}</td>
+        <td>${d.formaPagamento}</td>
+        <td>R$ ${(d.valor).toFixed(2)}</td>
+        <td>
+          ${d.parcelas.length} (${d.statusParcelas})
+          <button onclick="abrirModalParcelas('${d.compraId}')">Ver</button>
+        </td>
       </tr>
     `;
   });
@@ -92,17 +103,3 @@ export function gerarTabelaFinanceiro() {
   html += `</tbody></table>`;
   lista.innerHTML = html;
 }
-
-// 🔃 Ordenar por descrição
-window.ordenarPorDescricao = function () {
-  dados.sort((a, b) => {
-    const nomeA = (a.descricao || "").toLowerCase();
-    const nomeB = (b.descricao || "").toLowerCase();
-    if (nomeA < nomeB) return ordemCrescente ? -1 : 1;
-    if (nomeA > nomeB) return ordemCrescente ? 1 : -1;
-    return 0;
-  });
-
-  ordemCrescente = !ordemCrescente;
-  gerarTabelaFinanceiro();
-};

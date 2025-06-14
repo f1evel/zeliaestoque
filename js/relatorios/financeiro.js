@@ -13,8 +13,7 @@ export async function atualizarTabelaFinanceiro() {
   try {
     mostrarSpinner();
 
-    const periodoMeses = parseInt(document.getElementById("input-meses-fin")?.value) || 3;
-    dadosFinanceiro = await carregarDadosFinanceiro(periodoMeses);
+    dadosFinanceiro = await carregarDadosFinanceiro();
 
     setDadosFinanceiro(dadosFinanceiro);
     gerarFiltrosFinanceiro();
@@ -30,11 +29,12 @@ export async function atualizarTabelaFinanceiro() {
 
 // 🧹 Limpar filtros
 export function limparFiltrosFinanceiro() {
-  document.getElementById("input-meses-fin").value = 3;
-  document.getElementById("filtro-descricao").value = "";
-  document.getElementById("filtro-categoria-fin").value = "";
-  document.getElementById("filtro-status-fin").value = "";
-  document.getElementById("filtro-mes-fin").value = "";
+  document.getElementById('fin-data-inicio').value = '';
+  document.getElementById('fin-data-fim').value = '';
+  document.getElementById('fin-compra-id').value = '';
+  document.getElementById('fin-fornecedor').value = '';
+  document.getElementById('fin-forma').value = '';
+  document.getElementById('fin-status').value = '';
 
   gerarTabelaFinanceiro();
 }
@@ -54,3 +54,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
   atualizarTabelaFinanceiro();
 });
+
+// 📑 Modal de parcelas
+window.abrirModalParcelas = function (compraId) {
+  const registro = dadosFinanceiro.find(d => d.compraId === compraId);
+  if (!registro) return;
+
+  document.getElementById('modal-compra-id').textContent = compraId;
+  const cont = document.getElementById('parcelas-detalhes');
+
+  if (!registro.parcelas || registro.parcelas.length === 0) {
+    cont.innerHTML = '<p>Sem parcelas cadastradas.</p>';
+  } else {
+    let html = `<table class="tabela"><thead><tr><th>#</th><th>Valor</th><th>Vencimento</th><th>Status</th></tr></thead><tbody>`;
+    registro.parcelas.forEach(p => {
+      const venc = p.vencimento ? new Date(p.vencimento).toLocaleDateString('pt-BR') : '-';
+      html += `<tr><td>${p.numero}</td><td>R$ ${(p.valor || 0).toFixed(2)}</td><td>${venc}</td><td>${p.status}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    cont.innerHTML = html;
+  }
+
+  document.getElementById('modal-parcelas').style.display = 'block';
+  document.getElementById('fundo-modal-parcelas').style.display = 'block';
+};
+
+window.fecharModalParcelas = function () {
+  document.getElementById('modal-parcelas').style.display = 'none';
+  document.getElementById('fundo-modal-parcelas').style.display = 'none';
+};

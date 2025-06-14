@@ -19,6 +19,20 @@ export async function carregarDadosFinanceiro(periodoMeses = 3) {
       const dataVenc = d.dataVencimento?.toDate?.() || null;
       const dataPag = d.dataPagamento?.toDate?.() || null;
 
+      const parcelas = Array.isArray(d.parcelas) ? d.parcelas : [];
+
+      const hoje = new Date();
+      let statusParcelas = "paga";
+      let temVencida = false;
+      parcelas.forEach(p => {
+        const venc = p.vencimento ? new Date(p.vencimento) : null;
+        if (p.status !== "pago") {
+          statusParcelas = "pendente";
+          if (venc && venc < hoje) temVencida = true;
+        }
+      });
+      if (temVencida) statusParcelas = "vencida";
+
       return {
         id: doc.id,
         tipo: d.tipo || "-",
@@ -26,6 +40,9 @@ export async function carregarDadosFinanceiro(periodoMeses = 3) {
         categoria: d.categoria || "-",
         valor: Number(d.valorTotal) || 0,
         status: d.status || "pendente",
+        compraId: d.compraId || "-",
+        parcelas,
+        statusParcelas,
         fornecedorOuCliente: d.fornecedorOuCliente || "-",
         formaPagamento: d.formaPagamento || "-",
         dataLancamento: dataLanc,
