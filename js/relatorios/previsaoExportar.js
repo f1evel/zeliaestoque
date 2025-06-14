@@ -3,7 +3,7 @@
 // 👉 Exportar dados para CSV
 export function exportarPrevisaoCSV(dados) {
   const linhas = [
-    ["Produto", "Categoria", "Fornecedor", "Qtd", "Consumo/Mês", "Dias Estoque", "Prev. Esgotamento"],
+    ["Produto", "Categoria", "Fornecedor", "Qtd", "Consumo/Mês", "Dias Estoque", "Prev. Esgotamento", "Última Saída"],
     ...dados.map(d => [
       d.nome,
       d.categoria,
@@ -11,7 +11,8 @@ export function exportarPrevisaoCSV(dados) {
       d.quantidade,
       d.consumoMensal,
       d.diasDeEstoque === Infinity ? "-" : d.diasDeEstoque,
-      d.dataPrevistaEsgotamento ? d.dataPrevistaEsgotamento.toLocaleDateString('pt-BR') : "-"
+      d.dataPrevistaEsgotamento ? d.dataPrevistaEsgotamento.toLocaleDateString('pt-BR') : "-",
+      d.ultimaSaida ? d.ultimaSaida.toLocaleDateString('pt-BR') : "-"
     ])
   ];
 
@@ -37,7 +38,8 @@ export async function exportarPrevisaoExcel(dados) {
     Quantidade: d.quantidade,
     Consumo_Mensal: d.consumoMensal,
     Dias_Estoque: d.diasDeEstoque === Infinity ? "-" : d.diasDeEstoque,
-    Previsao_Esgotamento: d.dataPrevistaEsgotamento ? d.dataPrevistaEsgotamento.toLocaleDateString('pt-BR') : "-"
+    Previsao_Esgotamento: d.dataPrevistaEsgotamento ? d.dataPrevistaEsgotamento.toLocaleDateString('pt-BR') : "-",
+    Ultima_Saida: d.ultimaSaida ? d.ultimaSaida.toLocaleDateString('pt-BR') : "-"
   }));
 
   const worksheet = utils.json_to_sheet(linhas);

@@ -344,3 +344,22 @@ tr:last-child td {
 .autocomplete-item.selecionado {
   background-color: #e0f7fa;
 }
+
+/* Previsão critico */
+tr.critico {
+  background-color: #ffe5e5;
+}
+
+.btn-repor {
+  padding: 4px 8px;
+  font-size: 12px;
+  background-color: #f39c12;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-repor:hover {
+  background-color: #d68910;
+}
