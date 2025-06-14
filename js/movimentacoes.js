@@ -28,6 +28,7 @@ let movimentacoesCache = [];
 let produtosCache = [];
 let produtosPorNome = {}; // Novo: agrupamento por nome normalizado
 let mapaValidades = {}; // Novo: quantidades por validade
+let listenerFormulario = null; // usado ao editar uma movimentacao
 
 // =========================
 // 🔥 Carregar Movimentações
@@ -467,6 +468,7 @@ function renderizarTabela(movimentacoes, termo = "") {
         <th>Validade</th>
         <th>Lote</th>
         <th>Observações</th>
+        <th>Ações</th>
       </tr>`;
 
   filtradas.forEach(m => {
@@ -481,6 +483,7 @@ function renderizarTabela(movimentacoes, termo = "") {
       <td>${m.validade?.toDate()?.toLocaleDateString("pt-BR") || "-"}</td>
       <td>${m.lote || "-"}</td>
       <td>${m.observacao || "-"}</td>
+      <td><button onclick="editarMovimentacao('${m.id}')">✏️ Editar</button></td>
     </tr>`;
   });
 
@@ -587,3 +590,76 @@ async function carregarValidadesEPrecos(nome) {
     precoInput.value = dados.preco.toFixed(2);
   });
 }
+
+// ==========================
+// 🔥 Editar Movimentação
+// ==========================
+window.editarMovimentacao = async function (id) {
+  const docRef = doc(db, "movimentacoes", id);
+  const docSnap = await getDoc(docRef);
+
+  if (!docSnap.exists()) {
+    mostrarErro("❌ Movimentação não encontrada.");
+    return;
+  }
+
+  const m = docSnap.data();
+
+  document.getElementById("nome-produto").value = m.nomeProduto || "";
+  document.getElementById("tipo-movimentacao").value = m.tipo || "entrada";
+  document.getElementById("quantidade").value = m.quantidade || "";
+  document.getElementById("preco-unitario").value = m.precoUnitario || "";
+  document.getElementById("data-movimentacao").value =
+    m.dataMovimentacao?.toDate()?.toISOString().split("T")[0] || "";
+  document.getElementById("validade").value =
+    m.validade?.toDate()?.toISOString().split("T")[0] || "";
+  document.getElementById("lote").value = m.lote || "";
+  document.getElementById("observacoes").value = m.observacao || "";
+
+  const btn = document.querySelector("#form-movimentacao button[type='submit']");
+  btn.textContent = "💾 Salvar Alterações";
+
+  const form = document.getElementById("form-movimentacao");
+  if (listenerFormulario) {
+    form.removeEventListener("submit", listenerFormulario);
+  }
+
+  listenerFormulario = async function (e) {
+    e.preventDefault();
+
+    const nomeProduto = document.getElementById("nome-produto").value.trim();
+    const tipo = document.getElementById("tipo-movimentacao").value;
+    const quantidade = parseFloat(document.getElementById("quantidade").value);
+    const precoUnitario =
+      parseFloat(document.getElementById("preco-unitario").value) || 0;
+    const dataMov = new Date(
+      document.getElementById("data-movimentacao").value
+    );
+    const observacoes = document.getElementById("observacoes").value.trim();
+    const validadeStr = document.getElementById("validade").value;
+    const validade = validadeStr ? new Date(validadeStr) : new Date(NaN);
+    const lote = document.getElementById("lote").value.trim();
+
+    const atualizados = {
+      nomeProduto,
+      nomeBusca: normalizarTexto(nomeProduto),
+      tipo,
+      quantidade,
+      precoUnitario,
+      custoTotal: quantidade * precoUnitario,
+      dataMovimentacao: Timestamp.fromDate(dataMov),
+      observacao: observacoes,
+      validade: isNaN(validade.getTime()) ? null : Timestamp.fromDate(validade),
+      lote
+    };
+
+    await updateDoc(docRef, atualizados);
+
+    mostrarMensagem("✅ Movimentação atualizada com sucesso!");
+    form.reset();
+    btn.textContent = "Salvar Movimentação";
+    carregarMovimentacoes();
+  };
+
+  form.addEventListener("submit", listenerFormulario);
+};
