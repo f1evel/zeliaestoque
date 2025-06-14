@@ -272,6 +272,9 @@ background:#ffffffcc; z-index:2000; display:flex; align-items:center; justify-co
     document.querySelectorAll('.aba-conteudo').forEach(div => div.style.display = 'none');
     document.querySelector(`[onclick="abrirAba('${id}')"]`).classList.add('ativa');
     document.getElementById(id).style.display = 'block';
+    if(id === 'aba-estoque' && window.atualizarTabelaEstoque){
+      window.atualizarTabelaEstoque();
+    }
   }
 </script>
 

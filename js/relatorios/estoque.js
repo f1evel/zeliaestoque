@@ -60,3 +60,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   atualizarTabelaEstoque();
 });
+
+// permite atualização ao abrir a aba
+window.atualizarTabelaEstoque = atualizarTabelaEstoque;
