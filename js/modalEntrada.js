@@ -267,3 +267,6 @@ function atualizarParcelasPreview() {
 document.getElementById("entrada-numero-parcelas").addEventListener("input", atualizarParcelasPreview);
 document.getElementById("entrada-primeiro-vencimento").addEventListener("change", atualizarParcelasPreview);
 
+// Tornar funções acessíveis globalmente para os botões do modal
+window.fecharModalEntrada = fecharModalEntrada;
+
