@@ -118,12 +118,16 @@
       <h2>💰 Financeiro</h2>
 
       <div class="filtros">
-        <label>Período (meses):</label>
-        <input type="number" id="input-meses-fin" value="3" min="1" style="width: 60px;">
-        <input type="text" id="filtro-descricao" placeholder="🔍 Descrição...">
-        <select id="filtro-categoria-fin"></select>
-        <select id="filtro-status-fin"></select>
-        <select id="filtro-mes-fin"></select>
+        <label>De:</label>
+        <input type="date" id="fin-data-inicio">
+        <label>Até:</label>
+        <input type="date" id="fin-data-fim">
+
+        <input type="text" id="fin-compra-id" placeholder="CompraID" list="lista-compra-fin" style="width:140px;">
+        <datalist id="lista-compra-fin"></datalist>
+        <select id="fin-fornecedor"></select>
+        <select id="fin-forma"></select>
+        <select id="fin-status"></select>
 
         <button id="botao-atualizar-fin">🔄 Atualizar</button>
         <button id="botao-limpar-fin">🧹 Limpar</button>
@@ -139,6 +143,17 @@
       </div>
 
       <div id="tabela-financeiro"></div>
+
+      <div id="modal-parcelas" class="modal">
+        <div class="modal-content">
+          <h3>Parcelas - Compra <span id="modal-compra-id"></span></h3>
+          <div id="parcelas-detalhes"></div>
+          <div style="margin-top:10px; text-align:right;">
+            <button onclick="fecharModalParcelas()">Fechar</button>
+          </div>
+        </div>
+      </div>
+      <div id="fundo-modal-parcelas" class="fundo-modal"></div>
     </div>
 
 
