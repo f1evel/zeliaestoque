@@ -1,8 +1,10 @@
 // financeiroTabela.js — Geração de tabela e filtros
 
 import { normalizarTexto } from '../utils.js';
+import { atualizarCardsFinanceiro } from './financeiroTotais.js';
 
 let dados = [];
+let filtrosIniciados = false;
 
 // 🔥 Setar dados
 export function setDadosFinanceiro(novosDados) {
@@ -15,6 +17,10 @@ export function gerarFiltrosFinanceiro() {
   const formas = new Set();
   const compras = new Set();
   const statusParcelas = new Set();
+
+  const selFornecedor = document.getElementById('fin-fornecedor').value;
+  const selForma = document.getElementById('fin-forma').value;
+  const selStatus = document.getElementById('fin-status').value;
 
   dados.forEach(d => {
     if (d.fornecedorOuCliente) fornecedores.add(d.fornecedorOuCliente);
@@ -37,6 +43,18 @@ export function gerarFiltrosFinanceiro() {
 
   document.getElementById('lista-compra-fin').innerHTML =
     [...compras].sort().map(c => `<option value="${c}">`).join('');
+
+  document.getElementById('fin-fornecedor').value = selFornecedor;
+  document.getElementById('fin-forma').value = selForma;
+  document.getElementById('fin-status').value = selStatus;
+
+  if (!filtrosIniciados) {
+    ['fin-fornecedor','fin-forma','fin-status','fin-compra-id','fin-data-inicio','fin-data-fim']
+      .forEach(id => {
+        document.getElementById(id)?.addEventListener('input', gerarTabelaFinanceiro);
+      });
+    filtrosIniciados = true;
+  }
 }
 
 // 📊 Renderizar Tabela
@@ -49,6 +67,8 @@ export function gerarTabelaFinanceiro() {
   const statusFiltro = document.getElementById('fin-status').value;
   const inicio = document.getElementById('fin-data-inicio').value;
   const fim = document.getElementById('fin-data-fim').value;
+  const inicioData = inicio ? new Date(inicio) : null;
+  const fimData = fim ? new Date(fim) : null;
 
   const filtrados = dados.filter(d => {
     const fornMatch = fornecedorFiltro === '' || d.fornecedorOuCliente === fornecedorFiltro;
@@ -56,15 +76,29 @@ export function gerarTabelaFinanceiro() {
     const compraMatch = compraFiltro === '' || d.compraId === compraFiltro;
     const statusMatch = statusFiltro === '' || d.statusParcelas === statusFiltro;
 
-    let dataMatch = true;
-    if (inicio) dataMatch = d.dataLancamento && d.dataLancamento >= new Date(inicio);
-    if (fim) dataMatch = dataMatch && d.dataLancamento && d.dataLancamento <= new Date(fim);
+    let vencMatch = true;
+    if (inicioData || fimData) {
+      const vencs = [];
+      if (Array.isArray(d.parcelas)) {
+        d.parcelas.forEach(p => {
+          if (p.vencimento) vencs.push(new Date(p.vencimento));
+        });
+      }
+      if (vencs.length === 0 && d.dataVencimento) vencs.push(new Date(d.dataVencimento));
+      vencMatch = vencs.some(v => {
+        if (!v || isNaN(v)) return false;
+        if (inicioData && v < inicioData) return false;
+        if (fimData && v > fimData) return false;
+        return true;
+      });
+    }
 
-    return fornMatch && formaMatch && compraMatch && statusMatch && dataMatch;
+    return fornMatch && formaMatch && compraMatch && statusMatch && vencMatch;
   });
 
   if (filtrados.length === 0) {
     lista.innerHTML = "<p>❌ Nenhum dado encontrado.</p>";
+    atualizarCardsFinanceiro([]);
     return;
   }
 
@@ -102,4 +136,6 @@ export function gerarTabelaFinanceiro() {
 
   html += `</tbody></table>`;
   lista.innerHTML = html;
+
+  atualizarCardsFinanceiro(filtrados);
 }
