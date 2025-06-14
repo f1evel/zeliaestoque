@@ -2,9 +2,10 @@
 
 import { carregarDadosFinanceiro } from './financeiroDados.js';
 import { setDadosFinanceiro, gerarFiltrosFinanceiro, gerarTabelaFinanceiro } from './financeiroTabela.js';
-import { atualizarCardsFinanceiro } from './financeiroTotais.js';
 import { exportarFinanceiroCSV, exportarFinanceiroExcel } from './financeiroExportar.js';
 import { mostrarSpinner, esconderSpinner } from '../utils.js';
+import { db } from '../firebaseConfig.js';
+import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
 let dadosFinanceiro = [];
 
@@ -18,7 +19,6 @@ export async function atualizarTabelaFinanceiro() {
     setDadosFinanceiro(dadosFinanceiro);
     gerarFiltrosFinanceiro();
     gerarTabelaFinanceiro();
-    atualizarCardsFinanceiro(dadosFinanceiro);
 
   } catch (error) {
     console.error("❌ Erro ao atualizar financeiro:", error);
@@ -56,24 +56,44 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // 📑 Modal de parcelas
-window.abrirModalParcelas = function (compraId) {
+window.abrirModalParcelas = async function (compraId) {
   const registro = dadosFinanceiro.find(d => d.compraId === compraId);
   if (!registro) return;
 
   document.getElementById('modal-compra-id').textContent = compraId;
   const cont = document.getElementById('parcelas-detalhes');
 
+  let html = '';
+
+  // Produtos relacionados
+  try {
+    const q = query(collection(db, 'movimentacoes'), where('compraId', '==', compraId), where('tipo', '==', 'entrada'));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      html += '<h4>Produtos</h4><table class="tabela"><thead><tr><th>Produto</th><th>Qtd</th><th>Preço</th></tr></thead><tbody>';
+      snap.docs.forEach(doc => {
+        const d = doc.data();
+        html += `<tr><td>${d.nomeProduto}</td><td>${d.quantidade}</td><td>R$ ${(d.precoUnitario || 0).toFixed(2)}</td></tr>`;
+      });
+      html += '</tbody></table><br />';
+    }
+  } catch (e) {
+    console.error('Erro ao buscar produtos da compra', e);
+  }
+
+  // Parcelas
   if (!registro.parcelas || registro.parcelas.length === 0) {
-    cont.innerHTML = '<p>Sem parcelas cadastradas.</p>';
+    html += '<p>Sem parcelas cadastradas.</p>';
   } else {
-    let html = `<table class="tabela"><thead><tr><th>#</th><th>Valor</th><th>Vencimento</th><th>Status</th></tr></thead><tbody>`;
+    html += `<h4>Parcelas</h4><table class="tabela"><thead><tr><th>#</th><th>Valor</th><th>Vencimento</th><th>Status</th></tr></thead><tbody>`;
     registro.parcelas.forEach(p => {
       const venc = p.vencimento ? new Date(p.vencimento).toLocaleDateString('pt-BR') : '-';
       html += `<tr><td>${p.numero}</td><td>R$ ${(p.valor || 0).toFixed(2)}</td><td>${venc}</td><td>${p.status}</td></tr>`;
     });
     html += '</tbody></table>';
-    cont.innerHTML = html;
   }
+
+  cont.innerHTML = html;
 
   document.getElementById('modal-parcelas').style.display = 'block';
   document.getElementById('fundo-modal-parcelas').style.display = 'block';

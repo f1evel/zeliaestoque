@@ -19,6 +19,7 @@
         <li><a href="dashboard.html">🏠 Dashboard</a></li>
         <li><a href="produtos.html">📦 Produtos</a></li>
         <li><a href="movimentacoes.html">🔁 Movimentações</a></li>
+        <li><a href="financeiro.html">💰 Financeiro</a></li>
         <li><a class="ativo" href="relatorios.html">📊 Relatórios</a></li>
       </ul>
     </nav>
@@ -34,7 +35,6 @@
       <button class="aba ativa" onclick="abrirAba('aba-consumo')">Consumo</button>
       <button class="aba" onclick="abrirAba('aba-entradas')">Entradas</button>
       <button class="aba" onclick="abrirAba('aba-saidas')">Saídas</button>
-      <button class="aba" onclick="abrirAba('aba-financeiro')">Financeiro</button>
       <button class="aba" onclick="abrirAba('aba-estoque')">Estoque Crítico</button>
       <button class="aba" onclick="abrirAba('aba-previsao')">Previsão</button>
     </div>
@@ -132,48 +132,6 @@
       <div id="tabela-saidas"></div>
     </div>
 
-    <!-- 🔥 Aba Financeiro -->
-    <div id="aba-financeiro" class="aba-conteudo" style="display:none">
-      <h2>💰 Financeiro</h2>
-
-      <div class="filtros">
-        <label>De:</label>
-        <input type="date" id="fin-data-inicio">
-        <label>Até:</label>
-        <input type="date" id="fin-data-fim">
-
-        <input type="text" id="fin-compra-id" placeholder="CompraID" list="lista-compra-fin" style="width:140px;">
-        <datalist id="lista-compra-fin"></datalist>
-        <select id="fin-fornecedor"></select>
-        <select id="fin-forma"></select>
-        <select id="fin-status"></select>
-
-        <button id="botao-atualizar-fin">🔄 Atualizar</button>
-        <button id="botao-limpar-fin">🧹 Limpar</button>
-        <button id="botao-exportar-csv-fin">📄 CSV</button>
-        <button id="botao-exportar-excel-fin">📊 Excel</button>
-      </div>
-
-      <div id="cards-financeiro" class="cards">
-        <div class="card"><strong>A pagar:</strong> <span id="total-pagar">-</span></div>
-        <div class="card"><strong>A receber:</strong> <span id="total-receber">-</span></div>
-        <div class="card"><strong>Pagos:</strong> <span id="total-pagos">-</span></div>
-        <div class="card"><strong>Recebidos:</strong> <span id="total-recebidos">-</span></div>
-      </div>
-
-      <div id="tabela-financeiro"></div>
-
-      <div id="modal-parcelas" class="modal">
-        <div class="modal-content">
-          <h3>Parcelas - Compra <span id="modal-compra-id"></span></h3>
-          <div id="parcelas-detalhes"></div>
-          <div style="margin-top:10px; text-align:right;">
-            <button onclick="fecharModalParcelas()">Fechar</button>
-          </div>
-        </div>
-      </div>
-      <div id="fundo-modal-parcelas" class="fundo-modal"></div>
-    </div>
 
 
     <!-- 🔥 Aba Estoque -->
@@ -269,10 +227,6 @@ background:#ffffffcc; z-index:2000; display:flex; align-items:center; justify-co
 <script type="module" src="js/relatorios/saidasTabela.js"></script>
 <script type="module" src="js/relatorios/saidasDados.js"></script>
 
-<script type="module" src="js/relatorios/financeiro.js"></script>
-<script type="module" src="js/relatorios/financeiroExportar.js"></script>
-<script type="module" src="js/relatorios/financeiroGraficos.js"></script>
-<script type="module" src="js/relatorios/financeiroTotais.js"></script>
 
 <script type="module" src="js/relatorios/estoque.js"></script>
 <script type="module" src="js/relatorios/estoqueExportar.js"></script>
