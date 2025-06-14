@@ -82,6 +82,50 @@ async function carregarProdutos() {
 
 carregarProdutos();
 
+// ==========================
+// 🔍 Obter preço de uma validade específica
+// ==========================
+async function obterPrecoDaValidade(nome, validadeStr) {
+  const nomeNormalizado = normalizarTexto(nome);
+  const dataVal = new Date(validadeStr);
+  if (isNaN(dataVal.getTime())) return null;
+  const validadeTs = Timestamp.fromDate(dataVal);
+
+  try {
+    const q = query(
+      collection(db, "movimentacoes"),
+      where("nomeBusca", "==", nomeNormalizado),
+      where("tipo", "==", "entrada"),
+      where("validade", "==", validadeTs)
+    );
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      const d = snap.docs[0].data();
+      if (typeof d.precoUnitario === "number") {
+        return d.precoUnitario;
+      }
+    }
+  } catch (e) {
+    console.error("Erro ao buscar preço da validade:", e);
+  }
+
+  const prod = produtosCache.find(
+    p => normalizarTexto(p.nome) === nomeNormalizado
+  );
+  if (prod) {
+    let val;
+    if (prod.validade?.toDate) {
+      val = prod.validade.toDate();
+    } else {
+      val = new Date(prod.validade);
+    }
+    if (!isNaN(val.getTime()) && val.toISOString().split("T")[0] === validadeStr) {
+      return typeof prod.precoCompra === "number" ? prod.precoCompra : null;
+    }
+  }
+  return null;
+}
+
 // =========================
 // 🔥 Autocomplete com Teclado (corrigido)
 // =========================
@@ -659,6 +703,8 @@ window.editarMovimentacao = async function (id) {
     form.reset();
     btn.textContent = "Salvar Movimentação";
     carregarMovimentacoes();
+    form.removeEventListener("submit", listenerFormulario);
+    listenerFormulario = null;
   };
 
   form.addEventListener("submit", listenerFormulario);

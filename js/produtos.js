@@ -49,6 +49,7 @@ function formatarData(data) {
 // 🔥 Variáveis Globais
 let listenerFormulario = null;
 let produtosCache = [];
+let produtoEditandoId = null;
 
 // ==========================
 // 🔥 Carregar Produtos
@@ -247,6 +248,7 @@ async function adicionarProduto() {
 // 🔥 Editar Produto
 // ==========================
 window.editarProduto = async function (id) {
+  produtoEditandoId = id;
   await executarComSpinner(async () => {
     const docRef = doc(db, "produtos", id);
     const docSnap = await getDoc(docRef);
@@ -317,6 +319,9 @@ window.editarProduto = async function (id) {
       form.reset();
       btn.textContent = "Salvar Produto";
       carregarProdutos();
+      produtoEditandoId = null;
+      form.removeEventListener("submit", listenerFormulario);
+      listenerFormulario = null;
     };
 
     form.addEventListener("submit", listenerFormulario);
@@ -358,11 +363,14 @@ document.getElementById("nome").addEventListener("blur", function () {
     const snapshot = await getDocs(q);
 
     if (!snapshot.empty) {
-      abrirModalProdutoExiste();
-      input.value = "";
-      const sugestoes = document.getElementById("sugestoes-nome");
-      if (sugestoes) sugestoes.style.display = "none";
-      input.focus();
+      const outros = snapshot.docs.filter(doc => doc.id !== produtoEditandoId);
+      if (outros.length > 0) {
+        abrirModalProdutoExiste();
+        input.value = "";
+        const sugestoes = document.getElementById("sugestoes-nome");
+        if (sugestoes) sugestoes.style.display = "none";
+        input.focus();
+      }
     }
   }, 200);
 });
