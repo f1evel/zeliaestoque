@@ -1,4 +1,5 @@
 import { normalizarTexto } from '../utils.js';
+import { atualizarCardsEntradas } from './entradasTotais.js';
 
 let dadosOriginais = [];
 
@@ -15,7 +16,7 @@ function aplicarFiltros() {
   const compraFiltro = document.getElementById('filtro-compra-entradas').value;
   const dataInicio = document.getElementById('filtro-data-inicio-entradas').value;
   const dataFim = document.getElementById('filtro-data-fim-entradas').value;
-  const validadeFiltro = document.getElementById('filtro-validade-entradas').value;
+
 
   const filtrados = dadosOriginais.filter(d => {
     const nomeMatch = d.nomeBusca.includes(nomeFiltro);
@@ -26,16 +27,12 @@ function aplicarFiltros() {
     if (dataInicio) dataMatch = d.data && d.data >= new Date(dataInicio);
     if (dataFim) dataMatch = dataMatch && d.data && d.data <= new Date(dataFim);
 
-    let valMatch = true;
-    if (validadeFiltro) {
-      valMatch = d.validade && d.validade.toISOString().split('T')[0] === validadeFiltro;
-    }
-
-    return nomeMatch && fornMatch && compraMatch && dataMatch && valMatch;
+    return nomeMatch && fornMatch && compraMatch && dataMatch;
   });
 
   if (filtrados.length === 0) {
     lista.innerHTML = '<p>❌ Nenhum dado encontrado.</p>';
+    atualizarCardsEntradas([]);
     return;
   }
 
@@ -73,19 +70,18 @@ function aplicarFiltros() {
 
   html += '</tbody></table>';
   lista.innerHTML = html;
+  atualizarCardsEntradas(filtrados);
 }
 
 export function gerarFiltrosEntradas(dados) {
   const nomes = new Set();
   const fornecedores = new Set();
   const compras = new Set();
-  const validades = new Set();
 
   dados.forEach(d => {
     if (d.nome) nomes.add(d.nome);
     if (d.fornecedor) fornecedores.add(d.fornecedor);
     if (d.compraId) compras.add(d.compraId);
-    if (d.validade) validades.add(d.validade.toISOString().split('T')[0]);
   });
 
   document.getElementById('lista-produtos-entradas').innerHTML =
@@ -99,9 +95,8 @@ export function gerarFiltrosEntradas(dados) {
 
   fill('filtro-fornecedor-entradas', fornecedores, 'Todos os fornecedores');
   fill('filtro-compra-entradas', compras, 'Todas as compras');
-  fill('filtro-validade-entradas', validades, 'Todas as validades');
 
-  ['filtro-nome-entradas','filtro-fornecedor-entradas','filtro-compra-entradas','filtro-data-inicio-entradas','filtro-data-fim-entradas','filtro-validade-entradas']
+  ['filtro-nome-entradas','filtro-fornecedor-entradas','filtro-compra-entradas','filtro-data-inicio-entradas','filtro-data-fim-entradas']
     .forEach(id => {
       document.getElementById(id)?.addEventListener('input', aplicarFiltros);
     });
@@ -113,6 +108,5 @@ export function limparFiltrosEntradas() {
   document.getElementById('filtro-compra-entradas').value = '';
   document.getElementById('filtro-data-inicio-entradas').value = '';
   document.getElementById('filtro-data-fim-entradas').value = '';
-  document.getElementById('filtro-validade-entradas').value = '';
   aplicarFiltros();
 }
