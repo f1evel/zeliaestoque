@@ -40,6 +40,8 @@
     <!-- 🔥 Aba Consumo -->
     <div id="aba-consumo" class="aba-conteudo">
       <h2>📦 Relatório de Consumo</h2>
+      <p class="descricao-relatorio">Exibe o consumo mensal de produtos, permitindo
+        análise por categoria, fornecedor e tendência ao longo do tempo.</p>
 
       <!-- 🔍 Filtros -->
       <div class="filtros">
@@ -64,8 +66,9 @@
         <div class="card"><strong>Quantidade total:</strong> <span id="card-consumo-quantidade">-</span></div>
       </div>
 
-      <!-- 📈 Gráfico -->
-      <canvas id="grafico-consumo" style="max-height: 300px; margin: 20px 0;"></canvas>
+      <!-- 📈 Gráficos -->
+      <canvas id="grafico-consumo-mes" style="max-height: 300px; margin: 20px 0;"></canvas>
+      <canvas id="grafico-consumo-categoria" style="max-height: 300px; margin: 20px 0;"></canvas>
 
       <!-- 📋 Tabela -->
       <div id="tabela-consumo"></div>

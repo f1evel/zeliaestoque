@@ -37,24 +37,26 @@ function aplicarFiltrosEAtualizarTabela() {
       <thead>
         <tr>
           <th>Produto</th>
+          <th>Mês/Ano</th>
+          <th>Quantidade</th>
+          <th>Unidade</th>
           <th>Categoria</th>
           <th>Fornecedor</th>
-          <th>Quantidade</th>
-          <th>Data</th>
         </tr>
       </thead>
       <tbody>
   `;
 
   filtrados.forEach(d => {
-    const data = d.data ? d.data.toLocaleDateString('pt-BR') : "-";
+    const mesAno = d.data ? `${String(d.data.getMonth()+1).padStart(2,'0')}/${d.data.getFullYear()}` : "-";
     html += `
       <tr>
         <td>${d.nome}</td>
+        <td>${mesAno}</td>
+        <td>${(d.quantidade || 0).toLocaleString('pt-BR')}</td>
+        <td>${d.unidade}</td>
         <td>${d.categoria}</td>
         <td>${d.fornecedor}</td>
-        <td>${(d.quantidade || 0).toLocaleString('pt-BR')}</td>
-        <td>${data}</td>
       </tr>
     `;
   });
