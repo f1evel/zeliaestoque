@@ -16,6 +16,7 @@ import {
 import { mostrarErro, normalizarTexto } from './utils.js';
 
 let produtoCadastroAtual = null;
+let dadosFinanceiroAtual = null;
 
 /**
  * 🔥 Abrir o Modal de Entrada
@@ -53,11 +54,19 @@ export async function abrirModalEntrada(produto) {
   document.getElementById("entrada-observacoes").value = "";
   const dataEntrada = new Date(produtoCadastroAtual.dataEntrada);
   dataEntrada.setMonth(dataEntrada.getMonth() + 1);
-  document.getElementById("entrada-primeiro-vencimento").value = dataEntrada.toISOString().split("T")[0];
+  document.getElementById("entrada-primeiro-vencimento").value = dataEntrada
+    .toISOString()
+    .split("T")[0];
+
+  if (produto.compraId) {
+    document.getElementById("entrada-compra-id").value = produto.compraId;
+    await preencherDadosFinanceiro(produto.compraId);
+  } else {
+    atualizarParcelasPreview();
+  }
+
   document.getElementById("modal-entrada").style.display = "block";
   document.getElementById("fundo-modal").style.display = "block";
-
-  atualizarParcelasPreview(); // Gera preview com base no produto atual
 }
 
 /**
@@ -66,6 +75,53 @@ export async function abrirModalEntrada(produto) {
 export function fecharModalEntrada() {
   document.getElementById("modal-entrada").style.display = "none";
   document.getElementById("fundo-modal").style.display = "none";
+}
+
+async function preencherDadosFinanceiro(compraId) {
+  if (!compraId) return;
+  try {
+    const q = query(collection(db, "financeiro"), where("compraId", "==", compraId));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      dadosFinanceiroAtual = snap.docs[0].data();
+      document.getElementById("entrada-forma-pagamento").value = dadosFinanceiroAtual.formaPagamento || "pix";
+      document.getElementById("entrada-identificador-pagamento").value = dadosFinanceiroAtual.identificadorPagamento || "";
+      document.getElementById("entrada-observacoes").value = dadosFinanceiroAtual.observacoes || "";
+      const parcelas = Array.isArray(dadosFinanceiroAtual.parcelas) ? dadosFinanceiroAtual.parcelas : [];
+      document.getElementById("entrada-numero-parcelas").value = parcelas.length || 1;
+      if (parcelas.length > 0) {
+        document.getElementById("entrada-primeiro-vencimento").value = parcelas[0].vencimento;
+        exibirParcelas(parcelas);
+      } else {
+        atualizarParcelasPreview();
+      }
+    }
+  } catch (e) {
+    console.error("Erro ao carregar dados financeiros:", e);
+  }
+}
+
+function exibirParcelas(parcelas) {
+  if (!Array.isArray(parcelas) || parcelas.length === 0) {
+    atualizarParcelasPreview();
+    return;
+  }
+
+  let html = `<table style="width:100%; border-collapse: collapse;">
+                <tr style="background:#f0f0f0;">
+                  <th>Parcela</th><th>Valor (R$)</th><th>Data de Vencimento</th>
+                </tr>`;
+
+  parcelas.forEach((p, index) => {
+    html += `<tr>
+      <td style="text-align:center;">${p.numero}</td>
+      <td style="text-align:center;">${(p.valor || 0).toFixed(2)}</td>
+      <td style="text-align:center;"><input type="date" id="parcela-venc-${index}" value="${p.vencimento}" /></td>
+    </tr>`;
+  });
+
+  html += "</table>";
+  document.getElementById("parcelas-container").innerHTML = html;
 }
 
 /**
@@ -266,6 +322,9 @@ function atualizarParcelasPreview() {
 
 document.getElementById("entrada-numero-parcelas").addEventListener("input", atualizarParcelasPreview);
 document.getElementById("entrada-primeiro-vencimento").addEventListener("change", atualizarParcelasPreview);
+document.getElementById("entrada-compra-id").addEventListener("change", (e) => {
+  preencherDadosFinanceiro(e.target.value.trim());
+});
 
 // Tornar funções acessíveis globalmente para os botões do modal
 window.fecharModalEntrada = fecharModalEntrada;
