@@ -32,6 +32,8 @@
     <!-- 🔥 Abas -->
     <div class="abas">
       <button class="aba ativa" onclick="abrirAba('aba-consumo')">Consumo</button>
+      <button class="aba" onclick="abrirAba('aba-entradas')">Entradas</button>
+      <button class="aba" onclick="abrirAba('aba-saidas')">Saídas</button>
       <button class="aba" onclick="abrirAba('aba-financeiro')">Financeiro</button>
       <button class="aba" onclick="abrirAba('aba-estoque')">Estoque Crítico</button>
       <button class="aba" onclick="abrirAba('aba-previsao')">Previsão</button>
@@ -69,6 +71,43 @@
 
       <!-- 📋 Tabela -->
       <div id="tabela-consumo"></div>
+    </div>
+
+    <!-- 🔥 Aba Entradas -->
+    <div id="aba-entradas" class="aba-conteudo" style="display:none">
+      <h2>📥 Relatório de Entradas</h2>
+
+      <div class="filtros">
+        <input type="text" id="filtro-nome-entradas" placeholder="🔍 Produto..." list="lista-produtos-entradas">
+        <datalist id="lista-produtos-entradas"></datalist>
+        <select id="filtro-fornecedor-entradas"></select>
+        <select id="filtro-compra-entradas"></select>
+        <input type="date" id="filtro-data-inicio-entradas">
+        <input type="date" id="filtro-data-fim-entradas">
+        <select id="filtro-validade-entradas"></select>
+        <button id="botao-limpar-entradas">🧹 Limpar</button>
+        <button id="botao-exportar-excel-entradas">📊 Excel</button>
+      </div>
+
+      <div id="tabela-entradas"></div>
+    </div>
+
+    <!-- 🔥 Aba Saídas -->
+    <div id="aba-saidas" class="aba-conteudo" style="display:none">
+      <h2>📤 Relatório de Saídas</h2>
+
+      <div class="filtros">
+        <input type="text" id="filtro-nome-saidas" placeholder="🔍 Produto..." list="lista-produtos-saidas">
+        <datalist id="lista-produtos-saidas"></datalist>
+        <input type="date" id="filtro-data-inicio-saidas">
+        <input type="date" id="filtro-data-fim-saidas">
+        <select id="filtro-motivo-saidas"></select>
+        <select id="filtro-responsavel-saidas"></select>
+        <button id="botao-limpar-saidas">🧹 Limpar</button>
+        <button id="botao-exportar-excel-saidas">📊 Excel</button>
+      </div>
+
+      <div id="tabela-saidas"></div>
     </div>
 
     <!-- 🔥 Aba Financeiro -->
@@ -168,6 +207,16 @@ background:#ffffffcc; z-index:2000; display:flex; align-items:center; justify-co
 <script type="module" src="js/relatorios/consumoGraficos.js"></script>
 <script type="module" src="js/relatorios/consumoTotais.js"></script>
 <script type="module" src="js/relatorios/consumoTabela.js"></script>
+
+<script type="module" src="js/relatorios/entradas.js"></script>
+<script type="module" src="js/relatorios/entradasExportar.js"></script>
+<script type="module" src="js/relatorios/entradasTabela.js"></script>
+<script type="module" src="js/relatorios/entradasDados.js"></script>
+
+<script type="module" src="js/relatorios/saidas.js"></script>
+<script type="module" src="js/relatorios/saidasExportar.js"></script>
+<script type="module" src="js/relatorios/saidasTabela.js"></script>
+<script type="module" src="js/relatorios/saidasDados.js"></script>
 
 <script type="module" src="js/relatorios/financeiro.js"></script>
 <script type="module" src="js/relatorios/financeiroExportar.js"></script>
