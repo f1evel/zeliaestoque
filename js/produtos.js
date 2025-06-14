@@ -16,8 +16,7 @@ import {
 import { ref as storageRef, uploadString } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
 
 import {
-  abrirModalProdutoExiste,
-  abrirModalConfirmacao
+  abrirModalProdutoExiste
 } from './modais.js';
 
 import {
@@ -153,7 +152,8 @@ async function adicionarProduto() {
       const validadeInput = document.getElementById("validade").value;
       const validade = new Date(validadeInput);
       const dataEntrada = new Date(document.getElementById("dataEntrada").value);
-      const precoCompra = parseFloat(document.getElementById("precoCompra").value);
+      const precoCompraValor = document.getElementById("precoCompra").value.replace(',', '.');
+      const precoCompra = parseFloat(precoCompraValor) || 0;
       const fornecedor = document.getElementById("fornecedor").value.trim();
       const prazoEntregaDias = parseInt(document.getElementById("prazoEntregaDias").value);
       const observacoes = document.getElementById("observacoes").value.trim();
@@ -191,55 +191,50 @@ async function adicionarProduto() {
         return;
       }
 
-      abrirModalConfirmacao(
-        "✅ Produto cadastrado com sucesso! Deseja dar entrada no estoque agora?",
-        async () => {
-            try {
-            const docRef = await addDoc(collection(db, "produtos"), {
-                nome,
-                nomeBusca: nomeNormalizado,
-                categoria,
-                quantidade,
-                quantidadeMinima,
-                validade: isNaN(validade.getTime()) ? null : Timestamp.fromDate(validade),
-                dataEntrada: isNaN(dataEntrada.getTime()) ? null : Timestamp.fromDate(dataEntrada),
-                precoCompra,
-                fornecedor,
-                prazoEntregaDias,
-                observacoes,
-                localizacao,
-                lote
-            });
+      try {
+        const docRef = await addDoc(collection(db, "produtos"), {
+          nome,
+          nomeBusca: nomeNormalizado,
+          categoria,
+          quantidade,
+          quantidadeMinima,
+          validade: isNaN(validade.getTime()) ? null : Timestamp.fromDate(validade),
+          dataEntrada: isNaN(dataEntrada.getTime()) ? null : Timestamp.fromDate(dataEntrada),
+          precoCompra,
+          fornecedor,
+          prazoEntregaDias,
+          observacoes,
+          localizacao,
+          lote
+        });
 
-            console.log("✅ Produto adicionado ao Firestore:", docRef.id);
-            mostrarMensagem("✅ Produto adicionado com sucesso!");
+        console.log("✅ Produto adicionado ao Firestore:", docRef.id);
+        mostrarMensagem("✅ Produto adicionado com sucesso!");
 
-            try {
-                abrirModalEntrada({
-                    id: docRef.id,
-                    nome,
-                    categoria,
-                    fornecedor,
-                    unidadeMedida: "unidade",
-                    quantidade,
-                    precoCompra,
-                    dataEntrada,
-                    validade,
-                    lote
-                });
-                } catch (erroModal) {
-                console.error("❌ Erro ao abrir modal de entrada:", erroModal);
-                mostrarErro("❌ Produto salvo, mas houve erro ao abrir o modal de entrada.");
-                }
-
-            document.getElementById("form-produto").reset();
-            carregarProdutos();
-            } catch (erro) {
-            console.error("❌ Erro ao salvar produto após confirmação:", erro);
-            mostrarErro("❌ Não foi possível salvar o produto.");
-            }
+        try {
+          abrirModalEntrada({
+            id: docRef.id,
+            nome,
+            categoria,
+            fornecedor,
+            unidadeMedida: "unidade",
+            quantidade,
+            precoCompra,
+            dataEntrada,
+            validade,
+            lote
+          });
+        } catch (erroModal) {
+          console.error("❌ Erro ao abrir modal de entrada:", erroModal);
+          mostrarErro("❌ Produto salvo, mas houve erro ao abrir o modal de entrada.");
         }
-        );
+
+        document.getElementById("form-produto").reset();
+        carregarProdutos();
+      } catch (erro) {
+        console.error("❌ Erro ao salvar produto:", erro);
+        mostrarErro("❌ Não foi possível salvar o produto.");
+      }
 
     } catch (erro) {
       console.error("❌ Erro inesperado ao adicionar produto:", erro);
@@ -269,7 +264,10 @@ window.editarProduto = async function (id) {
     document.getElementById("quantidadeMinima").value = p.quantidadeMinima || "";
     document.getElementById("validade").value = formatarData(p.validade) || "";
     document.getElementById("dataEntrada").value = formatarData(p.dataEntrada) || "";
-    document.getElementById("precoCompra").value = p.precoCompra || "";
+    document.getElementById("precoCompra").value =
+      p.precoCompra !== undefined && p.precoCompra !== null
+        ? p.precoCompra.toString().replace('.', ',')
+        : "";
     document.getElementById("prazoEntregaDias").value = p.prazoEntregaDias || "";
     document.getElementById("fornecedor").value = p.fornecedor || "";
     document.getElementById("observacoes").value = p.observacoes || "";
@@ -301,7 +299,10 @@ window.editarProduto = async function (id) {
           const data = new Date(document.getElementById("dataEntrada").value);
           return isNaN(data.getTime()) ? null : Timestamp.fromDate(data);
         })(),
-        precoCompra: parseFloat(document.getElementById("precoCompra").value),
+        precoCompra: (() => {
+          const valor = document.getElementById("precoCompra").value.replace(',', '.');
+          return parseFloat(valor) || 0;
+        })(),
         prazoEntregaDias: parseInt(document.getElementById("prazoEntregaDias").value),
         fornecedor: document.getElementById("fornecedor").value.trim(),
         observacoes: document.getElementById("observacoes").value.trim(),
@@ -417,5 +418,14 @@ if (form && btn) {
     e.preventDefault();
     adicionarProduto();
   });
+}
+
+// 🔧 Preencher data de entrada com a data atual ao carregar a página
+const campoDataEntrada = document.getElementById("dataEntrada");
+if (campoDataEntrada && !campoDataEntrada.value) {
+  const hoje = new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+    .toISOString()
+    .split("T")[0];
+  campoDataEntrada.value = hoje;
 }
 
