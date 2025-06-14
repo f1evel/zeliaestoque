@@ -46,9 +46,25 @@ function formatarData(data) {
   }
 }
 
+// 🔧 Formato ISO para inputs (yyyy-mm-dd)
+function formatarDataInput(data) {
+  try {
+    if (data?.toDate) return data.toDate().toISOString().split('T')[0];
+    if (data instanceof Date) return data.toISOString().split('T')[0];
+    if (typeof data === 'string' && data) {
+      const d = new Date(data);
+      return isNaN(d.getTime()) ? '' : d.toISOString().split('T')[0];
+    }
+    return '';
+  } catch {
+    return '';
+  }
+}
+
 // 🔥 Variáveis Globais
 let listenerFormulario = null;
 let produtosCache = [];
+let editandoProdutoId = null;
 
 // ==========================
 // 🔥 Carregar Produtos
@@ -257,13 +273,14 @@ window.editarProduto = async function (id) {
     }
 
     const p = docSnap.data();
+    editandoProdutoId = id;
 
     document.getElementById("nome").value = p.nome || "";
     document.getElementById("categoria").value = p.categoria || "";
     document.getElementById("quantidade").value = p.quantidade || "";
     document.getElementById("quantidadeMinima").value = p.quantidadeMinima || "";
-    document.getElementById("validade").value = formatarData(p.validade) || "";
-    document.getElementById("dataEntrada").value = formatarData(p.dataEntrada) || "";
+    document.getElementById("validade").value = formatarDataInput(p.validade);
+    document.getElementById("dataEntrada").value = formatarDataInput(p.dataEntrada);
     document.getElementById("precoCompra").value =
       p.precoCompra !== undefined && p.precoCompra !== null
         ? p.precoCompra.toString().replace('.', ',')
@@ -271,6 +288,7 @@ window.editarProduto = async function (id) {
     document.getElementById("prazoEntregaDias").value = p.prazoEntregaDias || "";
     document.getElementById("fornecedor").value = p.fornecedor || "";
     document.getElementById("observacoes").value = p.observacoes || "";
+    document.getElementById("localizacao").value = p.localizacao || "";
     document.getElementById("lote").value = p.lote || "";
 
     const btn = document.querySelector("#form-produto button[type='submit']");
@@ -317,6 +335,7 @@ window.editarProduto = async function (id) {
       form.reset();
       btn.textContent = "Salvar Produto";
       carregarProdutos();
+      editandoProdutoId = null;
     };
 
     form.addEventListener("submit", listenerFormulario);
@@ -358,11 +377,14 @@ document.getElementById("nome").addEventListener("blur", function () {
     const snapshot = await getDocs(q);
 
     if (!snapshot.empty) {
-      abrirModalProdutoExiste();
-      input.value = "";
-      const sugestoes = document.getElementById("sugestoes-nome");
-      if (sugestoes) sugestoes.style.display = "none";
-      input.focus();
+      const existeOutro = snapshot.docs.some(doc => doc.id !== editandoProdutoId);
+      if (existeOutro) {
+        abrirModalProdutoExiste();
+        input.value = "";
+        const sugestoes = document.getElementById("sugestoes-nome");
+        if (sugestoes) sugestoes.style.display = "none";
+        input.focus();
+      }
     }
   }, 200);
 });
