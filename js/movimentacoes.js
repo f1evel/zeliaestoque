@@ -211,8 +211,8 @@ function atualizarCamposPorTipo() {
     campoLote.style.display = "none";
     grupoValidadeSaida.style.display = "block";
 
-    // ✅ Chama a função correta para exibir validades e preços
-    if (nome.length > 0) carregarValidadesEPrecos(nome);
+    // ✅ Preenche validades disponíveis e preços ao selecionar produto
+    if (nome.length > 0) preencherValidadesDisponiveis();
   } else {
     campoValidade.style.display = "block";
     campoLote.style.display = "block";
