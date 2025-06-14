@@ -31,6 +31,10 @@ export async function atualizarTabelaEstoque() {
 export function limparFiltrosEstoque() {
   document.getElementById("filtro-nome-estoque").value = "";
   document.getElementById("input-dias-val").value = 15;
+  document.getElementById("filtro-alerta-tipo").value = "todos";
+  document.getElementById("filtro-categoria-estoque").value = "";
+  document.getElementById("filtro-fornecedor-estoque").value = "";
+  document.getElementById("filtro-lote-ativo").checked = false;
   gerarTabelaEstoque();
   atualizarCardsEstoque(dadosFiltradosEstoque());
 }
@@ -46,6 +50,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("botao-exportar-excel-estoque")?.addEventListener("click", () => {
     exportarEstoqueExcel(dadosFiltradosEstoque());
+  });
+
+  document.getElementById("botao-gerar-pedido")?.addEventListener("click", () => {
+    const itens = dadosFiltradosEstoque();
+    localStorage.setItem("carrinhoReposicao", JSON.stringify(itens));
+    alert(`Pedido gerado com ${itens.length} itens.`);
   });
 
   atualizarTabelaEstoque();

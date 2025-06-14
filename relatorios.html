@@ -102,20 +102,31 @@
 
     <!-- 🔥 Aba Estoque -->
     <div id="aba-estoque" class="aba-conteudo" style="display: none;">
-      <h2>⚠️ Estoque Crítico e Validade Curta</h2>
+      <h2>🚨 Itens em Alerta (Crítico + Validade Próxima)</h2>
 
       <div class="filtros">
         <input type="text" id="filtro-nome-estoque" placeholder="🔍 Produto...">
-        <label>Validade até (dias):</label>
+        <select id="filtro-alerta-tipo" style="width:160px;">
+          <option value="todos">Mostrar: Todos</option>
+          <option value="critico">Apenas estoque crítico</option>
+          <option value="validade">Apenas validade próxima</option>
+        </select>
+        <select id="filtro-categoria-estoque"></select>
+        <select id="filtro-fornecedor-estoque"></select>
+        <label><input type="checkbox" id="filtro-lote-ativo"> Lote ativo</label>
+        <label>Dias p/ vencer:</label>
         <input type="number" id="input-dias-val" value="15" min="1" style="width: 60px;">
         <button id="botao-atualizar-estoque">🔄 Atualizar</button>
         <button id="botao-limpar-estoque">🧹 Limpar</button>
         <button id="botao-exportar-csv-estoque">📄 CSV</button>
         <button id="botao-exportar-excel-estoque">📊 Excel</button>
         <button id="botao-exportar-pdf-estoque">🖨️ PDF</button>
+        <button id="botao-gerar-pedido">🛒 Gerar pedido automático</button>
       </div>
 
-      <div id="cards-estoque"></div>
+      <div id="cards-estoque" class="cards">
+        <div class="card"><strong>Itens em alerta:</strong> <span id="card-estoque-alerta">-</span></div>
+      </div>
       <canvas id="grafico-estoque"></canvas>
       <div id="tabela-estoque"></div>
     </div>

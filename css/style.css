@@ -161,6 +161,20 @@ tr:last-child td {
   border-bottom: none;
 }
 
+/* Cards */
+.cards {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.card {
+  background: #fafafa;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
 /* Alerts */
 .alert-erro {
   background-color: #fdecea;
