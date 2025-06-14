@@ -2,7 +2,16 @@
 
 import { db, storage } from "./firebaseConfig.js";
 import {
-  collection, getDocs, addDoc, query, where, doc, updateDoc, orderBy, Timestamp
+  collection,
+  getDocs,
+  addDoc,
+  query,
+  where,
+  doc,
+  updateDoc,
+  orderBy,
+  Timestamp,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 import { ref as storageRef, uploadString } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
 
