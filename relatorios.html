@@ -81,15 +81,28 @@
       <h2>📥 Relatório de Entradas</h2>
 
       <div class="filtros">
+        <label for="filtro-nome-entradas">Produto:</label>
         <input type="text" id="filtro-nome-entradas" placeholder="🔍 Produto..." list="lista-produtos-entradas">
         <datalist id="lista-produtos-entradas"></datalist>
+
+        <label for="filtro-fornecedor-entradas">Fornecedor:</label>
         <select id="filtro-fornecedor-entradas"></select>
+
+        <label for="filtro-compra-entradas">Compra:</label>
         <select id="filtro-compra-entradas"></select>
+
+        <label for="filtro-data-inicio-entradas">De:</label>
         <input type="date" id="filtro-data-inicio-entradas">
+        <label for="filtro-data-fim-entradas">Até:</label>
         <input type="date" id="filtro-data-fim-entradas">
-        <select id="filtro-validade-entradas"></select>
+
         <button id="botao-limpar-entradas">🧹 Limpar</button>
         <button id="botao-exportar-excel-entradas">📊 Excel</button>
+      </div>
+
+      <div id="cards-entradas" class="cards">
+        <div class="card"><strong>Valor total:</strong> <span id="card-entradas-valor">-</span></div>
+        <div class="card"><strong>Quantidade total:</strong> <span id="card-entradas-quantidade">-</span></div>
       </div>
 
       <div id="tabela-entradas"></div>
@@ -100,12 +113,18 @@
       <h2>📤 Relatório de Saídas</h2>
 
       <div class="filtros">
+        <label for="filtro-nome-saidas">Produto:</label>
         <input type="text" id="filtro-nome-saidas" placeholder="🔍 Produto..." list="lista-produtos-saidas">
         <datalist id="lista-produtos-saidas"></datalist>
+
+        <label for="filtro-categoria-saidas">Categoria:</label>
+        <select id="filtro-categoria-saidas"></select>
+
+        <label for="filtro-data-inicio-saidas">De:</label>
         <input type="date" id="filtro-data-inicio-saidas">
+        <label for="filtro-data-fim-saidas">Até:</label>
         <input type="date" id="filtro-data-fim-saidas">
-        <select id="filtro-motivo-saidas"></select>
-        <select id="filtro-responsavel-saidas"></select>
+
         <button id="botao-limpar-saidas">🧹 Limpar</button>
         <button id="botao-exportar-excel-saidas">📊 Excel</button>
       </div>

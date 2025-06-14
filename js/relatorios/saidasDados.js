@@ -16,6 +16,7 @@ export async function carregarDadosSaidas() {
       data: d.dataMovimentacao?.toDate() || null,
       motivo: d.observacao || '',
       responsavel: d.usuario || '-',
+      categoria: d.categoria || '-',
       nomeBusca: normalizarTexto(d.nomeProduto || '')
     };
   });
