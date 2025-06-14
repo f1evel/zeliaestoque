@@ -31,11 +31,11 @@ export function limparFiltrosConsumo() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById("botao-atualizar-consumo").addEventListener("click", atualizarTabelaConsumo);
-  document.getElementById("botao-limpar-consumo").addEventListener("click", limparFiltrosConsumo);
-  document.getElementById("botao-exportar-csv-consumo").addEventListener("click", () => exportarConsumoCSV(dados));
-  document.getElementById("botao-exportar-excel-consumo").addEventListener("click", () => exportarConsumoExcel(dados));
-  document.getElementById("botao-exportar-pdf-consumo").addEventListener("click", () => exportarConsumoPDF(dados));
+  document.getElementById("botao-atualizar-consumo")?.addEventListener("click", atualizarTabelaConsumo);
+  document.getElementById("botao-limpar-consumo")?.addEventListener("click", limparFiltrosConsumo);
+  document.getElementById("botao-exportar-csv-consumo")?.addEventListener("click", () => exportarConsumoCSV(dados));
+  document.getElementById("botao-exportar-excel-consumo")?.addEventListener("click", () => exportarConsumoExcel(dados));
+  document.getElementById("botao-exportar-pdf-consumo")?.addEventListener("click", () => exportarConsumoPDF(dados));
 
   atualizarTabelaConsumo();
 });
