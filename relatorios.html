@@ -179,13 +179,16 @@
 
       <div class="filtros">
         <input type="text" id="filtro-nome-previsao" placeholder="🔍 Produto...">
+        <select id="filtro-categoria-previsao"></select>
         <label>Período base (meses):</label>
         <input type="number" id="input-meses-previsao" value="3" min="1" style="width: 60px;">
+        <label><input type="checkbox" id="check-apenas-critico"> Somente críticos</label>
+        <input type="number" id="input-limite-previsao" value="30" min="1" style="width:60px"> dias
         <button id="botao-atualizar-previsao">🔄 Atualizar</button>
         <button id="botao-limpar-previsao">🧹 Limpar</button>
         <button id="botao-exportar-csv-previsao">📄 CSV</button>
         <button id="botao-exportar-excel-previsao">📊 Excel</button>
-        <button id="botao-exportar-pdf-previsao">🖨️ PDF</button>
+        <button id="botao-exportar-filtrado-previsao">⏬ Exportar Críticos</button>
       </div>
 
       <div id="cards-previsao"></div>

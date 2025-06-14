@@ -1,7 +1,7 @@
 // previsao.js — Controlador geral do módulo previsão
 
 import { carregarDadosPrevisao } from './previsaoDados.js';
-import { setDadosPrevisao, gerarTabelaPrevisao, dadosFiltradosPrevisao } from './previsaoTabela.js';
+import { setDadosPrevisao, gerarTabelaPrevisao, dadosFiltradosPrevisao, gerarFiltrosPrevisao } from './previsaoTabela.js';
 import { exportarPrevisaoCSV, exportarPrevisaoExcel } from './previsaoExportar.js';
 import { mostrarSpinner, esconderSpinner } from '../utils.js';
 
@@ -16,6 +16,7 @@ export async function atualizarTabelaPrevisao() {
     dadosPrevisao = await carregarDadosPrevisao(periodoMeses);
 
     setDadosPrevisao(dadosPrevisao);
+    gerarFiltrosPrevisao();
     gerarTabelaPrevisao();
 
   } catch (error) {
@@ -29,6 +30,9 @@ export async function atualizarTabelaPrevisao() {
 export function limparFiltrosPrevisao() {
   document.getElementById("input-meses-previsao").value = 3;
   document.getElementById("filtro-nome-previsao").value = "";
+  document.getElementById("filtro-categoria-previsao").value = "";
+  document.getElementById("check-apenas-critico").checked = false;
+  document.getElementById("input-limite-previsao").value = 30;
   gerarTabelaPrevisao();
 }
 
@@ -36,6 +40,10 @@ export function limparFiltrosPrevisao() {
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("botao-atualizar-previsao")?.addEventListener("click", atualizarTabelaPrevisao);
   document.getElementById("botao-limpar-previsao")?.addEventListener("click", limparFiltrosPrevisao);
+
+  ["filtro-nome-previsao","filtro-categoria-previsao","check-apenas-critico","input-limite-previsao"].forEach(id => {
+    document.getElementById(id)?.addEventListener("input", gerarTabelaPrevisao);
+  });
 
   document.getElementById("botao-exportar-csv-previsao")?.addEventListener("click", () => {
     exportarPrevisaoCSV(dadosFiltradosPrevisao());
@@ -45,5 +53,14 @@ document.addEventListener("DOMContentLoaded", () => {
     exportarPrevisaoExcel(dadosFiltradosPrevisao());
   });
 
+  document.getElementById("botao-exportar-filtrado-previsao")?.addEventListener("click", () => {
+    exportarPrevisaoExcel(dadosFiltradosPrevisao());
+  });
+
   atualizarTabelaPrevisao();
 });
+
+// placeholder para solicitar reposição
+window.solicitarReposicao = function(id) {
+  alert(`Solicitar reposição para produto ${id}`);
+};
