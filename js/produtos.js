@@ -212,7 +212,11 @@ async function adicionarProduto() {
                     categoria,
                     fornecedor,
                     unidadeMedida: "unidade",
-                    dataEntrada
+                    quantidade,
+                    precoCompra,
+                    dataEntrada,
+                    validade,
+                    lote
                 });
                 } catch (erroModal) {
                 console.error("❌ Erro ao abrir modal de entrada:", erroModal);
