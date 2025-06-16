@@ -157,6 +157,11 @@ th {
   background-color: #fafafa;
 }
 
+.tabela th.ordenavel {
+  cursor: pointer;
+  user-select: none;
+}
+
 tr:last-child td {
   border-bottom: none;
 }
