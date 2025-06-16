@@ -106,8 +106,12 @@ function aplicarFiltros() {
   ordenados.forEach(d => {
     const validade = d.validade ? d.validade.toLocaleDateString('pt-BR') : '-';
     const data = d.data ? d.data.toLocaleDateString('pt-BR') : '-';
+    const modificado = d.modificado ? d.modificado.toLocaleDateString('pt-BR') : '-';
+    let tooltip = `Usuário: ${d.usuario || '-'}\nObs.: ${d.observacoes || 'Nenhuma'}\nModificado: ${modificado}`;
+    tooltip = tooltip.replace(/"/g, '&quot;');
+
     html += `
-      <tr>
+      <tr title="${tooltip}">
         <td>${d.nome}</td>
         <td>${d.quantidade}</td>
         <td>${validade}</td>

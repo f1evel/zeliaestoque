@@ -382,3 +382,8 @@ tr.critico {
 .btn-repor:hover {
   background-color: #d68910;
 }
+
+/* Tooltips em linhas da tabela */
+tr[title] {
+  cursor: help;
+}
