@@ -69,6 +69,7 @@ let produtosCache = [];
 let editandoProdutoId = null;
 let produtoEmEdicao = null;
 
+
 // ==========================
 // 🔥 Carregar Produtos
 // ==========================
@@ -269,6 +270,7 @@ async function adicionarProduto() {
 // 🔥 Editar Produto
 // ==========================
 window.editarProduto = async function (id) {
+  produtoEditandoId = id;
   await executarComSpinner(async () => {
     const docRef = doc(db, "produtos", id);
     const docSnap = await getDoc(docRef);
