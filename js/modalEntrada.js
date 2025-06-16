@@ -18,6 +18,32 @@ import { mostrarErro, normalizarTexto } from './utils.js';
 let produtoCadastroAtual = null;
 let dadosFinanceiroAtual = null;
 
+// Calcula a média de preços das entradas anteriores de um produto
+async function calcularPrecoMedioEntradas(produtoId) {
+  try {
+    const q = query(
+      collection(db, 'movimentacoes'),
+      where('produtoId', '==', produtoId),
+      where('tipo', '==', 'entrada')
+    );
+    const snap = await getDocs(q);
+    let soma = 0;
+    let count = 0;
+    snap.forEach(docSnap => {
+      const d = docSnap.data();
+      if (typeof d.precoUnitario === 'number') {
+        soma += d.precoUnitario;
+        count++;
+      }
+    });
+    if (count === 0) return null;
+    return soma / count;
+  } catch (e) {
+    console.error('Erro ao calcular preço médio:', e);
+    return null;
+  }
+}
+
 /**
  * 🔥 Abrir o Modal de Entrada
  */
@@ -165,6 +191,19 @@ window.confirmarEntradaEstoque = async function () {
     const produto = produtoSnap.data();
     const quantidade = produtoCadastroAtual.quantidade || 0;
     const precoUnitario = produtoCadastroAtual.precoCompra || 0;
+
+    // verifica se o preço informado está muito acima da média de entradas
+    const media = await calcularPrecoMedioEntradas(produtoCadastroAtual.id);
+    if (media && precoUnitario > media * 5) {
+      const continuar = confirm(
+        `⚠️ O preço informado (R$ ${precoUnitario.toFixed(2)}) ` +
+        `está acima da média anterior de R$ ${media.toFixed(2)}. ` +
+        'Deseja continuar mesmo assim?'
+      );
+      if (!continuar) {
+        return;
+      }
+    }
     const validadeEntrada = produtoCadastroAtual.validade ? new Date(produtoCadastroAtual.validade) : null;
     const lote = produtoCadastroAtual.lote || "";
     const custoTotal = quantidade * precoUnitario;
