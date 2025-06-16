@@ -14,6 +14,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
 import { mostrarErro, normalizarTexto } from './utils.js';
+import { registrarHistorico } from './historico.js';
 
 let produtoCadastroAtual = null;
 let dadosFinanceiroAtual = null;
@@ -187,6 +188,7 @@ window.confirmarEntradaEstoque = async function () {
     // 🔸 Atualiza o estoque
     const novaQuantidade = (produto.quantidade || 0) + quantidade;
     await updateDoc(produtoRef, { quantidade: novaQuantidade });
+    await registrarHistorico(produtoCadastroAtual.id, 'quantidade', produto.quantidade || 0, novaQuantidade);
 
     // 🔸 Registra a movimentação
     await addDoc(collection(db, "movimentacoes"), {
