@@ -16,6 +16,7 @@ function aplicarFiltros() {
   const compraFiltro = document.getElementById('filtro-compra-entradas').value;
   const dataInicio = document.getElementById('filtro-data-inicio-entradas').value;
   const dataFim = document.getElementById('filtro-data-fim-entradas').value;
+  const validadeFim = document.getElementById('filtro-validade-entradas').value;
 
 
   const filtrados = dadosOriginais.filter(d => {
@@ -27,7 +28,10 @@ function aplicarFiltros() {
     if (dataInicio) dataMatch = d.data && d.data >= new Date(dataInicio);
     if (dataFim) dataMatch = dataMatch && d.data && d.data <= new Date(dataFim);
 
-    return nomeMatch && fornMatch && compraMatch && dataMatch;
+    let validadeMatch = true;
+    if (validadeFim) validadeMatch = d.validade && d.validade <= new Date(validadeFim);
+
+    return nomeMatch && fornMatch && compraMatch && dataMatch && validadeMatch;
   });
 
   if (filtrados.length === 0) {
@@ -96,7 +100,7 @@ export function gerarFiltrosEntradas(dados) {
   fill('filtro-fornecedor-entradas', fornecedores, 'Todos os fornecedores');
   fill('filtro-compra-entradas', compras, 'Todas as compras');
 
-  ['filtro-nome-entradas','filtro-fornecedor-entradas','filtro-compra-entradas','filtro-data-inicio-entradas','filtro-data-fim-entradas']
+  ['filtro-nome-entradas','filtro-fornecedor-entradas','filtro-compra-entradas','filtro-data-inicio-entradas','filtro-data-fim-entradas','filtro-validade-entradas']
     .forEach(id => {
       document.getElementById(id)?.addEventListener('input', aplicarFiltros);
     });
@@ -108,5 +112,6 @@ export function limparFiltrosEntradas() {
   document.getElementById('filtro-compra-entradas').value = '';
   document.getElementById('filtro-data-inicio-entradas').value = '';
   document.getElementById('filtro-data-fim-entradas').value = '';
+  document.getElementById('filtro-validade-entradas').value = '';
   aplicarFiltros();
 }
