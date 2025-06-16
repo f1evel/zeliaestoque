@@ -18,6 +18,7 @@ export async function carregarDadosEntradas() {
       preco: Number(d.precoUnitario) || 0,
       compraId: d.compraId || '-',
       data: d.dataMovimentacao?.toDate() || null,
+      observacao: d.observacao || '',
       nomeBusca: normalizarTexto(d.nomeProduto || '')
     };
   });

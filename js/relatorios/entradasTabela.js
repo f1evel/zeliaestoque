@@ -47,6 +47,7 @@ function aplicarFiltros() {
           <th>Fornecedor</th>
           <th>CompraID</th>
           <th>Data</th>
+          <th>Detalhes</th>
         </tr>
       </thead>
       <tbody>
@@ -64,6 +65,7 @@ function aplicarFiltros() {
         <td>${d.fornecedor}</td>
         <td>${d.compraId}</td>
         <td>${data}</td>
+        <td><button onclick="abrirModalDetalhesEntrada('${d.id}')">Ver Detalhes</button></td>
       </tr>
     `;
   });
