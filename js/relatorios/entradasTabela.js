@@ -2,6 +2,51 @@ import { normalizarTexto } from '../utils.js';
 import { atualizarCardsEntradas } from './entradasTotais.js';
 
 let dadosOriginais = [];
+let colunaOrdenacao = '';
+let ordemAsc = true;
+
+function ordenarDados(lista) {
+  if (!colunaOrdenacao) return lista;
+  return [...lista].sort((a, b) => {
+    let valA = a[colunaOrdenacao];
+    let valB = b[colunaOrdenacao];
+
+    if (valA === null || valA === undefined) valA = '';
+    if (valB === null || valB === undefined) valB = '';
+
+    if (valA instanceof Date && valB instanceof Date) {
+      return ordemAsc ? valA - valB : valB - valA;
+    }
+
+    if (typeof valA === 'number' && typeof valB === 'number') {
+      return ordemAsc ? valA - valB : valB - valA;
+    }
+
+    valA = valA.toString().toLowerCase();
+    valB = valB.toString().toLowerCase();
+    return ordemAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+  });
+}
+
+function cabecalhoOrdenavel(coluna, titulo) {
+  const seta = colunaOrdenacao === coluna ? (ordemAsc ? ' ↑' : ' ↓') : '';
+  return `<th data-col="${coluna}" class="ordenavel">${titulo}${seta}</th>`;
+}
+
+function adicionarEventosOrdenacao() {
+  document.querySelectorAll('#tabela-entradas th.ordenavel').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.col;
+      if (colunaOrdenacao === col) {
+        ordemAsc = !ordemAsc;
+      } else {
+        colunaOrdenacao = col;
+        ordemAsc = true;
+      }
+      aplicarFiltros();
+    });
+  });
+}
 
 export function gerarTabelaEntradas(dados) {
   dadosOriginais = dados;
@@ -30,6 +75,8 @@ function aplicarFiltros() {
     return nomeMatch && fornMatch && compraMatch && dataMatch;
   });
 
+  const ordenados = ordenarDados(filtrados);
+
   if (filtrados.length === 0) {
     lista.innerHTML = '<p>❌ Nenhum dado encontrado.</p>';
     atualizarCardsEntradas([]);
@@ -40,19 +87,19 @@ function aplicarFiltros() {
     <table class="tabela">
       <thead>
         <tr>
-          <th>Produto</th>
-          <th>Quantidade</th>
-          <th>Validade</th>
-          <th>Preço Unitário</th>
-          <th>Fornecedor</th>
-          <th>CompraID</th>
-          <th>Data</th>
+          ${cabecalhoOrdenavel('nome','Produto')}
+          ${cabecalhoOrdenavel('quantidade','Quantidade')}
+          ${cabecalhoOrdenavel('validade','Validade')}
+          ${cabecalhoOrdenavel('preco','Preço Unitário')}
+          ${cabecalhoOrdenavel('fornecedor','Fornecedor')}
+          ${cabecalhoOrdenavel('compraId','CompraID')}
+          ${cabecalhoOrdenavel('data','Data')}
         </tr>
       </thead>
       <tbody>
   `;
 
-  filtrados.forEach(d => {
+  ordenados.forEach(d => {
     const validade = d.validade ? d.validade.toLocaleDateString('pt-BR') : '-';
     const data = d.data ? d.data.toLocaleDateString('pt-BR') : '-';
     html += `
@@ -70,7 +117,8 @@ function aplicarFiltros() {
 
   html += '</tbody></table>';
   lista.innerHTML = html;
-  atualizarCardsEntradas(filtrados);
+  adicionarEventosOrdenacao();
+  atualizarCardsEntradas(ordenados);
 }
 
 export function gerarFiltrosEntradas(dados) {
