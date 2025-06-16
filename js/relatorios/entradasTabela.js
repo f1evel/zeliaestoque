@@ -1,5 +1,6 @@
 import { normalizarTexto } from '../utils.js';
 import { atualizarCardsEntradas } from './entradasTotais.js';
+import { gerarGraficoEntradas } from './entradasGraficos.js';
 
 let dadosOriginais = [];
 
@@ -33,6 +34,7 @@ function aplicarFiltros() {
   if (filtrados.length === 0) {
     lista.innerHTML = '<p>❌ Nenhum dado encontrado.</p>';
     atualizarCardsEntradas([]);
+    gerarGraficoEntradas([]);
     return;
   }
 
@@ -71,6 +73,7 @@ function aplicarFiltros() {
   html += '</tbody></table>';
   lista.innerHTML = html;
   atualizarCardsEntradas(filtrados);
+  gerarGraficoEntradas(filtrados);
 }
 
 export function gerarFiltrosEntradas(dados) {
