@@ -336,6 +336,8 @@ window.editarProduto = async function (id) {
       btn.textContent = "Salvar Produto";
       carregarProdutos();
       editandoProdutoId = null;
+      form.removeEventListener("submit", listenerFormulario);
+      listenerFormulario = null;
     };
 
     form.addEventListener("submit", listenerFormulario);
