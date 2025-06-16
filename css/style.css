@@ -377,3 +377,12 @@ tr.critico {
 .btn-repor:hover {
   background-color: #d68910;
 }
+
+/* Cabeçalho fixo para a tabela de entradas */
+#tabela-entradas table.tabela-cabecalho-fixo thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: #fafafa;
+}
+
