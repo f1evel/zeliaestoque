@@ -30,17 +30,32 @@ export function dadosFiltradosEstoque() {
     const fornecedorMatch = fornecedorFiltro === "" || d.fornecedor === fornecedorFiltro;
     const loteMatch = !soLoteAtivo || d.quantidade > 0;
 
-    return nomeMatch && (estoqueCritico || validadeProxima) && tipoMatch && categoriaMatch && fornecedorMatch && loteMatch;
+    return nomeMatch && tipoMatch && categoriaMatch && fornecedorMatch && loteMatch;
   });
 }
 
 // 📦 Renderizar tabela
 export function gerarTabelaEstoque() {
   const lista = document.getElementById("tabela-estoque");
+  const diasValidade = parseInt(document.getElementById("input-dias-val").value) || 15;
   const filtrados = dadosFiltradosEstoque();
 
+  filtrados.sort((a, b) => {
+    const alertaA = a.quantidade <= a.quantidadeMinima || (a.diasParaVencer !== null && a.diasParaVencer <= diasValidade);
+    const alertaB = b.quantidade <= b.quantidadeMinima || (b.diasParaVencer !== null && b.diasParaVencer <= diasValidade);
+    if (alertaA !== alertaB) return alertaA ? -1 : 1;
+
+    const diasA = a.diasParaVencer ?? Infinity;
+    const diasB = b.diasParaVencer ?? Infinity;
+    if (diasA !== diasB) return diasA - diasB;
+
+    const diffA = (a.quantidade - a.quantidadeMinima);
+    const diffB = (b.quantidade - b.quantidadeMinima);
+    return diffA - diffB;
+  });
+
   if (filtrados.length === 0) {
-    lista.innerHTML = "<p>❌ Nenhum produto em alerta encontrado.</p>";
+    lista.innerHTML = "<p>❌ Nenhum produto encontrado.</p>";
     return;
   }
 

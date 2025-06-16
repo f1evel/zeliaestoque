@@ -11,21 +11,19 @@ export function gerarTabelaSaidas(dados) {
 function aplicarFiltros() {
   const lista = document.getElementById('tabela-saidas');
   const nomeFiltro = normalizarTexto(document.getElementById('filtro-nome-saidas').value.trim());
-  const motivoFiltro = document.getElementById('filtro-motivo-saidas').value;
-  const responsavelFiltro = document.getElementById('filtro-responsavel-saidas').value;
+  const categoriaFiltro = document.getElementById('filtro-categoria-saidas').value;
   const dataInicio = document.getElementById('filtro-data-inicio-saidas').value;
   const dataFim = document.getElementById('filtro-data-fim-saidas').value;
 
   const filtrados = dadosOriginais.filter(d => {
     const nomeMatch = d.nomeBusca.includes(nomeFiltro);
-    const motivoMatch = motivoFiltro === '' || d.motivo === motivoFiltro;
-    const respMatch = responsavelFiltro === '' || d.responsavel === responsavelFiltro;
+    const categoriaMatch = categoriaFiltro === '' || d.categoria === categoriaFiltro;
 
     let dataMatch = true;
     if (dataInicio) dataMatch = d.data && d.data >= new Date(dataInicio);
     if (dataFim) dataMatch = dataMatch && d.data && d.data <= new Date(dataFim);
 
-    return nomeMatch && motivoMatch && respMatch && dataMatch;
+    return nomeMatch && categoriaMatch && dataMatch;
   });
 
   if (filtrados.length === 0) {
@@ -61,13 +59,11 @@ function aplicarFiltros() {
 
 export function gerarFiltrosSaidas(dados) {
   const nomes = new Set();
-  const motivos = new Set();
-  const responsaveis = new Set();
+  const categorias = new Set();
 
   dados.forEach(d => {
     if (d.nome) nomes.add(d.nome);
-    if (d.motivo) motivos.add(d.motivo);
-    if (d.responsavel) responsaveis.add(d.responsavel);
+    if (d.categoria) categorias.add(d.categoria);
   });
 
   document.getElementById('lista-produtos-saidas').innerHTML =
@@ -79,10 +75,8 @@ export function gerarFiltrosSaidas(dados) {
       [...values].sort().map(v => `<option value="${v}">${v}</option>`).join('');
   };
 
-  fill('filtro-motivo-saidas', motivos, 'Todos os motivos');
-  fill('filtro-responsavel-saidas', responsaveis, 'Todos os responsáveis');
-
-  ['filtro-nome-saidas','filtro-motivo-saidas','filtro-responsavel-saidas','filtro-data-inicio-saidas','filtro-data-fim-saidas']
+  fill('filtro-categoria-saidas', categorias, 'Todas as categorias');
+  ['filtro-nome-saidas','filtro-categoria-saidas','filtro-data-inicio-saidas','filtro-data-fim-saidas']
     .forEach(id => {
       document.getElementById(id)?.addEventListener('input', aplicarFiltros);
     });
@@ -90,8 +84,7 @@ export function gerarFiltrosSaidas(dados) {
 
 export function limparFiltrosSaidas() {
   document.getElementById('filtro-nome-saidas').value = '';
-  document.getElementById('filtro-motivo-saidas').value = '';
-  document.getElementById('filtro-responsavel-saidas').value = '';
+  document.getElementById('filtro-categoria-saidas').value = '';
   document.getElementById('filtro-data-inicio-saidas').value = '';
   document.getElementById('filtro-data-fim-saidas').value = '';
   aplicarFiltros();

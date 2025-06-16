@@ -17,6 +17,7 @@
         <ul>
           <li><a href="dashboard.html">🏠 Dashboard</a></li>
           <li><a href="movimentacoes.html">🔁 Movimentações</a></li>
+          <li><a href="financeiro.html">💰 Financeiro</a></li>
           <li><a href="relatorios.html">📊 Relatórios</a></li>
         </ul>
       </nav>
@@ -183,6 +184,34 @@
       <div style="margin-top: 15px; text-align: right;">
         <button onclick="fecharModalEntrada()">Cancelar</button>
         <button onclick="confirmarEntradaEstoque()">Confirmar Entrada</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔧 Fundo Modal Detalhes -->
+  <div id="fundo-modal-detalhes-produto" class="fundo-modal"></div>
+
+  <!-- ✅ Modal Detalhes do Produto -->
+  <div id="modal-detalhes-produto" class="modal">
+    <div class="modal-content">
+      <h3>Detalhes do Produto</h3>
+      <div>
+        <button onclick="mostrarAbaDetalhes()">Detalhes</button>
+        <button onclick="mostrarAbaHistorico()">Histórico</button>
+      </div>
+      <div id="aba-detalhes" style="margin-top:10px;">
+        <p><strong>Nome:</strong> <span id="det-nome"></span></p>
+        <p><strong>Categoria:</strong> <span id="det-categoria"></span></p>
+        <p><strong>Quantidade:</strong> <span id="det-quantidade"></span></p>
+        <p><strong>Preço:</strong> <span id="det-preco"></span></p>
+        <p><strong>Fornecedor:</strong> <span id="det-fornecedor"></span></p>
+        <p><strong>Validade:</strong> <span id="det-validade"></span></p>
+      </div>
+      <div id="aba-historico" style="display:none; margin-top:10px;">
+        <div id="lista-historico"></div>
+      </div>
+      <div style="margin-top:15px; text-align:right;">
+        <button onclick="fecharModalDetalhes()">Fechar</button>
       </div>
     </div>
   </div>

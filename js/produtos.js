@@ -15,6 +15,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 import { ref as storageRef, uploadString } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
 
+import { registrarHistorico, carregarHistorico } from './historico.js';
+
 import {
   abrirModalProdutoExiste
 } from './modais.js';
@@ -46,10 +48,27 @@ function formatarData(data) {
   }
 }
 
+// 🔧 Formato ISO para inputs (yyyy-mm-dd)
+function formatarDataInput(data) {
+  try {
+    if (data?.toDate) return data.toDate().toISOString().split('T')[0];
+    if (data instanceof Date) return data.toISOString().split('T')[0];
+    if (typeof data === 'string' && data) {
+      const d = new Date(data);
+      return isNaN(d.getTime()) ? '' : d.toISOString().split('T')[0];
+    }
+    return '';
+  } catch {
+    return '';
+  }
+}
+
 // 🔥 Variáveis Globais
 let listenerFormulario = null;
 let produtosCache = [];
-let produtoEditandoId = null;
+let editandoProdutoId = null;
+let produtoEmEdicao = null;
+
 
 // ==========================
 // 🔥 Carregar Produtos
@@ -129,7 +148,10 @@ function renderizarTabela(produtos, termo = "") {
         <td>${dataValidade}</td>
         <td>${p.fornecedor || "-"}</td>
         <td>${p.localizacao || "-"}</td>
-        <td><button onclick="editarProduto('${p.id}')">✏️ Editar</button></td>
+        <td>
+          <button onclick="verDetalhes('${p.id}')">👁️ Detalhes</button>
+          <button onclick="editarProduto('${p.id}')">✏️ Editar</button>
+        </td>
       </tr>
     `;
   });
@@ -259,13 +281,15 @@ window.editarProduto = async function (id) {
     }
 
     const p = docSnap.data();
+    editandoProdutoId = id;
+    produtoEmEdicao = p;
 
     document.getElementById("nome").value = p.nome || "";
     document.getElementById("categoria").value = p.categoria || "";
     document.getElementById("quantidade").value = p.quantidade || "";
     document.getElementById("quantidadeMinima").value = p.quantidadeMinima || "";
-    document.getElementById("validade").value = formatarData(p.validade) || "";
-    document.getElementById("dataEntrada").value = formatarData(p.dataEntrada) || "";
+    document.getElementById("validade").value = formatarDataInput(p.validade);
+    document.getElementById("dataEntrada").value = formatarDataInput(p.dataEntrada);
     document.getElementById("precoCompra").value =
       p.precoCompra !== undefined && p.precoCompra !== null
         ? p.precoCompra.toString().replace('.', ',')
@@ -273,6 +297,7 @@ window.editarProduto = async function (id) {
     document.getElementById("prazoEntregaDias").value = p.prazoEntregaDias || "";
     document.getElementById("fornecedor").value = p.fornecedor || "";
     document.getElementById("observacoes").value = p.observacoes || "";
+    document.getElementById("localizacao").value = p.localizacao || "";
     document.getElementById("lote").value = p.lote || "";
 
     const btn = document.querySelector("#form-produto button[type='submit']");
@@ -313,13 +338,23 @@ window.editarProduto = async function (id) {
       };
 
       await updateDoc(docRef, atualizados);
+
+      const conv = v => {
+        if (v?.toDate) return v.toDate().toISOString();
+        return v ?? '';
+      };
+      await registrarHistorico(editandoProdutoId, 'quantidade', produtoEmEdicao.quantidade, atualizados.quantidade);
+      await registrarHistorico(editandoProdutoId, 'precoCompra', produtoEmEdicao.precoCompra, atualizados.precoCompra);
+      await registrarHistorico(editandoProdutoId, 'validade', conv(produtoEmEdicao.validade), conv(atualizados.validade));
+      await registrarHistorico(editandoProdutoId, 'fornecedor', produtoEmEdicao.fornecedor, atualizados.fornecedor);
+
       await gerarESalvarCSV();
 
       mostrarMensagem("✅ Alterações salvas com sucesso!");
       form.reset();
       btn.textContent = "Salvar Produto";
       carregarProdutos();
-      produtoEditandoId = null;
+      editandoProdutoId = null;
       form.removeEventListener("submit", listenerFormulario);
       listenerFormulario = null;
     };
@@ -363,8 +398,8 @@ document.getElementById("nome").addEventListener("blur", function () {
     const snapshot = await getDocs(q);
 
     if (!snapshot.empty) {
-      const outros = snapshot.docs.filter(doc => doc.id !== produtoEditandoId);
-      if (outros.length > 0) {
+      const existeOutro = snapshot.docs.some(doc => doc.id !== editandoProdutoId);
+      if (existeOutro) {
         abrirModalProdutoExiste();
         input.value = "";
         const sugestoes = document.getElementById("sugestoes-nome");
@@ -436,4 +471,63 @@ if (campoDataEntrada && !campoDataEntrada.value) {
     .split("T")[0];
   campoDataEntrada.value = hoje;
 }
+
+// ==========================
+// 🔥 Ver Detalhes do Produto
+// ==========================
+window.verDetalhes = async function(id) {
+  await executarComSpinner(async () => {
+    const docRef = doc(db, 'produtos', id);
+    const snap = await getDoc(docRef);
+    if (!snap.exists()) {
+      mostrarErro('❌ Produto não encontrado.');
+      return;
+    }
+
+    const p = snap.data();
+    document.getElementById('det-nome').textContent = p.nome || '-';
+    document.getElementById('det-categoria').textContent = p.categoria || '-';
+    document.getElementById('det-quantidade').textContent = p.quantidade ?? '-';
+    document.getElementById('det-preco').textContent =
+      p.precoCompra !== undefined && p.precoCompra !== null ? p.precoCompra : '-';
+    document.getElementById('det-fornecedor').textContent = p.fornecedor || '-';
+    document.getElementById('det-validade').textContent = formatarData(p.validade);
+
+    const historico = await carregarHistorico(id);
+    const lista = document.getElementById('lista-historico');
+    if (lista) {
+      if (historico.length === 0) {
+        lista.innerHTML = '<p>Sem alterações registradas.</p>';
+      } else {
+        let html = `<table class="tabela"><thead><tr><th>Campo</th><th>De</th><th>Para</th><th>Usuário</th><th>Data</th></tr></thead><tbody>`;
+        historico.forEach(h => {
+          const data = h.data?.toDate ? h.data.toDate() : new Date(h.data);
+          const dataStr = data.toLocaleString('pt-BR');
+          html += `<tr><td>${h.campo}</td><td>${h.de ?? '-'}</td><td>${h.para ?? '-'}</td><td>${h.usuario || '-'}</td><td>${dataStr}</td></tr>`;
+        });
+        html += '</tbody></table>';
+        lista.innerHTML = html;
+      }
+    }
+
+    document.getElementById('modal-detalhes-produto').style.display = 'block';
+    document.getElementById('fundo-modal-detalhes-produto').style.display = 'block';
+    mostrarAbaDetalhes();
+  });
+};
+
+window.fecharModalDetalhes = function() {
+  document.getElementById('modal-detalhes-produto').style.display = 'none';
+  document.getElementById('fundo-modal-detalhes-produto').style.display = 'none';
+};
+
+window.mostrarAbaDetalhes = function() {
+  document.getElementById('aba-detalhes').style.display = 'block';
+  document.getElementById('aba-historico').style.display = 'none';
+};
+
+window.mostrarAbaHistorico = function() {
+  document.getElementById('aba-detalhes').style.display = 'none';
+  document.getElementById('aba-historico').style.display = 'block';
+};
 

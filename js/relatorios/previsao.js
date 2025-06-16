@@ -37,7 +37,7 @@ export function limparFiltrosPrevisao() {
 }
 
 // 🚀 Inicialização
-document.addEventListener("DOMContentLoaded", () => {
+function initPrevisao() {
   document.getElementById("botao-atualizar-previsao")?.addEventListener("click", atualizarTabelaPrevisao);
   document.getElementById("botao-limpar-previsao")?.addEventListener("click", limparFiltrosPrevisao);
 
@@ -58,7 +58,13 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   atualizarTabelaPrevisao();
-});
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initPrevisao);
+} else {
+  initPrevisao();
+}
 
 // placeholder para solicitar reposição
 window.solicitarReposicao = function(id) {

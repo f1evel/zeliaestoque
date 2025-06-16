@@ -13,6 +13,7 @@ import {
   mostrarSpinner,
   esconderSpinner
 } from './utils.js';
+import { registrarHistorico } from './historico.js';
 
 import {
   abrirModalConfirmacao,
@@ -450,6 +451,7 @@ document.getElementById("form-movimentacao").addEventListener("submit", async (e
     async () => {
       try {
         await updateDoc(produtoRef, { quantidade: novaQuantidade });
+        await registrarHistorico(produtoEncontrado.id, 'quantidade', produto.quantidade || 0, novaQuantidade);
 
         const dataTimestamp = Timestamp.fromDate(dataMov);
 
