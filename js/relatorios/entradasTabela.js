@@ -65,7 +65,6 @@ function aplicarFiltros() {
   const precoMin = parseFloat(document.getElementById('filtro-preco-min-entradas').value);
   const precoMax = parseFloat(document.getElementById('filtro-preco-max-entradas').value);
 
-
   const filtrados = dadosOriginais.filter(d => {
     const nomeMatch = d.nomeBusca.includes(nomeFiltro);
     const fornMatch = fornecedorFiltro === '' || d.fornecedor === fornecedorFiltro;
@@ -159,6 +158,7 @@ export function gerarFiltrosEntradas(dados) {
   fill('filtro-compra-entradas', compras, 'Todas as compras');
 
   ['filtro-nome-entradas','filtro-fornecedor-entradas','filtro-compra-entradas','filtro-data-inicio-entradas','filtro-data-fim-entradas','filtro-validade-entradas','filtro-preco-min-entradas','filtro-preco-max-entradas']
+
     .forEach(id => {
       document.getElementById(id)?.addEventListener('input', aplicarFiltros);
     });
