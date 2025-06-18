@@ -270,7 +270,7 @@ async function adicionarProduto() {
 // 🔥 Editar Produto
 // ==========================
 window.editarProduto = async function (id) {
-  produtoEditandoId = id;
+  editandoProdutoId = id;
   await executarComSpinner(async () => {
     const docRef = doc(db, "produtos", id);
     const docSnap = await getDoc(docRef);
