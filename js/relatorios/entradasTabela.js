@@ -106,7 +106,7 @@ function aplicarFiltros() {
           ${cabecalhoOrdenavel('validade','Validade')}
           ${cabecalhoOrdenavel('preco','Preço Unitário')}
           ${cabecalhoOrdenavel('fornecedor','Fornecedor')}
-          ${cabecalhoOrdenavel('compraId','CompraID')}
+          ${mostrarCompraId ? cabecalhoOrdenavel('compraId','CompraID') : ''}
           ${cabecalhoOrdenavel('data','Data')}
          </tr>
       </thead>
@@ -129,6 +129,7 @@ function aplicarFiltros() {
         <td>${d.fornecedor}</td>
         ${mostrarCompraId ? `<td>${d.compraId}</td>` : ''}
         <td>${data}</td>
+        <td><button onclick="abrirModalDetalhesEntrada('${d.id}')">Ver Detalhes</button></td>
       </tr>
     `;
   });

@@ -117,7 +117,26 @@
       </div>
 
       <div id="tabela-entradas"></div>
+
       <canvas id="grafico-entradas" style="max-height:300px; margin:20px 0;"></canvas>
+
+      <div id="modal-detalhes-entrada" class="modal">
+        <div class="modal-content">
+          <h3>Detalhes da Entrada</h3>
+          <p><strong>Data:</strong> <span id="detalhes-data"></span></p>
+          <p><strong>Produto:</strong> <span id="detalhes-produto"></span></p>
+          <p><strong>Quantidade:</strong> <span id="detalhes-quantidade"></span></p>
+          <p><strong>Validade:</strong> <span id="detalhes-validade"></span></p>
+          <p><strong>Fornecedor:</strong> <span id="detalhes-fornecedor"></span></p>
+          <p><strong>Observações:</strong> <span id="detalhes-observacoes"></span></p>
+          <p><strong>ID Interno:</strong> <span id="detalhes-id"></span></p>
+          <div style="text-align:right; margin-top:10px;">
+            <button onclick="fecharModalDetalhesEntrada()">Fechar</button>
+          </div>
+        </div>
+      </div>
+      <div id="fundo-modal-detalhes-entrada" class="fundo-modal" onclick="fecharModalDetalhesEntrada()"></div>
+
     </div>
 
     <!-- 🔥 Aba Saídas -->
