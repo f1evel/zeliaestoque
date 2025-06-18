@@ -62,7 +62,8 @@ function aplicarFiltros() {
   const dataInicio = document.getElementById('filtro-data-inicio-entradas').value;
   const dataFim = document.getElementById('filtro-data-fim-entradas').value;
   const validadeFim = document.getElementById('filtro-validade-entradas').value;
-
+  const precoMin = parseFloat(document.getElementById('filtro-preco-min-entradas').value);
+  const precoMax = parseFloat(document.getElementById('filtro-preco-max-entradas').value);
 
   const filtrados = dadosOriginais.filter(d => {
     const nomeMatch = d.nomeBusca.includes(nomeFiltro);
@@ -76,7 +77,11 @@ function aplicarFiltros() {
     let validadeMatch = true;
     if (validadeFim) validadeMatch = d.validade && d.validade <= new Date(validadeFim);
 
-    return nomeMatch && fornMatch && compraMatch && dataMatch && validadeMatch;
+    let precoMatch = true;
+    if (!isNaN(precoMin)) precoMatch = d.preco >= precoMin;
+    if (!isNaN(precoMax)) precoMatch = precoMatch && d.preco <= precoMax;
+
+    return nomeMatch && fornMatch && compraMatch && dataMatch && validadeMatch && precoMatch;
   });
 
   const ordenados = ordenarDados(filtrados);
@@ -125,6 +130,7 @@ function aplicarFiltros() {
 
   html += '</tbody></table>';
   lista.innerHTML = html;
+
   aplicarCabecalhoFixo();
   adicionarEventosOrdenacao();
   atualizarCardsEntradas(ordenados);
@@ -153,7 +159,8 @@ export function gerarFiltrosEntradas(dados) {
   fill('filtro-fornecedor-entradas', fornecedores, 'Todos os fornecedores');
   fill('filtro-compra-entradas', compras, 'Todas as compras');
 
-  ['filtro-nome-entradas','filtro-fornecedor-entradas','filtro-compra-entradas','filtro-data-inicio-entradas','filtro-data-fim-entradas','filtro-validade-entradas']
+  ['filtro-nome-entradas','filtro-fornecedor-entradas','filtro-compra-entradas','filtro-data-inicio-entradas','filtro-data-fim-entradas','filtro-validade-entradas','filtro-preco-min-entradas','filtro-preco-max-entradas']
+
     .forEach(id => {
       document.getElementById(id)?.addEventListener('input', aplicarFiltros);
     });
@@ -166,6 +173,8 @@ export function limparFiltrosEntradas() {
   document.getElementById('filtro-data-inicio-entradas').value = '';
   document.getElementById('filtro-data-fim-entradas').value = '';
   document.getElementById('filtro-validade-entradas').value = '';
+  document.getElementById('filtro-preco-min-entradas').value = '';
+  document.getElementById('filtro-preco-max-entradas').value = '';
   aplicarFiltros();
 }
 
