@@ -9,6 +9,10 @@ export async function carregarDadosEntradas() {
 
   return snapshot.docs.map(doc => {
     const d = doc.data();
+    const dataMov = d.dataMovimentacao?.toDate() || null;
+    const modificado = d.dataAtualizacao?.toDate() ||
+      (dataMov ? new Date(dataMov.getTime() + 86400000) : null); // simulado
+
     return {
       id: doc.id,
       nome: d.nomeProduto || '-',
@@ -17,7 +21,10 @@ export async function carregarDadosEntradas() {
       validade: d.validade?.toDate() || null,
       preco: Number(d.precoUnitario) || 0,
       compraId: d.compraId || '-',
-      data: d.dataMovimentacao?.toDate() || null,
+      data: dataMov,
+      usuario: d.usuario || 'admin@zelia.com',
+      observacoes: d.observacao || '',
+      modificado,
       nomeBusca: normalizarTexto(d.nomeProduto || '')
     };
   });
