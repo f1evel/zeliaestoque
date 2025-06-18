@@ -96,13 +96,24 @@
         <label for="filtro-data-fim-entradas">Até:</label>
         <input type="date" id="filtro-data-fim-entradas">
 
+        <label for="filtro-validade-entradas">Validade até:</label>
+        <input type="date" id="filtro-validade-entradas">
+
+        <label for="filtro-preco-min-entradas">Preço mínimo:</label>
+        <input type="number" id="filtro-preco-min-entradas" min="0" step="0.01" style="width:80px;">
+
+        <label for="filtro-preco-max-entradas">Preço máximo:</label>
+        <input type="number" id="filtro-preco-max-entradas" min="0" step="0.01" style="width:80px;">
+
         <button id="botao-limpar-entradas">🧹 Limpar</button>
         <button id="botao-exportar-excel-entradas">📊 Excel</button>
+        <button id="botao-exportar-pdf-entradas">🖨️ PDF</button>
       </div>
 
       <div id="cards-entradas" class="cards">
         <div class="card"><strong>Valor total:</strong> <span id="card-entradas-valor">-</span></div>
         <div class="card"><strong>Quantidade total:</strong> <span id="card-entradas-quantidade">-</span></div>
+        <div class="card"><strong>Custo médio/unid.:</strong> <span id="card-entradas-custo">-</span></div>
       </div>
 
       <div id="tabela-entradas"></div>

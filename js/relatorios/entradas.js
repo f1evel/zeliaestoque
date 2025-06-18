@@ -1,6 +1,6 @@
 import { carregarDadosEntradas } from './entradasDados.js';
 import { gerarTabelaEntradas, gerarFiltrosEntradas, limparFiltrosEntradas } from './entradasTabela.js';
-import { exportarEntradasExcel } from './entradasExportar.js';
+import { exportarEntradasExcel, exportarEntradasPDF } from './entradasExportar.js';
 import { mostrarSpinner, esconderSpinner } from '../utils.js';
 
 let dados = [];
@@ -21,5 +21,6 @@ export async function atualizarTabelaEntradas() {
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('botao-limpar-entradas')?.addEventListener('click', limparFiltrosEntradas);
   document.getElementById('botao-exportar-excel-entradas')?.addEventListener('click', () => exportarEntradasExcel(dados));
+  document.getElementById('botao-exportar-pdf-entradas')?.addEventListener('click', () => exportarEntradasPDF(dados));
   atualizarTabelaEntradas();
 });

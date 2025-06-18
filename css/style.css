@@ -157,6 +157,11 @@ th {
   background-color: #fafafa;
 }
 
+.tabela th.ordenavel {
+  cursor: pointer;
+  user-select: none;
+}
+
 tr:last-child td {
   border-bottom: none;
 }
@@ -376,4 +381,17 @@ tr.critico {
 
 .btn-repor:hover {
   background-color: #d68910;
+}
+
+/* Cabeçalho fixo para a tabela de entradas */
+#tabela-entradas table.tabela-cabecalho-fixo thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: #fafafa;
+}
+
+/* Tooltips em linhas da tabela */
+tr[title] {
+  cursor: help;
 }
