@@ -92,6 +92,9 @@ function aplicarFiltros() {
     return;
   }
 
+  // Verifica se pelo menos um registro possui CompraID preenchido
+  const mostrarCompraId = filtrados.some(d => d.compraId && d.compraId !== '-' && String(d.compraId).trim() !== '');
+
   let html = `
     <table class="tabela">
       <thead>
@@ -103,7 +106,7 @@ function aplicarFiltros() {
           ${cabecalhoOrdenavel('fornecedor','Fornecedor')}
           ${cabecalhoOrdenavel('compraId','CompraID')}
           ${cabecalhoOrdenavel('data','Data')}
-        </tr>
+         </tr>
       </thead>
       <tbody>
   `;
@@ -122,7 +125,7 @@ function aplicarFiltros() {
         <td>${validade}</td>
         <td>${d.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
         <td>${d.fornecedor}</td>
-        <td>${d.compraId}</td>
+        ${mostrarCompraId ? `<td>${d.compraId}</td>` : ''}
         <td>${data}</td>
       </tr>
     `;
