@@ -167,50 +167,5 @@
   <script type="module" src="js/modais.js"></script>
   <script type="module" src="js/movimentacoes.js"></script>
 
-  <!-- 🔧 Fundo do Modal de Entrada -->
-  <div id="fundo-modal" class="fundo-modal"></div>
-
-  <!-- ✅ Modal de Entrada de Produto -->
-  <div id="modal-entrada" class="modal">
-    <div class="modal-content">
-      <h3 id="nome-produto-modal">Produto:</h3>
-
-      <label>Identificador da Compra (compraId):</label>
-      <div style="display: flex; gap: 10px;">
-        <input type="text" id="entrada-compra-id" list="lista-compra-id" placeholder="Ex: compra_20250604_001" style="flex: 1;" />
-        <button type="button" onclick="gerarNovoCompraId()">+ Nova Compra</button>
-      </div>
-      <datalist id="lista-compra-id"></datalist>
-
-      <label>Forma de Pagamento:</label>
-      <select id="entrada-forma-pagamento">
-        <option value="pix">PIX</option>
-        <option value="boleto">Boleto</option>
-        <option value="cartao">Cartão</option>
-        <option value="dinheiro">Dinheiro</option>
-        <option value="transferencia">Transferência</option>
-      </select>
-
-      <label>Número do boleto / transação:</label>
-      <input type="text" id="entrada-identificador-pagamento" placeholder="Opcional" />
-
-      <label>Número de Parcelas:</label>
-      <input type="number" id="entrada-numero-parcelas" min="1" value="1" />
-
-      <label>Data do Primeiro Vencimento:</label>
-      <input type="date" id="entrada-primeiro-vencimento" />
-
-      <!-- Gerador de parcelas -->
-      <div id="parcelas-container" style="margin-top:10px;"></div>
-
-      <label>Observações:</label>
-      <textarea id="entrada-observacoes" rows="2"></textarea>
-
-      <div style="margin-top: 15px; text-align: right;">
-        <button onclick="fecharModalEntrada()">Cancelar</button>
-        <button onclick="confirmarEntradaEstoque()">Confirmar Entrada</button>
-      </div>
-    </div>
-  </div>
 </body>
 </html>
