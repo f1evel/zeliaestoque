@@ -130,6 +130,8 @@ function aplicarFiltros() {
 
   html += '</tbody></table>';
   lista.innerHTML = html;
+
+  aplicarCabecalhoFixo();
   adicionarEventosOrdenacao();
   atualizarCardsEntradas(ordenados);
 }
@@ -174,4 +176,9 @@ export function limparFiltrosEntradas() {
   document.getElementById('filtro-preco-min-entradas').value = '';
   document.getElementById('filtro-preco-max-entradas').value = '';
   aplicarFiltros();
+}
+
+function aplicarCabecalhoFixo() {
+  const tabela = document.querySelector('#tabela-entradas table');
+  if (tabela) tabela.classList.add('tabela-cabecalho-fixo');
 }
