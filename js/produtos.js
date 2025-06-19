@@ -127,13 +127,13 @@ function renderizarTabela(produtos, termo = "") {
   const ordenados = filtrados.slice().sort((a, b) => {
     switch (criterio) {
       case 'nome':
-        return (a.nome || '').localeCompare(b.nome || '');
+        return normalizarTexto(a.nome).localeCompare(normalizarTexto(b.nome));
       case 'validade':
         return obterData(a.validade) - obterData(b.validade);
       case 'fornecedor':
-        return (a.fornecedor || '').localeCompare(b.fornecedor || '');
+        return normalizarTexto(a.fornecedor).localeCompare(normalizarTexto(b.fornecedor));
       case 'categoria':
-        return (a.categoria || '').localeCompare(b.categoria || '');
+        return normalizarTexto(a.categoria).localeCompare(normalizarTexto(b.categoria));
       case 'preco':
         return (a.precoCompra || 0) - (b.precoCompra || 0);
       default:
