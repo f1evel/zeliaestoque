@@ -1,4 +1,4 @@
-import { normalizarTexto } from '../utils.js';
+import { normalizarTexto, parseDataLocal } from '../utils.js';
 
 let dadosOriginais = [];
 
@@ -20,8 +20,8 @@ function aplicarFiltros() {
     const categoriaMatch = categoriaFiltro === '' || d.categoria === categoriaFiltro;
 
     let dataMatch = true;
-    if (dataInicio) dataMatch = d.data && d.data >= new Date(dataInicio);
-    if (dataFim) dataMatch = dataMatch && d.data && d.data <= new Date(dataFim);
+    if (dataInicio) dataMatch = d.data && d.data >= parseDataLocal(dataInicio);
+    if (dataFim) dataMatch = dataMatch && d.data && d.data <= parseDataLocal(dataFim);
 
     return nomeMatch && categoriaMatch && dataMatch;
   });

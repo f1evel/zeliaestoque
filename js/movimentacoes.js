@@ -11,7 +11,8 @@ import {
   mostrarErro,
   calcularDiasParaVencimento,
   mostrarSpinner,
-  esconderSpinner
+  esconderSpinner,
+  parseDataLocal
 } from './utils.js';
 import { registrarHistorico } from './historico.js';
 
@@ -388,10 +389,10 @@ document.getElementById("form-movimentacao").addEventListener("submit", async (e
   const tipo = document.getElementById("tipo-movimentacao").value;
   const quantidade = parseFloat(document.getElementById("quantidade").value);
   const precoUnitario = parseFloat(document.getElementById("preco-unitario").value) || 0;
-  const dataMov = new Date(document.getElementById("data-movimentacao").value);
+  const dataMov = parseDataLocal(document.getElementById("data-movimentacao").value);
   const observacoes = document.getElementById("observacoes").value.trim();
   const validadeStr = document.getElementById("validade").value;
-  const validade = validadeStr ? new Date(validadeStr) : new Date(NaN);
+  const validade = validadeStr ? parseDataLocal(validadeStr) : new Date(NaN);
 
   if (tipo === "saida") {
     const validadeKey = validade.toISOString().split("T")[0];
@@ -678,12 +679,12 @@ window.editarMovimentacao = async function (id) {
     const quantidade = parseFloat(document.getElementById("quantidade").value);
     const precoUnitario =
       parseFloat(document.getElementById("preco-unitario").value) || 0;
-    const dataMov = new Date(
+    const dataMov = parseDataLocal(
       document.getElementById("data-movimentacao").value
     );
     const observacoes = document.getElementById("observacoes").value.trim();
     const validadeStr = document.getElementById("validade").value;
-    const validade = validadeStr ? new Date(validadeStr) : new Date(NaN);
+    const validade = validadeStr ? parseDataLocal(validadeStr) : new Date(NaN);
     const lote = document.getElementById("lote").value.trim();
 
     const atualizados = {

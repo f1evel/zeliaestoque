@@ -1,6 +1,6 @@
 // financeiroTabela.js — Geração de tabela e filtros
 
-import { normalizarTexto } from '../utils.js';
+import { normalizarTexto, parseDataLocal } from '../utils.js';
 import { atualizarCardsFinanceiro } from './financeiroTotais.js';
 
 let dados = [];
@@ -67,8 +67,8 @@ export function gerarTabelaFinanceiro() {
   const statusFiltro = document.getElementById('fin-status').value;
   const inicio = document.getElementById('fin-data-inicio').value;
   const fim = document.getElementById('fin-data-fim').value;
-  const inicioData = inicio ? new Date(inicio) : null;
-  const fimData = fim ? new Date(fim) : null;
+  const inicioData = inicio ? parseDataLocal(inicio) : null;
+  const fimData = fim ? parseDataLocal(fim) : null;
 
   const filtrados = dados.filter(d => {
     const fornMatch = fornecedorFiltro === '' || d.fornecedorOuCliente === fornecedorFiltro;
@@ -81,10 +81,10 @@ export function gerarTabelaFinanceiro() {
       const vencs = [];
       if (Array.isArray(d.parcelas)) {
         d.parcelas.forEach(p => {
-          if (p.vencimento) vencs.push(new Date(p.vencimento));
+          if (p.vencimento) vencs.push(parseDataLocal(p.vencimento));
         });
       }
-      if (vencs.length === 0 && d.dataVencimento) vencs.push(new Date(d.dataVencimento));
+      if (vencs.length === 0 && d.dataVencimento) vencs.push(parseDataLocal(d.dataVencimento));
       vencMatch = vencs.some(v => {
         if (!v || isNaN(v)) return false;
         if (inicioData && v < inicioData) return false;
