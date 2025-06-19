@@ -87,6 +87,14 @@ export async function executarComSpinner(func, mensagemErro = "❌ Ocorreu um er
 // 📆 Datas
 // ==========================
 
+// 👉 Converter string yyyy-mm-dd para Date no horário local
+export function parseDataLocal(str) {
+  if (!str) return new Date(NaN);
+  const [ano, mes, dia] = str.split("-").map(Number);
+  if (!ano || !mes || !dia) return new Date(NaN);
+  return new Date(ano, mes - 1, dia);
+}
+
 // 👉 Calcular dias restantes para vencimento
 export function calcularDiasParaVencimento(validade) {
   try {

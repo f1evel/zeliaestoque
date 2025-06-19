@@ -13,7 +13,7 @@ import {
   Timestamp
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-import { mostrarErro, normalizarTexto } from './utils.js';
+import { mostrarErro, normalizarTexto, parseDataLocal } from './utils.js';
 import { registrarHistorico } from './historico.js';
 
 let produtoCadastroAtual = null;
@@ -311,7 +311,7 @@ function gerarParcelasAutomaticamente(valorTotal, numParcelas, dataInicial) {
   const parcelas = [];
   const valorParcela = Math.round((valorTotal / numParcelas) * 100) / 100; // Arredondamento com 2 casas
 
-  const dataBase = new Date(dataInicial);
+  const dataBase = parseDataLocal(dataInicial);
   for (let i = 0; i < numParcelas; i++) {
     const vencimento = new Date(dataBase);
     vencimento.setMonth(dataBase.getMonth() + i);

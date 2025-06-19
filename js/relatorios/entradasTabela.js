@@ -1,4 +1,4 @@
-import { normalizarTexto } from '../utils.js';
+import { normalizarTexto, parseDataLocal } from '../utils.js';
 import { atualizarCardsEntradas } from './entradasTotais.js';
 import { gerarGraficoEntradas } from './entradasGraficos.js';
 
@@ -72,11 +72,11 @@ function aplicarFiltros() {
     const compraMatch = compraFiltro === '' || d.compraId === compraFiltro;
 
     let dataMatch = true;
-    if (dataInicio) dataMatch = d.data && d.data >= new Date(dataInicio);
-    if (dataFim) dataMatch = dataMatch && d.data && d.data <= new Date(dataFim);
+    if (dataInicio) dataMatch = d.data && d.data >= parseDataLocal(dataInicio);
+    if (dataFim) dataMatch = dataMatch && d.data && d.data <= parseDataLocal(dataFim);
 
     let validadeMatch = true;
-    if (validadeFim) validadeMatch = d.validade && d.validade <= new Date(validadeFim);
+    if (validadeFim) validadeMatch = d.validade && d.validade <= parseDataLocal(validadeFim);
 
     let precoMatch = true;
     if (!isNaN(precoMin)) precoMatch = d.preco >= precoMin;

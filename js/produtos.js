@@ -30,7 +30,8 @@ import {
   mostrarMensagem,
   mostrarErro,
   calcularDiasParaVencimento,
-  executarComSpinner
+  executarComSpinner,
+  parseDataLocal
 } from './utils.js';
 
 // 🔧 Formatador de datas
@@ -173,8 +174,8 @@ async function adicionarProduto() {
       const quantidade = parseInt(document.getElementById("quantidade").value);
       const quantidadeMinima = parseInt(document.getElementById("quantidadeMinima").value);
       const validadeInput = document.getElementById("validade").value;
-      const validade = new Date(validadeInput);
-      const dataEntrada = new Date(document.getElementById("dataEntrada").value);
+      const validade = parseDataLocal(validadeInput);
+      const dataEntrada = parseDataLocal(document.getElementById("dataEntrada").value);
       const precoCompraValor = document.getElementById("precoCompra").value.replace(',', '.');
       const precoCompra = parseFloat(precoCompraValor) || 0;
       const fornecedor = document.getElementById("fornecedor").value.trim();
@@ -319,11 +320,11 @@ window.editarProduto = async function (id) {
         quantidade: parseInt(document.getElementById("quantidade").value),
         quantidadeMinima: parseInt(document.getElementById("quantidadeMinima").value),
         validade: (() => {
-          const data = new Date(document.getElementById("validade").value);
+          const data = parseDataLocal(document.getElementById("validade").value);
           return isNaN(data.getTime()) ? null : Timestamp.fromDate(data);
         })(),
         dataEntrada: (() => {
-          const data = new Date(document.getElementById("dataEntrada").value);
+          const data = parseDataLocal(document.getElementById("dataEntrada").value);
           return isNaN(data.getTime()) ? null : Timestamp.fromDate(data);
         })(),
         precoCompra: (() => {
