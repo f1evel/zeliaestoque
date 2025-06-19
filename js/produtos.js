@@ -99,6 +99,11 @@ document.getElementById("filtro-produto").addEventListener("input", function () 
   renderizarTabela(produtosCache, termo);
 });
 
+document.getElementById("ordenacao-produto").addEventListener("change", () => {
+  const termo = normalizarTexto(document.getElementById("filtro-produto").value.trim());
+  renderizarTabela(produtosCache, termo);
+});
+
 // ==========================
 // 🔥 Renderizar Tabela
 // ==========================
@@ -108,6 +113,32 @@ function renderizarTabela(produtos, termo = "") {
   const filtrados = produtos.filter(p => {
     const nomeNormalizado = normalizarTexto(p.nome || "");
     return nomeNormalizado.includes(termo);
+  });
+
+  const criterio = document.getElementById("ordenacao-produto")?.value || "recentes";
+  const obterData = d => {
+    if (!d) return new Date(0);
+    if (d.toDate) return d.toDate();
+    if (d instanceof Date) return d;
+    const x = new Date(d);
+    return isNaN(x.getTime()) ? new Date(0) : x;
+  };
+
+  const ordenados = filtrados.slice().sort((a, b) => {
+    switch (criterio) {
+      case 'nome':
+        return (a.nome || '').localeCompare(b.nome || '');
+      case 'validade':
+        return obterData(a.validade) - obterData(b.validade);
+      case 'fornecedor':
+        return (a.fornecedor || '').localeCompare(b.fornecedor || '');
+      case 'categoria':
+        return (a.categoria || '').localeCompare(b.categoria || '');
+      case 'preco':
+        return (a.precoCompra || 0) - (b.precoCompra || 0);
+      default:
+        return obterData(b.dataEntrada) - obterData(a.dataEntrada);
+    }
   });
 
   if (filtrados.length === 0) {
@@ -131,7 +162,7 @@ function renderizarTabela(produtos, termo = "") {
       <tbody>
   `;
 
-  filtrados.forEach(p => {
+  ordenados.forEach(p => {
     const dataValidade = formatarData(p.validade);
     const alertaEstoque = p.quantidade <= p.quantidadeMinima;
     const diasParaVencer = calcularDiasParaVencimento(p.validade);

@@ -103,7 +103,17 @@
       <!-- 🔸 Tabela -->
       <section>
         <h2>Estoque Atual</h2>
-        <input type="text" id="filtro-produto" placeholder="🔍 Buscar por nome..." style="margin-bottom: 10px; width: 250px; padding: 6px;" />
+        <div style="display:flex;gap:10px;margin-bottom:10px;">
+          <input type="text" id="filtro-produto" placeholder="🔍 Buscar por nome..." style="flex:1; padding: 6px;" />
+          <select id="ordenacao-produto" style="padding:6px;">
+            <option value="recentes">Mais Recentes</option>
+            <option value="nome">Nome</option>
+            <option value="validade">Validade</option>
+            <option value="fornecedor">Fornecedor</option>
+            <option value="categoria">Categoria</option>
+            <option value="preco">Preço</option>
+          </select>
+        </div>
         <div id="lista-produtos"></div>
       </section>
     </main>
