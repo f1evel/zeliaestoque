@@ -219,7 +219,7 @@ async function adicionarProduto() {
           nome,
           nomeBusca: nomeNormalizado,
           categoria,
-          quantidade,
+          quantidade: 0, // quantidade será adicionada via entrada
           quantidadeMinima,
           validade: isNaN(validade.getTime()) ? null : Timestamp.fromDate(validade),
           dataEntrada: isNaN(dataEntrada.getTime()) ? null : Timestamp.fromDate(dataEntrada),
