@@ -369,26 +369,32 @@ window.editarProduto = async function (id) {
         lote: document.getElementById("lote").value.trim()
       };
 
-      await updateDoc(docRef, atualizados);
+      try {
+        await updateDoc(docRef, atualizados);
 
-      const conv = v => {
-        if (v?.toDate) return v.toDate().toISOString();
-        return v ?? '';
-      };
-      await registrarHistorico(editandoProdutoId, 'quantidade', produtoEmEdicao.quantidade, atualizados.quantidade);
-      await registrarHistorico(editandoProdutoId, 'precoCompra', produtoEmEdicao.precoCompra, atualizados.precoCompra);
-      await registrarHistorico(editandoProdutoId, 'validade', conv(produtoEmEdicao.validade), conv(atualizados.validade));
-      await registrarHistorico(editandoProdutoId, 'fornecedor', produtoEmEdicao.fornecedor, atualizados.fornecedor);
+        const conv = v => {
+          if (v?.toDate) return v.toDate().toISOString();
+          return v ?? '';
+        };
 
-      await gerarESalvarCSV();
+        await registrarHistorico(editandoProdutoId, 'quantidade', produtoEmEdicao.quantidade, atualizados.quantidade);
+        await registrarHistorico(editandoProdutoId, 'precoCompra', produtoEmEdicao.precoCompra, atualizados.precoCompra);
+        await registrarHistorico(editandoProdutoId, 'validade', conv(produtoEmEdicao.validade), conv(atualizados.validade));
+        await registrarHistorico(editandoProdutoId, 'fornecedor', produtoEmEdicao.fornecedor, atualizados.fornecedor);
 
-      mostrarMensagem("✅ Alterações salvas com sucesso!");
-      form.reset();
-      btn.textContent = "Salvar Produto";
-      carregarProdutos();
-      editandoProdutoId = null;
-      form.removeEventListener("submit", listenerFormulario);
-      listenerFormulario = null;
+        await gerarESalvarCSV();
+
+        mostrarMensagem("✅ Alterações salvas com sucesso!");
+        form.reset();
+        btn.textContent = "Salvar Produto";
+        carregarProdutos();
+        editandoProdutoId = null;
+        form.removeEventListener("submit", listenerFormulario);
+        listenerFormulario = null;
+      } catch (erro) {
+        console.error('❌ Erro ao salvar alterações:', erro);
+        mostrarErro('❌ Não foi possível salvar as alterações.', erro);
+      }
     };
 
     form.addEventListener("submit", listenerFormulario);
