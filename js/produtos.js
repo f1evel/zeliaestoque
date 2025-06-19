@@ -460,6 +460,10 @@ const btn = document.querySelector("#form-produto button[type='submit']");
 if (form && btn) {
   form.addEventListener("submit", (e) => {
     e.preventDefault();
+    // se houver um produto em edição, o listener específico de edição irá tratar
+    if (editandoProdutoId) {
+      return;
+    }
     adicionarProduto();
   });
 }
