@@ -49,9 +49,9 @@ async function calcularPrecoMedioEntradas(produtoId) {
  * 🔥 Abrir o Modal de Entrada
  */
 export async function abrirModalEntrada(produto) {
-  console.log("🧪 produto recebido no modal:", produto);
-  console.log("🧪 typeof dataEntrada:", typeof produto.dataEntrada);
-  console.log("🧪 dataEntrada bruta:", produto.dataEntrada);
+  // console.log("🧪 produto recebido no modal:", produto);
+  // console.log("🧪 typeof dataEntrada:", typeof produto.dataEntrada);
+  // console.log("🧪 dataEntrada bruta:", produto.dataEntrada);
 
   produtoCadastroAtual = produto;
 
