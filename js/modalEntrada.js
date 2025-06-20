@@ -226,7 +226,10 @@ window.confirmarEntradaEstoque = async function () {
 
     // 🔸 Atualiza o estoque
     const novaQuantidade = (produto.quantidade || 0) + quantidade;
-    await updateDoc(produtoRef, { quantidade: novaQuantidade });
+    await updateDoc(produtoRef, {
+      quantidade: novaQuantidade,
+      dataEntrada: dataTimestamp
+    });
     await registrarHistorico(produtoCadastroAtual.id, 'quantidade', produto.quantidade || 0, novaQuantidade);
 
     // 🔸 Registra a movimentação
