@@ -337,6 +337,10 @@ window.editarProduto = async function (id) {
 
     const form = document.getElementById("form-produto");
 
+    if (listenerPadrao) {
+      form.removeEventListener("submit", listenerPadrao);
+    }
+
     if (listenerFormulario) {
       form.removeEventListener("submit", listenerFormulario);
     }
@@ -391,9 +395,15 @@ window.editarProduto = async function (id) {
         editandoProdutoId = null;
         form.removeEventListener("submit", listenerFormulario);
         listenerFormulario = null;
+        if (listenerPadrao) {
+          form.addEventListener("submit", listenerPadrao);
+        }
       } catch (erro) {
         console.error('❌ Erro ao salvar alterações:', erro);
         mostrarErro('❌ Não foi possível salvar as alterações.', erro);
+        if (listenerPadrao) {
+          form.addEventListener("submit", listenerPadrao);
+        }
       }
     };
 
@@ -493,16 +503,18 @@ async function gerarESalvarCSV() {
 // ✅ Acionar salvar produto no submit do formulário
 const form = document.getElementById("form-produto");
 const btn = document.querySelector("#form-produto button[type='submit']");
+let listenerPadrao = null;
 
 if (form && btn) {
-  form.addEventListener("submit", (e) => {
+  listenerPadrao = (e) => {
     e.preventDefault();
     // se houver um produto em edição, o listener específico de edição irá tratar
     if (editandoProdutoId) {
       return;
     }
     adicionarProduto();
-  });
+  };
+  form.addEventListener("submit", listenerPadrao);
 }
 
 // 🔧 Preencher data de entrada com a data atual ao carregar a página
