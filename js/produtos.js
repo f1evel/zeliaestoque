@@ -65,10 +65,10 @@ function formatarDataInput(data) {
 }
 
 // 🔥 Variáveis Globais
-let listenerFormulario = null;
 let produtosCache = [];
 let editandoProdutoId = null;
 let produtoEmEdicao = null;
+let docRefEmEdicao = null;
 
 
 // ==========================
@@ -302,114 +302,102 @@ async function adicionarProduto() {
 // 🔥 Editar Produto
 // ==========================
 window.editarProduto = async function (id) {
-  editandoProdutoId = id;
   await executarComSpinner(async () => {
-    const docRef = doc(db, "produtos", id);
-    const docSnap = await getDoc(docRef);
+    const ref = doc(db, 'produtos', id);
+    const snap = await getDoc(ref);
 
-    if (!docSnap.exists()) {
-      mostrarErro("❌ Produto não encontrado.");
+    if (!snap.exists()) {
+      mostrarErro('❌ Produto não encontrado.');
       return;
     }
 
-    const p = docSnap.data();
+    const p = snap.data();
+    docRefEmEdicao = ref;
     editandoProdutoId = id;
     produtoEmEdicao = p;
 
-    document.getElementById("nome").value = p.nome || "";
-    document.getElementById("categoria").value = p.categoria || "";
-    document.getElementById("quantidade").value = p.quantidade || "";
-    document.getElementById("quantidadeMinima").value = p.quantidadeMinima || "";
-    document.getElementById("validade").value = formatarDataInput(p.validade);
-    document.getElementById("dataEntrada").value = formatarDataInput(p.dataEntrada);
-    document.getElementById("precoCompra").value =
+    document.getElementById('nome').value = p.nome || '';
+    document.getElementById('categoria').value = p.categoria || '';
+    document.getElementById('quantidade').value = p.quantidade || '';
+    document.getElementById('quantidadeMinima').value = p.quantidadeMinima || '';
+    document.getElementById('validade').value = formatarDataInput(p.validade);
+    document.getElementById('dataEntrada').value = formatarDataInput(p.dataEntrada);
+    document.getElementById('precoCompra').value =
       p.precoCompra !== undefined && p.precoCompra !== null
         ? p.precoCompra.toString().replace('.', ',')
-        : "";
-    document.getElementById("prazoEntregaDias").value = p.prazoEntregaDias || "";
-    document.getElementById("fornecedor").value = p.fornecedor || "";
-    document.getElementById("observacoes").value = p.observacoes || "";
-    document.getElementById("localizacao").value = p.localizacao || "";
-    document.getElementById("lote").value = p.lote || "";
+        : '';
+    document.getElementById('prazoEntregaDias').value = p.prazoEntregaDias || '';
+    document.getElementById('fornecedor').value = p.fornecedor || '';
+    document.getElementById('observacoes').value = p.observacoes || '';
+    document.getElementById('localizacao').value = p.localizacao || '';
+    document.getElementById('lote').value = p.lote || '';
 
-    const btn = document.querySelector("#form-produto button[type='submit']");
-    btn.textContent = "💾 Salvar Alterações";
+    const btn = document.querySelector('#form-produto button[type="submit"]');
+    btn.textContent = '💾 Salvar Alterações';
 
-    const form = document.getElementById("form-produto");
-
-    if (listenerPadrao) {
-      form.removeEventListener("submit", listenerPadrao);
-    }
-
-    if (listenerFormulario) {
-      form.removeEventListener("submit", listenerFormulario);
-    }
-
-    listenerFormulario = async function (e) {
-      e.preventDefault();
-
-      const atualizados = {
-        nome: document.getElementById("nome").value.trim(),
-        nomeBusca: normalizarTexto(document.getElementById("nome").value.trim()),
-        categoria: document.getElementById("categoria").value.trim(),
-        quantidade: parseInt(document.getElementById("quantidade").value),
-        quantidadeMinima: parseInt(document.getElementById("quantidadeMinima").value),
-        validade: (() => {
-          const data = parseDataLocal(document.getElementById("validade").value);
-          return isNaN(data.getTime()) ? null : Timestamp.fromDate(data);
-        })(),
-        dataEntrada: (() => {
-          const data = parseDataLocal(document.getElementById("dataEntrada").value);
-          return isNaN(data.getTime()) ? null : Timestamp.fromDate(data);
-        })(),
-        precoCompra: (() => {
-          const valor = document.getElementById("precoCompra").value.replace(',', '.');
-          return parseFloat(valor) || 0;
-        })(),
-        prazoEntregaDias: parseInt(document.getElementById("prazoEntregaDias").value),
-        fornecedor: document.getElementById("fornecedor").value.trim(),
-        observacoes: document.getElementById("observacoes").value.trim(),
-        localizacao: document.getElementById("localizacao").value.trim(),
-        lote: document.getElementById("lote").value.trim()
-      };
-
-      try {
-        await updateDoc(docRef, atualizados);
-
-        const conv = v => {
-          if (v?.toDate) return v.toDate().toISOString();
-          return v ?? '';
-        };
-
-        await registrarHistorico(editandoProdutoId, 'quantidade', produtoEmEdicao.quantidade, atualizados.quantidade);
-        await registrarHistorico(editandoProdutoId, 'precoCompra', produtoEmEdicao.precoCompra, atualizados.precoCompra);
-        await registrarHistorico(editandoProdutoId, 'validade', conv(produtoEmEdicao.validade), conv(atualizados.validade));
-        await registrarHistorico(editandoProdutoId, 'fornecedor', produtoEmEdicao.fornecedor, atualizados.fornecedor);
-
-        await gerarESalvarCSV();
-
-        mostrarMensagem("✅ Alterações salvas com sucesso!");
-        form.reset();
-        btn.textContent = "Salvar Produto";
-        carregarProdutos();
-        editandoProdutoId = null;
-        form.removeEventListener("submit", listenerFormulario);
-        listenerFormulario = null;
-        if (listenerPadrao) {
-          form.addEventListener("submit", listenerPadrao);
-        }
-      } catch (erro) {
-        console.error('❌ Erro ao salvar alterações:', erro);
-        mostrarErro('❌ Não foi possível salvar as alterações.', erro);
-        if (listenerPadrao) {
-          form.addEventListener("submit", listenerPadrao);
-        }
-      }
-    };
-
-    form.addEventListener("submit", listenerFormulario);
+    const form = document.getElementById('form-produto');
+    form.dataset.editando = 'true';
   });
 };
+
+async function salvarAlteracoesProduto() {
+  const form = document.getElementById('form-produto');
+  if (!docRefEmEdicao || !form) return;
+
+  const atualizados = {
+    nome: document.getElementById('nome').value.trim(),
+    nomeBusca: normalizarTexto(document.getElementById('nome').value.trim()),
+    categoria: document.getElementById('categoria').value.trim(),
+    quantidade: parseInt(document.getElementById('quantidade').value),
+    quantidadeMinima: parseInt(document.getElementById('quantidadeMinima').value),
+    validade: (() => {
+      const data = parseDataLocal(document.getElementById('validade').value);
+      return isNaN(data.getTime()) ? null : Timestamp.fromDate(data);
+    })(),
+    dataEntrada: (() => {
+      const data = parseDataLocal(document.getElementById('dataEntrada').value);
+      return isNaN(data.getTime()) ? null : Timestamp.fromDate(data);
+    })(),
+    precoCompra: (() => {
+      const valor = document.getElementById('precoCompra').value.replace(',', '.');
+      return parseFloat(valor) || 0;
+    })(),
+    prazoEntregaDias: parseInt(document.getElementById('prazoEntregaDias').value),
+    fornecedor: document.getElementById('fornecedor').value.trim(),
+    observacoes: document.getElementById('observacoes').value.trim(),
+    localizacao: document.getElementById('localizacao').value.trim(),
+    lote: document.getElementById('lote').value.trim()
+  };
+
+  try {
+    await updateDoc(docRefEmEdicao, atualizados);
+
+    const conv = v => {
+      if (v?.toDate) return v.toDate().toISOString();
+      return v ?? '';
+    };
+
+    await registrarHistorico(editandoProdutoId, 'quantidade', produtoEmEdicao.quantidade, atualizados.quantidade);
+    await registrarHistorico(editandoProdutoId, 'precoCompra', produtoEmEdicao.precoCompra, atualizados.precoCompra);
+    await registrarHistorico(editandoProdutoId, 'validade', conv(produtoEmEdicao.validade), conv(atualizados.validade));
+    await registrarHistorico(editandoProdutoId, 'fornecedor', produtoEmEdicao.fornecedor, atualizados.fornecedor);
+
+    await gerarESalvarCSV();
+
+    mostrarMensagem('✅ Alterações salvas com sucesso!');
+    form.reset();
+    const btnSalvar = document.querySelector('#form-produto button[type="submit"]');
+    if (btnSalvar) btnSalvar.textContent = 'Salvar Produto';
+    form.dataset.editando = '';
+    carregarProdutos();
+    editandoProdutoId = null;
+    docRefEmEdicao = null;
+    produtoEmEdicao = null;
+  } catch (erro) {
+    console.error('❌ Erro ao salvar alterações:', erro);
+    mostrarErro('❌ Não foi possível salvar as alterações.', erro);
+  }
+}
 
 // ==========================
 // 🔥 Carregar Sugestões
@@ -508,13 +496,13 @@ let listenerPadrao = null;
 if (form && btn) {
   listenerPadrao = (e) => {
     e.preventDefault();
-    // se houver um produto em edição, o listener específico de edição irá tratar
-    if (editandoProdutoId) {
+    if (form.dataset.editando === 'true') {
+      salvarAlteracoesProduto();
       return;
     }
     adicionarProduto();
   };
-  form.addEventListener("submit", listenerPadrao);
+  form.addEventListener('submit', listenerPadrao);
 }
 
 // 🔧 Preencher data de entrada com a data atual ao carregar a página
