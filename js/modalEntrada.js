@@ -175,7 +175,6 @@ window.confirmarEntradaEstoque = async function () {
     const identificadorPagamento = document.getElementById("entrada-identificador-pagamento")?.value?.trim() || "";
     const numParcelas = parseInt(document.getElementById("entrada-numero-parcelas")?.value || "1");
 
-    const dataMov = new Date(produtoCadastroAtual.dataEntrada); // ✅ Aqui está a correção!
 
     if (!compraId) {
       alert("❌ Você precisa informar um identificador da compra (compraId).");
@@ -208,7 +207,7 @@ window.confirmarEntradaEstoque = async function () {
     const validadeEntrada = produtoCadastroAtual.validade ? new Date(produtoCadastroAtual.validade) : null;
     const lote = produtoCadastroAtual.lote || "";
     const custoTotal = quantidade * precoUnitario;
-    const dataTimestamp = Timestamp.fromDate(dataMov);
+    const dataTimestamp = Timestamp.now();
 
     const parcelas = [];
     for (let i = 0; i < numParcelas; i++) {
