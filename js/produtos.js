@@ -82,7 +82,7 @@ async function carregarProdutos() {
     const q = query(collection(db, "produtos"), orderBy("dataEntrada", "desc"));
     const snapshot = await getDocs(q);
 
-    console.log(`✅ Produtos carregados: ${snapshot.docs.length}`);
+    // console.log(`✅ Produtos carregados: ${snapshot.docs.length}`);
 
     produtosCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
@@ -196,7 +196,7 @@ function renderizarTabela(produtos, termo = "") {
 // 🔥 Adicionar Produto
 // ==========================
 async function adicionarProduto() {
-  console.log("🚀 Função adicionarProduto() foi chamada");
+  // console.log("🚀 Função adicionarProduto() foi chamada");
 
   await executarComSpinner(async () => {
     try {
@@ -215,19 +215,19 @@ async function adicionarProduto() {
       const localizacao = document.getElementById("localizacao").value.trim();
       const lote = document.getElementById("lote")?.value?.trim() || "";
 
-      console.log("🔸 Nome:", nome);
-      console.log("🔸 Categoria:", categoria);
-      console.log("🔸 Quantidade:", quantidade);
-      console.log("🔸 Quantidade mínima:", quantidadeMinima);
-      console.log("🔸 Validade (string):", validadeInput);
-      console.log("🔸 Validade (Date):", validade);
-      console.log("🔸 Data de entrada:", dataEntrada);
-      console.log("🔸 Preço de compra:", precoCompra);
-      console.log("🔸 Fornecedor:", fornecedor);
-      console.log("🔸 Prazo entrega dias:", prazoEntregaDias);
-      console.log("🔸 Observações:", observacoes);
-      console.log("🔸 Localização:", localizacao);
-      console.log("🔸 Lote:", lote);
+      // console.log("🔸 Nome:", nome);
+      // console.log("🔸 Categoria:", categoria);
+      // console.log("🔸 Quantidade:", quantidade);
+      // console.log("🔸 Quantidade mínima:", quantidadeMinima);
+      // console.log("🔸 Validade (string):", validadeInput);
+      // console.log("🔸 Validade (Date):", validade);
+      // console.log("🔸 Data de entrada:", dataEntrada);
+      // console.log("🔸 Preço de compra:", precoCompra);
+      // console.log("🔸 Fornecedor:", fornecedor);
+      // console.log("🔸 Prazo entrega dias:", prazoEntregaDias);
+      // console.log("🔸 Observações:", observacoes);
+      // console.log("🔸 Localização:", localizacao);
+      // console.log("🔸 Lote:", lote);
 
       if (!nome || isNaN(quantidade) || isNaN(quantidadeMinima) || !validadeInput) {
         alert("❗ Preencha todos os campos obrigatórios (nome, quantidade, quantidade mínima e validade).");
@@ -235,13 +235,13 @@ async function adicionarProduto() {
       }
 
       const nomeNormalizado = normalizarTexto(nome);
-      console.log("🔎 Nome normalizado:", nomeNormalizado);
+      // console.log("🔎 Nome normalizado:", nomeNormalizado);
 
       const q = query(collection(db, "produtos"), where("nomeBusca", "==", nomeNormalizado));
       const snapshot = await getDocs(q);
 
       if (!snapshot.empty) {
-        console.warn("⚠️ Produto já existe!");
+        // console.warn("⚠️ Produto já existe!");
         abrirModalProdutoExiste();
         return;
       }
@@ -263,7 +263,7 @@ async function adicionarProduto() {
           lote
         });
 
-        console.log("✅ Produto adicionado ao Firestore:", docRef.id);
+        // console.log("✅ Produto adicionado ao Firestore:", docRef.id);
         mostrarMensagem("✅ Produto adicionado com sucesso!");
 
         try {
@@ -496,7 +496,7 @@ async function gerarESalvarCSV() {
     contentType: "text/csv"
   });
 
-  console.log("✅ CSV salvo com sucesso no Firebase Storage.");
+  // console.log("✅ CSV salvo com sucesso no Firebase Storage.");
 }
 
 

@@ -321,7 +321,7 @@ selectValidadeSaida.innerHTML = "";
     }
   });
  // 🔄 Preenche o select com as validades em estoque
-console.log("Mapa final de validades:", mapaValidades);
+ // console.log("Mapa final de validades:", mapaValidades);
 const validadesDisponiveis = Object.entries(mapaValidades)
   .filter(([_, qtd]) => qtd > 0)
   .sort(([a], [b]) => new Date(a) - new Date(b));
