@@ -151,8 +151,10 @@ function renderizarTabela(produtos, termo = "") {
       <thead>
         <tr>
           <th>Nome</th>
+          <th>Categoria</th>
           <th>Qtd</th>
           <th>Mín.</th>
+          <th>Preço</th>
           <th>Validade</th>
           <th>Fornecedor</th>
           <th>Localização</th>
@@ -172,11 +174,18 @@ function renderizarTabela(produtos, termo = "") {
       ? "style='background:#ffe5e5;color:#900;'"
       : "";
 
+    const preco =
+      p.precoCompra !== undefined && p.precoCompra !== null
+        ? p.precoCompra
+        : "-";
+
     html += `
       <tr ${style}>
         <td>${p.nome}</td>
+        <td>${p.categoria || "-"}</td>
         <td>${p.quantidade}</td>
         <td>${p.quantidadeMinima}</td>
+        <td>${preco}</td>
         <td>${dataValidade}</td>
         <td>${p.fornecedor || "-"}</td>
         <td>${p.localizacao || "-"}</td>
