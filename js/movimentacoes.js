@@ -268,6 +268,8 @@ function atualizarCamposPorTipo() {
 
 
 async function preencherValidadesDisponiveis() {
+  // 🧹 Remove handler anterior para evitar duplicidade
+  selectValidadeSaida.onchange = null;
   const nome = document.getElementById("nome-produto").value.trim();
   const tipo = document.getElementById("tipo-movimentacao").value;
   mapaValidades = {};
@@ -341,11 +343,8 @@ if (validadesDisponiveis.length > 0) {
     document.getElementById("preco-unitario").value = precoInicial;
   }
 
-  selectValidadeSaida.addEventListener("change", () => {
-    document.getElementById("validade").value = selectValidadeSaida.value;
-  });
-
-  selectValidadeSaida.addEventListener("change", async () => {
+  // 🎯 Define handler único para mudanças de validade
+  selectValidadeSaida.onchange = async () => {
     const validadeSelecionada = selectValidadeSaida.value;
     document.getElementById("validade").value = validadeSelecionada;
 
@@ -353,7 +352,7 @@ if (validadesDisponiveis.length > 0) {
     if (preco !== null) {
       document.getElementById("preco-unitario").value = preco;
     }
-  });
+  };
 
 } else {
   // ❌ Nenhuma validade com estoque positivo
