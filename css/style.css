@@ -18,6 +18,54 @@ a {
   text-decoration: none;
 }
 
+/* P\u00E1ginas de autentica\u00E7\u00E3o (login e cadastro) */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-page .container {
+  background: #fff;
+  padding: 40px 30px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.auth-page .logo {
+  width: 140px;
+  height: auto;
+  margin: 0 auto 20px;
+  display: block;
+}
+
+.auth-page input {
+  margin-bottom: 15px;
+  padding: 12px 10px;
+  font-size: 15px;
+}
+
+.auth-page button {
+  width: 100%;
+  padding: 12px;
+  font-size: 15px;
+  margin-top: 10px;
+}
+
+.auth-page a {
+  display: block;
+  margin-top: 15px;
+}
+
+.auth-page .error {
+  margin-top: 10px;
+  color: #c0392b;
+}
 /* Layout principal */
 .app-container {
   display: flex;
