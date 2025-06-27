@@ -1,6 +1,6 @@
 // financeiroDados.js — Buscar dados do Firestore
 
-import { db } from '../firebaseConfig.js';
+import { db, getEmpresaIdDoUsuario } from '../firebaseConfig.js';
 import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
 export async function carregarDadosFinanceiro(periodoMeses = 3) {
@@ -8,8 +8,9 @@ export async function carregarDadosFinanceiro(periodoMeses = 3) {
   const dataLimite = new Date();
   dataLimite.setMonth(hoje.getMonth() - periodoMeses);
 
+  const empresaId = await getEmpresaIdDoUsuario();
   const snapshot = await getDocs(
-    query(collection(db, "financeiro"), orderBy("dataLancamento", "desc"))
+    query(collection(db, "empresas", empresaId, "financeiro"), orderBy("dataLancamento", "desc"))
   );
 
   return snapshot.docs

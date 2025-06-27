@@ -1,12 +1,13 @@
 // estoqueDados.js — Buscar dados de estoque (alertas)
 
-import { db } from '../firebaseConfig.js';
+import { db, getEmpresaIdDoUsuario } from '../firebaseConfig.js';
 import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 import { normalizarTexto } from '../utils.js';
 
 export async function carregarDadosEstoque(diasValidade = 30) {
+  const empresaId = await getEmpresaIdDoUsuario();
   const snapshot = await getDocs(
-    query(collection(db, "produtos"), orderBy("nome"))
+    query(collection(db, "empresas", empresaId, "produtos"), orderBy("nome"))
   );
 
   const hoje = new Date();

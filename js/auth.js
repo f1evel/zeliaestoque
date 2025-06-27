@@ -4,6 +4,7 @@ import {
   onAuthStateChanged,
   signOut
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+import { getEmpresaIdDoUsuario } from './firebaseConfig.js';
 
 // 🔐 Firebase config (a mesma que você já está usando)
 const firebaseConfig = {
@@ -22,6 +23,9 @@ const auth = getAuth(app);
 onAuthStateChanged(auth, (user) => {
   if (!user) {
     window.location.href = "index.html"; // Redireciona para login
+  } else {
+    // Carrega e mantém em cache o empresaId do usuário
+    getEmpresaIdDoUsuario();
   }
 });
 
