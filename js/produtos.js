@@ -626,3 +626,46 @@ window.mostrarAbaHistorico = function() {
   document.getElementById('aba-historico').style.display = 'block';
 };
 
+// ==========================
+// 📥 Importar Produtos via CSV
+// ==========================
+async function importarCSV(file) {
+  const Papa = await import('https://cdn.jsdelivr.net/npm/papaparse@5.4.1/+esm');
+  Papa.parse(file, {
+    header: true,
+    skipEmptyLines: true,
+    complete: async (res) => {
+      const empresaId = await getEmpresaIdDoUsuario();
+      for (const linha of res.data) {
+        const dados = {
+          nome: linha.nome,
+          categoria: linha.categoria,
+          quantidade: Number(linha.quantidade) || 0,
+          quantidadeMinima: Number(linha.quantidadeMinima) || 0,
+          validade: linha.validade || null,
+          dataEntrada: linha.dataEntrada || null,
+          precoCompra: Number(linha.precoCompra) || 0,
+          fornecedor: linha.fornecedor || '',
+          prazoEntregaDias: Number(linha.prazoEntregaDias) || 0,
+          observacoes: linha.observacoes || '',
+          lote: linha.lote || '',
+          localizacao: linha.localizacao || '',
+          nomeBusca: normalizarTexto(linha.nome)
+        };
+        await addDoc(collection(db, 'empresas', empresaId, 'produtos'), dados);
+      }
+      mostrarMensagem('Importação concluída');
+      carregarProdutos();
+    }
+  });
+}
+
+document.getElementById('btn-importar-csv')?.addEventListener('click', () => {
+  document.getElementById('arquivo-csv').click();
+});
+
+document.getElementById('arquivo-csv')?.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) importarCSV(file);
+});
+

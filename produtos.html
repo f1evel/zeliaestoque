@@ -19,6 +19,7 @@
           <li><a href="movimentacoes.html">🔁 Movimentações</a></li>
           <li><a href="financeiro.html">💰 Financeiro</a></li>
           <li><a href="relatorios.html">📊 Relatórios</a></li>
+          <li><a href="usuarios.html">👥 Usuários</a></li>
         </ul>
       </nav>
       <button onclick="logout()">Sair</button>
@@ -115,6 +116,8 @@
             <option value="categoria">Categoria</option>
             <option value="preco">Preço</option>
           </select>
+          <button id="btn-importar-csv" type="button">Importar estoque</button>
+          <input type="file" id="arquivo-csv" accept=".csv" style="display:none;" />
         </div>
         <div id="lista-produtos"></div>
       </section>

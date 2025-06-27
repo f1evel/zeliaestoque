@@ -45,7 +45,10 @@ export async function getEmpresaIdDoUsuario() {
         uid: user.uid,
         empresaId: empresaIdCache,
         nome: user.displayName || user.email || '',
-        tipo: 'admin'
+        tipo: 'admin',
+        autorizado: true,
+        termoAceito: false,
+        dataAceite: null
       });
     }
   } catch (e) {
