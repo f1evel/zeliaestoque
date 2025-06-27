@@ -155,6 +155,7 @@ function renderizarTabela(produtos, termo = "") {
           <th>Categoria</th>
           <th>Qtd</th>
           <th>Mín.</th>
+          <th>Estoque Atual</th>
           <th>Preço</th>
           <th>Validade</th>
           <th>Fornecedor</th>
@@ -177,7 +178,7 @@ function renderizarTabela(produtos, termo = "") {
 
     const preco =
       p.precoCompra !== undefined && p.precoCompra !== null
-        ? p.precoCompra
+        ? `R$ ${(Number(p.precoCompra) || 0).toFixed(2)}`
         : "-";
 
     html += `
@@ -186,6 +187,7 @@ function renderizarTabela(produtos, termo = "") {
         <td>${p.categoria || "-"}</td>
         <td>${p.quantidade}</td>
         <td>${p.quantidadeMinima}</td>
+        <td>${p.quantidade}</td>
         <td>${preco}</td>
         <td>${dataValidade}</td>
         <td>${p.fornecedor || "-"}</td>
@@ -346,6 +348,8 @@ window.editarProduto = async function (id) {
 
     const btn = document.querySelector('#form-produto button[type="submit"]');
     btn.textContent = '💾 Salvar Alterações';
+    const cancelar = document.getElementById('cancelar-edicao');
+    if (cancelar) cancelar.style.display = 'inline-block';
 
     const form = document.getElementById('form-produto');
     form.dataset.editando = 'true';
@@ -400,6 +404,8 @@ async function salvarAlteracoesProduto() {
     form.reset();
     const btnSalvar = document.querySelector('#form-produto button[type="submit"]');
     if (btnSalvar) btnSalvar.textContent = 'Salvar Produto';
+    const cancelar = document.getElementById('cancelar-edicao');
+    if (cancelar) cancelar.style.display = 'none';
     form.dataset.editando = '';
     carregarProdutos();
     editandoProdutoId = null;
@@ -409,6 +415,19 @@ async function salvarAlteracoesProduto() {
     console.error('❌ Erro ao salvar alterações:', erro);
     mostrarErro('❌ Não foi possível salvar as alterações.', erro);
   }
+}
+
+function cancelarEdicao() {
+  const form = document.getElementById('form-produto');
+  form.reset();
+  form.dataset.editando = '';
+  const btnSalvar = document.querySelector('#form-produto button[type="submit"]');
+  if (btnSalvar) btnSalvar.textContent = 'Salvar Produto';
+  const cancelar = document.getElementById('cancelar-edicao');
+  if (cancelar) cancelar.style.display = 'none';
+  editandoProdutoId = null;
+  docRefEmEdicao = null;
+  produtoEmEdicao = null;
 }
 
 // ==========================
@@ -506,6 +525,7 @@ async function gerarESalvarCSV() {
 // ✅ Acionar salvar produto no submit do formulário
 const form = document.getElementById("form-produto");
 const btn = document.querySelector("#form-produto button[type='submit']");
+const btnCancelar = document.getElementById('cancelar-edicao');
 let listenerPadrao = null;
 
 if (form && btn) {
@@ -518,6 +538,10 @@ if (form && btn) {
     adicionarProduto();
   };
   form.addEventListener('submit', listenerPadrao);
+}
+
+if (btnCancelar) {
+  btnCancelar.addEventListener('click', cancelarEdicao);
 }
 
 // 🔧 Preencher data de entrada com a data atual ao carregar a página
@@ -547,7 +571,9 @@ window.verDetalhes = async function(id) {
     document.getElementById('det-categoria').textContent = p.categoria || '-';
     document.getElementById('det-quantidade').textContent = p.quantidade ?? '-';
     document.getElementById('det-preco').textContent =
-      p.precoCompra !== undefined && p.precoCompra !== null ? p.precoCompra : '-';
+      p.precoCompra !== undefined && p.precoCompra !== null
+        ? `R$ ${(Number(p.precoCompra) || 0).toFixed(2)}`
+        : '-';
     document.getElementById('det-fornecedor').textContent = p.fornecedor || '-';
     document.getElementById('det-validade').textContent = formatarData(p.validade);
 
