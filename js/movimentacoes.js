@@ -1,6 +1,6 @@
 // movimentacoes.js — Gerenciamento de entradas e saídas de produtos no sistema Zélia.
 
-import { db } from "./firebaseConfig.js";
+import { db, getEmpresaIdDoUsuario } from "./firebaseConfig.js";
 import {
   collection, getDocs, addDoc, query, where, doc, updateDoc, orderBy, Timestamp, getDoc
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
@@ -41,7 +41,8 @@ async function carregarMovimentacoes() {
     const lista = document.getElementById("lista-movimentacoes");
     lista.innerHTML = "<p>Carregando movimentações...</p>";
 
-    const q = query(collection(db, "movimentacoes"), orderBy("dataMovimentacao", "desc"));
+    const empresaId = await getEmpresaIdDoUsuario();
+    const q = query(collection(db, "empresas", empresaId, "movimentacoes"), orderBy("dataMovimentacao", "desc"));
     const snapshot = await getDocs(q);
     movimentacoesCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
@@ -68,7 +69,8 @@ document.addEventListener("DOMContentLoaded", () => {
 // 🔥 Carregar Produtos (para autocomplete)
 // =========================
 async function carregarProdutos() {
-  const snapshot = await getDocs(collection(db, "produtos"));
+  const empresaId = await getEmpresaIdDoUsuario();
+  const snapshot = await getDocs(collection(db, "empresas", empresaId, "produtos"));
   produtosCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
   // Agrupa os produtos por nome normalizado
@@ -94,8 +96,9 @@ async function obterPrecoDaValidade(nome, validadeStr) {
   const validadeTs = Timestamp.fromDate(dataVal);
 
   try {
+    const empresaId = await getEmpresaIdDoUsuario();
     const q = query(
-      collection(db, "movimentacoes"),
+      collection(db, "empresas", empresaId, "movimentacoes"),
       where("nomeBusca", "==", nomeNormalizado),
       where("tipo", "==", "entrada"),
       where("validade", "==", validadeTs)
@@ -303,8 +306,9 @@ selectValidadeSaida.innerHTML = "";
   if (tipo !== "saida" || nome.length < 2) return;
 
   const nomeNormalizado = normalizarTexto(nome);
+  const empresaId = await getEmpresaIdDoUsuario();
   const snapshot = await getDocs(query(
-    collection(db, "movimentacoes"),
+    collection(db, "empresas", empresaId, "movimentacoes"),
     where("nomeBusca", "==", nomeNormalizado)
   ));
 
@@ -417,7 +421,8 @@ document.getElementById("form-movimentacao").addEventListener("submit", async (e
     return;
   }
 
-  const produtoRef = doc(db, "produtos", produtoEncontrado.id);
+  const empresaId = await getEmpresaIdDoUsuario();
+  const produtoRef = doc(db, "empresas", empresaId, "produtos", produtoEncontrado.id);
   const produtoSnap = await getDoc(produtoRef);
   const produto = produtoSnap.data();
 
@@ -455,7 +460,7 @@ document.getElementById("form-movimentacao").addEventListener("submit", async (e
 
         const dataTimestamp = Timestamp.fromDate(dataMov);
 
-        await addDoc(collection(db, "movimentacoes"), {
+        await addDoc(collection(db, "empresas", empresaId, "movimentacoes"), {
           produtoId: produtoEncontrado.id,
           nomeProduto: produto.nome,
           nomeBusca: normalizarTexto(produto.nome),
@@ -542,7 +547,8 @@ function renderizarTabela(movimentacoes, termo = "") {
 // 🔥 Editar Movimentação
 // ==========================
 window.editarMovimentacao = async function (id) {
-  const docRef = doc(db, "movimentacoes", id);
+  const empresaId = await getEmpresaIdDoUsuario();
+  const docRef = doc(db, "empresas", empresaId, "movimentacoes", id);
   const docSnap = await getDoc(docRef);
 
   if (!docSnap.exists()) {
