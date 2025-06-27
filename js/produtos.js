@@ -1,6 +1,7 @@
 // produtos.js — Gerenciamento de produtos para o sistema Zélia.
 
 import { db, storage, getEmpresaIdDoUsuario } from "./firebaseConfig.js";
+
 import {
   collection,
   getDocs,
@@ -13,7 +14,6 @@ import {
   Timestamp,
   getDoc
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
-import { ref as storageRef, uploadString } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
 
 import { registrarHistorico, carregarHistorico } from './historico.js';
 
@@ -494,12 +494,23 @@ async function gerarESalvarCSV() {
 
   const conteudoCSV = [cabecalho.join(","), ...linhas].join("\n");
 
-  const fileRef = storageRef(storage, "relatorios/produtos.csv");
-  await uploadString(fileRef, conteudoCSV, "raw", {
-    contentType: "text/csv"
-  });
+  try {
+    await fetch(
+      "https://us-central1-zelia-1.cloudfunctions.net/salvarCSV",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nomeArquivo: "produtos.csv",
+          conteudo: conteudoCSV
+        })
+      }
+    );
+  } catch (e) {
+    console.error("Erro ao enviar CSV:", e);
+  }
 
-  // console.log("✅ CSV salvo com sucesso no Firebase Storage.");
+  // console.log("✅ CSV enviado para a Cloud Function.");
 }
 
 
