@@ -220,11 +220,13 @@ tr:last-child td {
 .modal {
   display: none;
   position: fixed;
-  bottom: 20px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   width: 95%;
   max-width: 800px;
+  max-height: 80vh;
+  overflow-y: auto;
   background: white;
   padding: 20px;
   border-radius: 10px;
