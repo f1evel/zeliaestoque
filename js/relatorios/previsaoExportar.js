@@ -1,7 +1,7 @@
 // previsaoExportar.js — Exportação CSV e Excel da previsão
 
 // 👉 Exportar dados para CSV
-export function exportarPrevisaoCSV(dados) {
+export async function exportarPrevisaoCSV(dados) {
   const linhas = [
     ["Produto", "Categoria", "Fornecedor", "Qtd", "Consumo/Mês", "Dias Estoque", "Prev. Esgotamento", "Última Saída"],
     ...dados.map(d => [
@@ -17,14 +17,25 @@ export function exportarPrevisaoCSV(dados) {
   ];
 
   const csvContent = linhas
-    .map(linha => linha.map(campo => `"${(campo ?? "").toString().replace(/"/g, '""')}"`).join(","))
+    .map(linha =>
+      linha
+        .map(campo => `"${(campo ?? "").toString().replace(/"/g, '""')}"`)
+        .join(",")
+    )
     .join("\n");
 
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = `relatorio_previsao_${Date.now()}.csv`;
-  link.click();
+  try {
+    await fetch("https://us-central1-zelia-1.cloudfunctions.net/salvarCSV", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nomeArquivo: `relatorio_previsao_${Date.now()}.csv`,
+        conteudo: csvContent
+      })
+    });
+  } catch (e) {
+    console.error("Erro ao enviar CSV:", e);
+  }
 }
 
 // 👉 Exportar dados para Excel (.xlsx)
