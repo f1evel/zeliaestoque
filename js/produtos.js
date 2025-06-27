@@ -1,6 +1,6 @@
 // produtos.js — Gerenciamento de produtos para o sistema Zélia.
 
-import { db, storage } from "./firebaseConfig.js";
+import { db, storage, getEmpresaIdDoUsuario } from "./firebaseConfig.js";
 import {
   collection,
   getDocs,
@@ -79,7 +79,8 @@ async function carregarProdutos() {
     const lista = document.getElementById("lista-produtos");
     lista.innerHTML = "<p>Carregando produtos...</p>";
 
-    const q = query(collection(db, "produtos"), orderBy("dataEntrada", "desc"));
+    const empresaId = await getEmpresaIdDoUsuario();
+    const q = query(collection(db, "empresas", empresaId, "produtos"), orderBy("dataEntrada", "desc"));
     const snapshot = await getDocs(q);
 
     // console.log(`✅ Produtos carregados: ${snapshot.docs.length}`);
@@ -246,7 +247,8 @@ async function adicionarProduto() {
       const nomeNormalizado = normalizarTexto(nome);
       // console.log("🔎 Nome normalizado:", nomeNormalizado);
 
-      const q = query(collection(db, "produtos"), where("nomeBusca", "==", nomeNormalizado));
+      const empresaId = await getEmpresaIdDoUsuario();
+      const q = query(collection(db, "empresas", empresaId, "produtos"), where("nomeBusca", "==", nomeNormalizado));
       const snapshot = await getDocs(q);
 
       if (!snapshot.empty) {
@@ -256,7 +258,7 @@ async function adicionarProduto() {
       }
 
       try {
-        const docRef = await addDoc(collection(db, "produtos"), {
+        const docRef = await addDoc(collection(db, "empresas", empresaId, "produtos"), {
           nome,
           nomeBusca: nomeNormalizado,
           categoria,
@@ -312,7 +314,8 @@ async function adicionarProduto() {
 // ==========================
 window.editarProduto = async function (id) {
   await executarComSpinner(async () => {
-    const ref = doc(db, 'produtos', id);
+    const empresaId = await getEmpresaIdDoUsuario();
+    const ref = doc(db, 'empresas', empresaId, 'produtos', id);
     const snap = await getDoc(ref);
 
     if (!snap.exists()) {
@@ -412,7 +415,8 @@ async function salvarAlteracoesProduto() {
 // 🔥 Carregar Sugestões
 // ==========================
 async function carregarSugestoes() {
-  const snapshot = await getDocs(collection(db, "produtos"));
+  const empresaId = await getEmpresaIdDoUsuario();
+  const snapshot = await getDocs(collection(db, "empresas", empresaId, "produtos"));
   const categorias = new Set();
   const fornecedores = new Set();
 
@@ -439,7 +443,8 @@ document.getElementById("nome").addEventListener("blur", function () {
     const termo = normalizarTexto(input.value.trim());
     if (!termo) return;
 
-    const q = query(collection(db, "produtos"), where("nomeBusca", "==", termo));
+    const empresaId = await getEmpresaIdDoUsuario();
+    const q = query(collection(db, "empresas", empresaId, "produtos"), where("nomeBusca", "==", termo));
     const snapshot = await getDocs(q);
 
     if (!snapshot.empty) {
@@ -459,7 +464,8 @@ document.getElementById("nome").addEventListener("blur", function () {
 // 🔥 Gerar e Salvar CSV
 // ==========================
 async function gerarESalvarCSV() {
-  const snapshot = await getDocs(collection(db, "produtos"));
+  const empresaId = await getEmpresaIdDoUsuario();
+  const snapshot = await getDocs(collection(db, "empresas", empresaId, "produtos"));
   const produtos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
   if (!produtos.length) return;
@@ -528,7 +534,8 @@ if (campoDataEntrada && !campoDataEntrada.value) {
 // ==========================
 window.verDetalhes = async function(id) {
   await executarComSpinner(async () => {
-    const docRef = doc(db, 'produtos', id);
+    const empresaId = await getEmpresaIdDoUsuario();
+    const docRef = doc(db, 'empresas', empresaId, 'produtos', id);
     const snap = await getDoc(docRef);
     if (!snap.exists()) {
       mostrarErro('❌ Produto não encontrado.');

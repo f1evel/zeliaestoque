@@ -1,10 +1,11 @@
-import { db } from '../firebaseConfig.js';
+import { db, getEmpresaIdDoUsuario } from '../firebaseConfig.js';
 import { collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 import { normalizarTexto } from '../utils.js';
 
 export async function carregarDadosConsumo() {
+  const empresaId = await getEmpresaIdDoUsuario();
   const snapshot = await getDocs(
-    query(collection(db, "movimentacoes"), where("tipo", "==", "saida"), orderBy("dataMovimentacao", "desc"))
+    query(collection(db, "empresas", empresaId, "movimentacoes"), where("tipo", "==", "saida"), orderBy("dataMovimentacao", "desc"))
   );
 
   return snapshot.docs.map(doc => {

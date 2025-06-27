@@ -1,6 +1,6 @@
 // previsaoDados.js — Dados da previsão de esgotamento
 
-import { db } from '../firebaseConfig.js';
+import { db, getEmpresaIdDoUsuario } from '../firebaseConfig.js';
 import { collection, getDocs, query, where, orderBy, Timestamp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 import { normalizarTexto } from '../utils.js';
 
@@ -9,9 +9,10 @@ export async function carregarDadosPrevisao(periodoMeses = 3) {
   const dataInicio = new Date();
   dataInicio.setMonth(dataInicio.getMonth() - periodoMeses);
 
+  const empresaId = await getEmpresaIdDoUsuario();
   const movSnap = await getDocs(
     query(
-      collection(db, "movimentacoes"),
+      collection(db, "empresas", empresaId, "movimentacoes"),
       where("tipo", "==", "saida"),
       where("dataMovimentacao", ">=", Timestamp.fromDate(dataInicio)),
       orderBy("dataMovimentacao", "desc")
@@ -34,7 +35,7 @@ export async function carregarDadosPrevisao(periodoMeses = 3) {
     }
   });
 
-  const snapshot = await getDocs(collection(db, "produtos"));
+  const snapshot = await getDocs(collection(db, "empresas", empresaId, "produtos"));
 
   return snapshot.docs.map(doc => {
     const data = doc.data();

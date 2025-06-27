@@ -4,7 +4,7 @@ import { carregarDadosFinanceiro } from './financeiroDados.js';
 import { setDadosFinanceiro, gerarFiltrosFinanceiro, gerarTabelaFinanceiro } from './financeiroTabela.js';
 import { exportarFinanceiroCSV, exportarFinanceiroExcel } from './financeiroExportar.js';
 import { mostrarSpinner, esconderSpinner } from '../utils.js';
-import { db } from '../firebaseConfig.js';
+import { db, getEmpresaIdDoUsuario } from '../firebaseConfig.js';
 import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
 let dadosFinanceiro = [];
@@ -67,7 +67,8 @@ window.abrirModalParcelas = async function (compraId) {
 
   // Produtos relacionados
   try {
-    const q = query(collection(db, 'movimentacoes'), where('compraId', '==', compraId), where('tipo', '==', 'entrada'));
+    const empresaId = await getEmpresaIdDoUsuario();
+    const q = query(collection(db, 'empresas', empresaId, 'movimentacoes'), where('compraId', '==', compraId), where('tipo', '==', 'entrada'));
     const snap = await getDocs(q);
     if (!snap.empty) {
       html += '<h4>Produtos</h4><table class="tabela"><thead><tr><th>Produto</th><th>Qtd</th><th>Preço</th></tr></thead><tbody>';

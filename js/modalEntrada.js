@@ -1,6 +1,6 @@
 // modalEntrada.js - Controle do modal de entrada + financeiro
 
-import { db } from "./firebaseConfig.js";
+import { db, getEmpresaIdDoUsuario } from "./firebaseConfig.js";
 import {
   collection,
   addDoc,
@@ -22,8 +22,9 @@ let dadosFinanceiroAtual = null;
 // Calcula a média de preços das entradas anteriores de um produto
 async function calcularPrecoMedioEntradas(produtoId) {
   try {
+    const empresaId = await getEmpresaIdDoUsuario();
     const q = query(
-      collection(db, 'movimentacoes'),
+      collection(db, 'empresas', empresaId, 'movimentacoes'),
       where('produtoId', '==', produtoId),
       where('tipo', '==', 'entrada')
     );
@@ -60,7 +61,8 @@ export async function abrirModalEntrada(produto) {
     const lista = document.getElementById("lista-compra-id");
     if (lista) {
       lista.innerHTML = "";
-      const comprasSnap = await getDocs(collection(db, "financeiro"));
+      const empresaId = await getEmpresaIdDoUsuario();
+      const comprasSnap = await getDocs(collection(db, "empresas", empresaId, "financeiro"));
       const ids = new Set();
       comprasSnap.forEach(docSnap => {
         const d = docSnap.data();
@@ -107,7 +109,8 @@ export function fecharModalEntrada() {
 async function preencherDadosFinanceiro(compraId) {
   if (!compraId) return;
   try {
-    const q = query(collection(db, "financeiro"), where("compraId", "==", compraId));
+    const empresaId = await getEmpresaIdDoUsuario();
+    const q = query(collection(db, "empresas", empresaId, "financeiro"), where("compraId", "==", compraId));
     const snap = await getDocs(q);
     if (!snap.empty) {
       dadosFinanceiroAtual = snap.docs[0].data();
@@ -181,7 +184,8 @@ window.confirmarEntradaEstoque = async function () {
       return;
     }
 
-    const produtoRef = doc(db, "produtos", produtoCadastroAtual.id);
+    const empresaId = await getEmpresaIdDoUsuario();
+    const produtoRef = doc(db, "empresas", empresaId, "produtos", produtoCadastroAtual.id);
     const produtoSnap = await getDoc(produtoRef);
 
     if (!produtoSnap.exists()) {
@@ -232,7 +236,7 @@ window.confirmarEntradaEstoque = async function () {
     await registrarHistorico(produtoCadastroAtual.id, 'quantidade', produto.quantidade || 0, novaQuantidade);
 
     // 🔸 Registra a movimentação
-    await addDoc(collection(db, "movimentacoes"), {
+    await addDoc(collection(db, "empresas", empresaId, "movimentacoes"), {
       produtoId: produtoCadastroAtual.id,
       nomeProduto: produto.nome,
       nomeBusca: normalizarTexto(produto.nome),
@@ -252,12 +256,12 @@ window.confirmarEntradaEstoque = async function () {
     });
     
     // 🔸 Registra ou atualiza o financeiro
-    const finQuery = query(collection(db, "financeiro"), where("compraId", "==", compraId));
+    const finQuery = query(collection(db, "empresas", empresaId, "financeiro"), where("compraId", "==", compraId));
     const finSnap = await getDocs(finQuery);
 
     if (!finSnap.empty) {
       const existing = finSnap.docs[0];
-      const finRef = doc(db, "financeiro", existing.id);
+      const finRef = doc(db, "empresas", empresaId, "financeiro", existing.id);
       const finData = existing.data();
       const parcelasExistentes = Array.isArray(finData.parcelas) ? finData.parcelas : [];
 
@@ -277,7 +281,7 @@ window.confirmarEntradaEstoque = async function () {
         parcelas: parcelasAtualizadas
       });
     } else {
-      await addDoc(collection(db, "financeiro"), {
+      await addDoc(collection(db, "empresas", empresaId, "financeiro"), {
         tipo: "pagar",
         fornecedorOuCliente: produto.fornecedor || "Fornecedor não informado",
         descricao: `Compra de ${quantidade} ${produto.unidadeMedida || "unidade(s)"} de ${produto.nome}`,
