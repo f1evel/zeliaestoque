@@ -1,7 +1,7 @@
 // financeiroExportar.js
 
 // 👉 Exportar para CSV
-export function exportarFinanceiroCSV(dados) {
+export async function exportarFinanceiroCSV(dados) {
   const linhas = [
     ["Descrição", "Categoria", "Valor", "Status", "Data Lançamento", "Vencimento", "Pagamento"],
     ...dados.map(d => [
@@ -16,14 +16,25 @@ export function exportarFinanceiroCSV(dados) {
   ];
 
   const csvContent = linhas
-    .map(l => l.map(campo => `"${(campo ?? "").toString().replace(/"/g, '""')}"`).join(","))
+    .map(l =>
+      l
+        .map(campo => `"${(campo ?? "").toString().replace(/"/g, '""')}"`)
+        .join(",")
+    )
     .join("\n");
 
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = `relatorio_financeiro_${Date.now()}.csv`;
-  link.click();
+  try {
+    await fetch("https://us-central1-zelia-1.cloudfunctions.net/salvarCSV", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nomeArquivo: `relatorio_financeiro_${Date.now()}.csv`,
+        conteudo: csvContent
+      })
+    });
+  } catch (e) {
+    console.error("Erro ao enviar CSV:", e);
+  }
 }
 
 // 👉 Exportar para Excel
