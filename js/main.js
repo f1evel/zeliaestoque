@@ -14,7 +14,6 @@ window.login = function () {
       // Sucesso no login
       console.log("Login realizado:", userCredential.user);
       getEmpresaIdDoUsuario().then(() => {
-        alert("Login realizado com sucesso!");
         window.location.href = "dashboard.html"; // Redireciona para o painel
       });
     })
