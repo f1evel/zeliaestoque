@@ -1,7 +1,10 @@
 // js/firebaseConfig.js
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
 
 // 🔥 Configuração do Firebase
@@ -31,8 +34,18 @@ let empresaIdCache = null;
  */
 export async function getEmpresaIdDoUsuario() {
   if (empresaIdCache) return empresaIdCache;
-  const user = auth.currentUser;
+
+  const getUser = () =>
+    new Promise(resolve => {
+      const unsub = onAuthStateChanged(auth, u => {
+        unsub();
+        resolve(u);
+      });
+    });
+
+  const user = auth.currentUser || (await getUser());
   if (!user) return null;
+
   try {
     const ref = doc(db, 'usuarios', user.uid);
     const snap = await getDoc(ref);
