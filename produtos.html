@@ -1,0 +1,235 @@
+<!-- ✅ VERSÃO PADRONIZADA - produtos.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Zélia - Produtos</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- 🔸 Sidebar -->
+    <aside class="sidebar">
+      <div class="logo">
+        <img src="img/logo-zelia.png" alt="Logo Zélia" />
+      </div>
+      <nav>
+        <ul>
+          <li><a href="dashboard.html">🏠 Dashboard</a></li>
+          <li><a href="movimentacoes.html">🔁 Movimentações</a></li>
+          <li><a href="financeiro.html">💰 Financeiro</a></li>
+          <li><a href="relatorios.html">📊 Relatórios</a></li>
+          <li><a href="usuarios.html">👥 Usuários</a></li>
+        </ul>
+      </nav>
+      <button onclick="logout()">Sair</button>
+    </aside>
+
+    <!-- 🔸 Conteúdo Principal -->
+    <main class="main-content">
+      <h1>📦 Produtos</h1>
+
+      <!-- 🔸 Formulário -->
+      <section class="form-section">
+        <h2>Registrar Produto</h2>
+        <form id="form-produto" class="form-grid">
+          <div class="form-group">
+            <label>Nome:</label>
+            <input type="text" id="nome" required />
+          </div>
+
+          <div class="form-group">
+            <label>Categoria:</label>
+            <input list="lista-categorias" id="categoria" />
+            <datalist id="lista-categorias"></datalist>
+          </div>
+
+          <div class="form-group">
+            <label>Quantidade:</label>
+            <input type="number" id="quantidade" required />
+          </div>
+
+          <div class="form-group">
+            <label>Quantidade Mínima:</label>
+            <input type="number" id="quantidadeMinima" required />
+          </div>
+
+          <div class="form-group">
+            <label>Validade:</label>
+            <input type="date" id="validade" required />
+          </div>
+
+          <div class="form-group">
+            <label>Data de Entrada:</label>
+            <input type="date" id="dataEntrada" required />
+          </div>
+
+          <div class="form-group">
+            <label>Preço Unitário (R$):</label>
+            <input type="text" id="precoCompra" inputmode="decimal" />
+          </div>
+
+          <div class="form-group">
+            <label>Prazo Entrega (dias):</label>
+            <input type="number" id="prazoEntregaDias" />
+          </div>
+
+          <div class="form-group">
+            <label>Fornecedor:</label>
+            <input list="lista-fornecedores" id="fornecedor" />
+            <datalist id="lista-fornecedores"></datalist>
+          </div>
+
+          <div class="form-group full-width">
+            <label>Observações:</label>
+            <textarea id="observacoes" rows="2"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Lote:</label>
+            <input type="text" id="lote" />
+          </div>
+
+          <div class="form-group">
+            <label>Localização no Estoque:</label>
+            <input type="text" id="localizacao" />
+          </div>
+
+          <div class="form-group full-width" style="text-align: right;">
+            <button id="cancelar-edicao" type="button" style="display:none;margin-right:10px;">❌ Cancelar Alterações</button>
+            <button type="submit">Salvar Produto</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- 🔸 Tabela -->
+      <section>
+        <h2>Estoque Atual</h2>
+        <div style="display:flex;gap:10px;margin-bottom:10px;">
+          <input type="text" id="filtro-produto" placeholder="🔍 Buscar por nome..." style="flex:1; padding: 6px;" />
+          <select id="ordenacao-produto" style="padding:6px; width:auto;">
+            <option value="" disabled selected>Organizar por</option>
+            <option value="recentes">Mais Recentes</option>
+            <option value="nome">Nome</option>
+            <option value="validade">Validade</option>
+            <option value="fornecedor">Fornecedor</option>
+            <option value="categoria">Categoria</option>
+            <option value="preco">Preço</option>
+          </select>
+          <button id="btn-importar-csv" type="button">Importar estoque</button>
+          <input type="file" id="arquivo-csv" accept=".csv" style="display:none;" />
+        </div>
+        <div id="lista-produtos"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- 🔧 Fundo do Modal de Confirmação -->
+  <div id="fundo-modal-confirmacao" class="fundo-modal" onclick="cancelarConfirmacao()"></div>
+  
+  <!-- Modal de Confirmação -->
+  <div id="modal-confirmacao" class="modal">
+    <div class="modal-content">
+      <p id="texto-confirmacao">Deseja realizar essa ação?</p>
+      <div style="text-align:right; margin-top: 20px;">
+        <button id="btn-cancelar-confirmacao">❌ Não</button>
+        <button id="btn-confirmar-acao">✅ Sim</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔥 Scripts -->
+  <script type="module" src="js/auth.js"></script>
+  <script type="module" src="js/utils.js"></script>
+  <script type="module" src="js/modalEntrada.js"></script>
+  <script type="module" src="js/modais.js"></script>
+  <script type="module" src="js/produtos.js"></script>
+
+  <!-- ✅ Modal: Produto Já Existe -->
+  <div id="fundo-modal-produto-existe" class="fundo-modal" onclick="fecharModalProdutoExiste()"></div>
+
+  <div id="modal-produto-existe" class="modal">
+    <div class="modal-content">
+      <p>⚠️ Ops! Esse produto já está cadastrado em nosso estoque.<br>
+      Para registrar uma nova entrada, vá até a aba <strong>Movimentações</strong>.</p>
+
+      <button onclick="fecharModalProdutoExiste()">OK</button>
+    </div>
+  </div>
+
+  <!-- 🔧 Fundo do Modal de Entrada -->
+  <div id="fundo-modal" class="fundo-modal" onclick="fecharModalEntrada()"></div>
+
+  <!-- ✅ Modal de Entrada de Produto -->
+  <div id="modal-entrada" class="modal">
+    <div class="modal-content">
+      <h3 id="nome-produto-modal">Produto:</h3>
+
+      <label>Identificador da Compra (compraId):</label>
+      <div style="display: flex; gap: 10px;">
+        <input type="text" id="entrada-compra-id" list="lista-compra-id" placeholder="Ex: compra_20250604_001" style="flex: 1;" />
+        <button type="button" onclick="gerarNovoCompraId()">+ Nova Compra</button>
+      </div>
+      <datalist id="lista-compra-id"></datalist>
+
+      <label>Forma de Pagamento:</label>
+      <select id="entrada-forma-pagamento">
+        <option value="pix">PIX</option>
+        <option value="boleto">Boleto</option>
+        <option value="cartao">Cartão</option>
+        <option value="dinheiro">Dinheiro</option>
+        <option value="transferencia">Transferência</option>
+      </select>
+
+      <label>Número do boleto / transação:</label>
+      <input type="text" id="entrada-identificador-pagamento" placeholder="Opcional" />
+
+      <label>Número de Parcelas:</label>
+      <input type="number" id="entrada-numero-parcelas" min="1" value="1" />
+
+      <label>Data do Primeiro Vencimento:</label>
+      <input type="date" id="entrada-primeiro-vencimento" />
+
+      <!-- Gerador de parcelas -->
+      <div id="parcelas-container" style="margin-top:10px;"></div>
+
+      <label>Observações:</label>
+      <textarea id="entrada-observacoes" rows="2"></textarea>
+
+      <div style="margin-top: 15px; text-align: right;">
+        <button onclick="fecharModalEntrada()">Cancelar</button>
+        <button onclick="confirmarEntradaEstoque()">Confirmar Entrada</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔧 Fundo Modal Detalhes -->
+  <div id="fundo-modal-detalhes-produto" class="fundo-modal" onclick="fecharModalDetalhes()"></div>
+
+  <!-- ✅ Modal Detalhes do Produto -->
+  <div id="modal-detalhes-produto" class="modal">
+    <div class="modal-content">
+      <h3>Detalhes do Produto</h3>
+      <div>
+        <button onclick="mostrarAbaDetalhes()">Detalhes</button>
+        <button onclick="mostrarAbaHistorico()">Histórico</button>
+      </div>
+      <div id="aba-detalhes" style="margin-top:10px;">
+        <p><strong>Nome:</strong> <span id="det-nome"></span></p>
+        <p><strong>Categoria:</strong> <span id="det-categoria"></span></p>
+        <p><strong>Quantidade:</strong> <span id="det-quantidade"></span></p>
+        <p><strong>Preço:</strong> <span id="det-preco"></span></p>
+        <p><strong>Fornecedor:</strong> <span id="det-fornecedor"></span></p>
+        <p><strong>Validade:</strong> <span id="det-validade"></span></p>
+      </div>
+      <div id="aba-historico" style="display:none; margin-top:10px;">
+        <div id="lista-historico"></div>
+      </div>
+      <div style="margin-top:15px; text-align:right;">
+        <button onclick="fecharModalDetalhes()">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

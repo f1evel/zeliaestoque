@@ -1,0 +1,57 @@
+// financeiroDados.js — Buscar dados do Firestore
+
+import { db, getEmpresaIdDoUsuario } from '../firebaseConfig.js';
+import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+export async function carregarDadosFinanceiro(periodoMeses = 3) {
+  const hoje = new Date();
+  const dataLimite = new Date();
+  dataLimite.setMonth(hoje.getMonth() - periodoMeses);
+
+  const empresaId = await getEmpresaIdDoUsuario();
+  const snapshot = await getDocs(
+    query(collection(db, "empresas", empresaId, "financeiro"), orderBy("dataLancamento", "desc"))
+  );
+
+  return snapshot.docs
+    .map(doc => {
+      const d = doc.data();
+      const dataLanc = d.dataLancamento?.toDate?.() || null;
+      const dataVenc = d.dataVencimento?.toDate?.() || null;
+      const dataPag = d.dataPagamento?.toDate?.() || null;
+
+      const parcelas = Array.isArray(d.parcelas) ? d.parcelas : [];
+
+      const hoje = new Date();
+      let statusParcelas = "paga";
+      let temVencida = false;
+      parcelas.forEach(p => {
+        const venc = p.vencimento ? new Date(p.vencimento) : null;
+        if (p.status !== "pago") {
+          statusParcelas = "pendente";
+          if (venc && venc < hoje) temVencida = true;
+        }
+      });
+      if (temVencida) statusParcelas = "vencida";
+
+      return {
+        id: doc.id,
+        tipo: d.tipo || "-",
+        descricao: d.descricao || "-",
+        categoria: d.categoria || "-",
+        valor: Number(d.valorTotal) || 0,
+        status: d.status || "pendente",
+        compraId: d.compraId || "-",
+        parcelas,
+        statusParcelas,
+        fornecedorOuCliente: d.fornecedorOuCliente || "-",
+        formaPagamento: d.formaPagamento || "-",
+        dataLancamento: dataLanc,
+        dataVencimento: dataVenc,
+        dataPagamento: dataPag,
+        observacoes: d.observacoes || "-",
+        mes: dataLanc ? `${dataLanc.getFullYear()}-${String(dataLanc.getMonth() + 1).padStart(2, '0')}` : "",
+      };
+    })
+    .filter(item => !item.dataLancamento || item.dataLancamento >= dataLimite);
+}
