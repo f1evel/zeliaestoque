@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Zélia - Estoque</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo">
+        <img src="img/logo-zelia.png" alt="Logo Zélia" />
+      </div>
+      <nav>
+        <ul>
+          <li><a href="dashboard.html">🏠 Dashboard</a></li>
+          <li><a href="produtos.html">📦 Produtos</a></li>
+          <li><a href="movimentacoes.html">🔁 Movimentações</a></li>
+          <li><a class="ativo" href="estoque.html">📊 Estoque</a></li>
+          <li><a href="financeiro.html">💰 Financeiro</a></li>
+          <li><a href="relatorios.html">📊 Relatórios</a></li>
+          <li><a href="usuarios.html">👥 Usuários</a></li>
+        </ul>
+      </nav>
+      <button onclick="logout()">Sair</button>
+    </aside>
+
+    <!-- Conteúdo Principal -->
+    <main class="main-content">
+      <h1>Relatórios de Estoque</h1>
+
+      <!-- Filtros Avançados -->
+      <div class="filtros">
+        <input type="text" id="filtro-nome" placeholder="🔍 Produto..." list="lista-produtos">
+        <datalist id="lista-produtos"></datalist>
+
+        <select id="filtro-categoria"></select>
+        <select id="filtro-fornecedor"></select>
+
+        <label for="filtro-inicio">De:</label>
+        <input type="date" id="filtro-inicio">
+        <label for="filtro-fim">Até:</label>
+        <input type="date" id="filtro-fim">
+
+        <select id="filtro-tipo">
+          <option value="todos">Todas</option>
+          <option value="entrada">Entradas</option>
+          <option value="saida">Saídas</option>
+        </select>
+
+        <label for="filtro-validade">Validade até:</label>
+        <input type="date" id="filtro-validade">
+
+        <label><input type="checkbox" id="filtro-critico"> Estoque crítico</label>
+        <label><input type="checkbox" id="filtro-previsao"> Exibir por previsão de esgotamento</label>
+      </div>
+
+      <!-- Cards Totais -->
+      <div id="cards-estoque-geral" class="cards">
+        <div class="card"><strong>Total de produtos:</strong> <span id="card-produtos">-</span></div>
+        <div class="card"><strong>Total de unidades:</strong> <span id="card-unidades">-</span></div>
+        <div class="card"><strong>Valor médio/unid.:</strong> <span id="card-valor-medio">-</span></div>
+        <div class="card"><strong>Valor total em estoque:</strong> <span id="card-valor-total">-</span></div>
+      </div>
+
+      <!-- Tabela -->
+      <div id="tabela-estoque-geral"></div>
+
+      <!-- Gráficos -->
+      <canvas id="grafico-categoria" style="max-height:300px; margin:20px 0;"></canvas>
+      <canvas id="grafico-meses" style="max-height:300px; margin:20px 0;"></canvas>
+    </main>
+  </div>
+
+  <!-- Spinner -->
+  <div id="spinner" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#ffffffcc; z-index:2000; display:flex; align-items:center; justify-content:center;">
+    <div style="border:6px solid #ccc; border-top:6px solid #009688; border-radius:50%; width:40px; height:40px; animation:girar 1s linear infinite;"></div>
+  </div>
+
+  <style>
+  @keyframes girar {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  </style>
+
+  <script type="module" src="js/firebaseConfig.js"></script>
+  <script type="module" src="js/utils.js"></script>
+  <script type="module" src="js/estoque/estoqueUnificado.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</body>
+</html>
