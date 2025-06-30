@@ -446,6 +446,10 @@ tr.critico {
   background-color: #ffe5e5;
 }
 
+tr.critico-suave {
+  background-color: #fff5f5;
+}
+
 .btn-repor {
   padding: 4px 8px;
   font-size: 12px;
