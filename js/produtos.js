@@ -446,6 +446,17 @@ async function salvarAlteracoesProduto() {
   try {
     await updateDoc(docRefEmEdicao, atualizados);
 
+    // 🔄 Se o nome mudou, atualiza nas movimentações relacionadas
+    if ((produtoEmEdicao.nome || '') !== atualizados.nome) {
+      await atualizarNomeMovimentacoes(editandoProdutoId, atualizados.nome);
+      await registrarHistorico(
+        editandoProdutoId,
+        'nome',
+        produtoEmEdicao.nome,
+        atualizados.nome
+      );
+    }
+
     // 🔄 Se a validade mudou, atualiza nas movimentações relacionadas
     const antigaValidade = produtoEmEdicao.validade?.toDate
       ? produtoEmEdicao.validade.toDate().toISOString()
@@ -758,6 +769,29 @@ async function atualizarValidadeMovimentacoes(produtoId, novaValidade) {
     await Promise.all(promises);
   } catch (e) {
     console.error('Erro ao atualizar validade nas movimentações:', e);
+  }
+}
+
+// ==========================
+// 🔄 Atualizar nome nas movimentações
+// ==========================
+async function atualizarNomeMovimentacoes(produtoId, novoNome) {
+  try {
+    const empresaId = await getEmpresaIdDoUsuario();
+    const q = query(
+      collection(db, 'empresas', empresaId, 'movimentacoes'),
+      where('produtoId', '==', produtoId)
+    );
+    const snap = await getDocs(q);
+    const promises = [];
+    const nomeBusca = normalizarTexto(novoNome || '');
+    snap.forEach(docSnap => {
+      const ref = doc(db, 'empresas', empresaId, 'movimentacoes', docSnap.id);
+      promises.push(updateDoc(ref, { nomeProduto: novoNome, nomeBusca }));
+    });
+    await Promise.all(promises);
+  } catch (e) {
+    console.error('Erro ao atualizar nome nas movimentações:', e);
   }
 }
 
