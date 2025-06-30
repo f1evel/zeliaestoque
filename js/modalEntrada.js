@@ -18,6 +18,7 @@ import { registrarHistorico } from './historico.js';
 
 let produtoCadastroAtual = null;
 let dadosFinanceiroAtual = null;
+let handlerTecladoEntrada = null;
 
 // Calcula a média de preços das entradas anteriores de um produto
 async function calcularPrecoMedioEntradas(produtoId) {
@@ -96,6 +97,31 @@ export async function abrirModalEntrada(produto) {
 
   document.getElementById("modal-entrada").style.display = "block";
   document.getElementById("fundo-modal").style.display = "block";
+
+  const btnConfirmar = document.getElementById("btn-entrada-confirmar");
+  const btnCancelar = document.getElementById("btn-entrada-cancelar");
+  if (btnConfirmar) btnConfirmar.focus();
+
+  const modal = document.getElementById("modal-entrada");
+  handlerTecladoEntrada = function (e) {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      if (document.activeElement === btnConfirmar) {
+        btnCancelar?.focus();
+      } else {
+        btnConfirmar?.focus();
+      }
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (document.activeElement === btnConfirmar) {
+        window.confirmarEntradaEstoque();
+      } else if (document.activeElement === btnCancelar) {
+        fecharModalEntrada();
+      }
+    }
+  };
+
+  modal.addEventListener("keydown", handlerTecladoEntrada);
 }
 
 /**
@@ -104,6 +130,11 @@ export async function abrirModalEntrada(produto) {
 export function fecharModalEntrada() {
   document.getElementById("modal-entrada").style.display = "none";
   document.getElementById("fundo-modal").style.display = "none";
+  const modal = document.getElementById("modal-entrada");
+  if (handlerTecladoEntrada) {
+    modal.removeEventListener("keydown", handlerTecladoEntrada);
+    handlerTecladoEntrada = null;
+  }
 }
 
 async function preencherDadosFinanceiro(compraId) {
