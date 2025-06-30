@@ -35,6 +35,7 @@ export function fecharModalProdutoExiste() {
 // ✅ Modal de Confirmação
 
 let acaoConfirmada = null;
+let handlerTecladoConfirmacao = null;
 
 export function abrirModalConfirmacao(texto, acao) {
   const textoEl = document.getElementById("texto-confirmacao");
@@ -46,11 +47,42 @@ export function abrirModalConfirmacao(texto, acao) {
 
   abrirModal('modal-confirmacao');
   acaoConfirmada = acao;
+
+  const btnConfirmar = document.getElementById("btn-confirmar-acao");
+  const btnCancelar = document.getElementById("btn-cancelar-confirmacao");
+  const modal = document.getElementById("modal-confirmacao");
+
+  btnConfirmar?.focus();
+
+  handlerTecladoConfirmacao = function (e) {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      if (document.activeElement === btnConfirmar) {
+        btnCancelar?.focus();
+      } else {
+        btnConfirmar?.focus();
+      }
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (document.activeElement === btnConfirmar) {
+        confirmarAcao();
+      } else if (document.activeElement === btnCancelar) {
+        cancelarConfirmacao();
+      }
+    }
+  };
+
+  modal.addEventListener("keydown", handlerTecladoConfirmacao);
 }
 
 export function cancelarConfirmacao() {
   fecharModal('modal-confirmacao');
   acaoConfirmada = null;
+  const modal = document.getElementById('modal-confirmacao');
+  if (handlerTecladoConfirmacao) {
+    modal.removeEventListener('keydown', handlerTecladoConfirmacao);
+    handlerTecladoConfirmacao = null;
+  }
 }
 
 export function confirmarAcao() {
