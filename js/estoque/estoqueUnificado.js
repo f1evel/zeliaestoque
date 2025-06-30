@@ -11,6 +11,7 @@ let dadosOriginais = [];
 let dadosFiltrados = [];
 let graficoCategoria = null;
 let graficoMeses = null;
+let periodoConsumoMeses = 3;
 
 // Carrega produtos e movimentações do Firestore
 async function carregarDados() {
@@ -24,7 +25,11 @@ async function carregarDados() {
 
     const movimentos = {};
     const inicioConsumo = new Date();
-    inicioConsumo.setMonth(inicioConsumo.getMonth() - 3);
+    if (periodoConsumoMeses) {
+      inicioConsumo.setMonth(inicioConsumo.getMonth() - periodoConsumoMeses);
+    } else {
+      inicioConsumo.setTime(0); // desde o início
+    }
 
     movSnap.forEach(doc => {
       const m = doc.data();
@@ -52,13 +57,15 @@ async function carregarDados() {
       })();
 
       const diasPeriodo = Math.max(1, Math.round((Date.now() - inicioConsumo.getTime()) / 86400000));
-      const consumoMedio = mov.consumo / diasPeriodo;
+      const mesesPeriodo = diasPeriodo / 30;
+      const consumoMedio = mov.consumo / mesesPeriodo;
 
       return {
         nome: d.nome || '-',
         categoria: d.categoria || '-',
         fornecedor: d.fornecedor || '-',
         quantidade: Number(d.quantidade) || 0,
+        quantidadeMinima: Number(d.quantidadeMinima) || 0,
         entradas: mov.entradas,
         saidas: mov.saidas,
         preco: Number(d.precoCompra) || 0,
@@ -110,6 +117,7 @@ function aplicaFiltros() {
   const validade = parseDataLocal(document.getElementById('filtro-validade').value);
   const critico = document.getElementById('filtro-critico').checked;
   const previsao = document.getElementById('filtro-previsao').checked;
+  const diasEsgotamento = parseInt(document.getElementById('filtro-dias-esgotamento').value) || 30;
 
   dadosFiltrados = dadosOriginais.filter(d => {
     const nomeOk = !nome || normalizarTexto(d.nome).includes(nome);
@@ -132,12 +140,12 @@ function aplicaFiltros() {
     else if (tipo === 'saida') tipoOk = d.saidas > 0;
 
     let criticoOk = true;
-    if (critico) criticoOk = d.quantidade < 50;
+    if (critico) criticoOk = d.quantidade < d.quantidadeMinima;
 
     let previsaoOk = true;
     if (previsao) {
       const dias = calculaPrevisao(d);
-      previsaoOk = dias <= 30;
+      previsaoOk = dias < diasEsgotamento;
     }
 
     return nomeOk && catOk && fornOk && dataOk && validadeOk && tipoOk && criticoOk && previsaoOk;
@@ -150,7 +158,7 @@ function aplicaFiltros() {
 
 function calculaPrevisao(item) {
   if (!item.consumoMedio || item.consumoMedio === 0) return Infinity;
-  return Math.floor(item.quantidade / item.consumoMedio);
+  return Math.floor((item.quantidade / item.consumoMedio) * 30);
 }
 
 function renderizarTabela() {
@@ -162,10 +170,11 @@ function renderizarTabela() {
   let html = `<table class="tabela"><thead><tr>
     <th>Produto</th>
     <th>Qtd Atual</th>
+    <th>Mínimo</th>
     <th>Entradas</th>
     <th>Saídas</th>
     <th>Preço Médio</th>
-    <th>Consumo Médio</th>
+    <th>Consumo/Mês</th>
     <th>Previsão (dias)</th>
     <th>Validade</th>
     <th>Categoria</th>
@@ -174,13 +183,16 @@ function renderizarTabela() {
 
   dadosFiltrados.forEach(d => {
     const dias = calculaPrevisao(d);
-    html += `<tr>
+    const classe = d.quantidade < d.quantidadeMinima ?
+      (document.getElementById('filtro-critico').checked ? 'critico' : 'critico-suave') : '';
+    html += `<tr class="${classe}">
       <td>${d.nome}</td>
       <td>${d.quantidade}</td>
+      <td>${d.quantidadeMinima}</td>
       <td>${d.entradas}</td>
       <td>${d.saidas}</td>
       <td>${d.preco.toFixed(2)}</td>
-      <td>${d.consumoMedio}</td>
+      <td>${d.consumoMedio.toFixed(1)}</td>
       <td>${dias}</td>
       <td>${d.validade}</td>
       <td>${d.categoria}</td>
@@ -242,10 +254,27 @@ function gerarGraficos() {
 }
 
 function registrarEventos() {
-  ['filtro-nome','filtro-categoria','filtro-fornecedor','filtro-inicio','filtro-fim','filtro-tipo','filtro-validade','filtro-critico','filtro-previsao']
+  ['filtro-nome','filtro-categoria','filtro-fornecedor','filtro-inicio','filtro-fim','filtro-tipo','filtro-validade','filtro-critico','filtro-previsao','filtro-periodo','filtro-dias-esgotamento']
     .forEach(id => {
-      document.getElementById(id).addEventListener('input', aplicaFiltros);
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', aplicaFiltros);
     });
+
+  const chk = document.getElementById('filtro-previsao');
+  const contPeriodo = document.getElementById('container-periodo');
+  const contDias = document.getElementById('container-dias-esgotamento');
+  chk.addEventListener('change', () => {
+    const ativo = chk.checked;
+    contPeriodo.style.display = ativo ? 'block' : 'none';
+    contDias.style.display = ativo ? 'block' : 'none';
+    aplicaFiltros();
+  });
+
+  document.getElementById('filtro-periodo').addEventListener('change', () => {
+    const val = parseInt(document.getElementById('filtro-periodo').value);
+    periodoConsumoMeses = val === 0 ? null : val;
+    carregarDados();
+  });
 }
 
 // Inicialização

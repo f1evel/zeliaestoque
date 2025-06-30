@@ -79,6 +79,22 @@
         <div class="campo-filtro">
           <label><input type="checkbox" id="filtro-previsao" title="Ordenar por previsão de esgotamento"> Exibir por previsão de esgotamento</label>
         </div>
+
+        <div class="campo-filtro" id="container-periodo" style="display:none;">
+          <label for="filtro-periodo" title="Período considerado para calcular a média de consumo">Período base</label>
+          <select id="filtro-periodo">
+            <option value="1">Último mês</option>
+            <option value="3" selected>Últimos 3 meses</option>
+            <option value="6">Últimos 6 meses</option>
+            <option value="12">Último ano</option>
+            <option value="0">Desde o início do sistema</option>
+          </select>
+        </div>
+
+        <div class="campo-filtro" id="container-dias-esgotamento" style="display:none;">
+          <label for="filtro-dias-esgotamento" title="Mostrar itens que esgotam em menos dias">Dias para esgotar</label>
+          <input type="number" id="filtro-dias-esgotamento" min="1" value="30">
+        </div>
       </fieldset>
 
       <!-- Cards Totais -->
