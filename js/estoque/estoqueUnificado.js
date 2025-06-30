@@ -1,48 +1,81 @@
 // js/estoque/estoqueUnificado.js
 // Página unificada de relatórios de estoque
 
+import { db, getEmpresaIdDoUsuario } from '../firebaseConfig.js';
+import { collection, getDocs } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js';
 import { normalizarTexto, parseDataLocal } from '../utils.js';
 
-// Exemplo de dados estáticos. Em uma versão real esses dados seriam buscados no banco.
-const dadosOriginais = [
-  {
-    nome: 'Arroz Branco',
-    categoria: 'Alimentos',
-    fornecedor: 'Fornecedor A',
-    quantidade: 120,
-    entradas: 40,
-    saidas: 30,
-    preco: 5.5,
-    consumoMedio: 2,
-    validade: '2024-12-31'
-  },
-  {
-    nome: 'Feijão Carioca',
-    categoria: 'Alimentos',
-    fornecedor: 'Fornecedor B',
-    quantidade: 80,
-    entradas: 20,
-    saidas: 10,
-    preco: 7,
-    consumoMedio: 1,
-    validade: '2024-10-15'
-  },
-  {
-    nome: 'Refrigerante',
-    categoria: 'Bebidas',
-    fornecedor: 'Fornecedor A',
-    quantidade: 200,
-    entradas: 100,
-    saidas: 60,
-    preco: 4,
-    consumoMedio: 3,
-    validade: '2025-01-10'
-  }
-];
+// Dados carregados do Firestore
+let dadosOriginais = [];
 
 let dadosFiltrados = [];
 let graficoCategoria = null;
 let graficoMeses = null;
+
+// Carrega produtos e movimentações do Firestore
+async function carregarDados() {
+  try {
+    const empresaId = await getEmpresaIdDoUsuario();
+
+    const [prodSnap, movSnap] = await Promise.all([
+      getDocs(collection(db, 'empresas', empresaId, 'produtos')),
+      getDocs(collection(db, 'empresas', empresaId, 'movimentacoes'))
+    ]);
+
+    const movimentos = {};
+    const inicioConsumo = new Date();
+    inicioConsumo.setMonth(inicioConsumo.getMonth() - 3);
+
+    movSnap.forEach(doc => {
+      const m = doc.data();
+      const nome = m.nomeBusca || normalizarTexto(m.nomeProduto || '');
+      if (!movimentos[nome]) movimentos[nome] = { entradas: 0, saidas: 0, consumo: 0 };
+      const qtd = Number(m.quantidade) || 0;
+      if (m.tipo === 'entrada') movimentos[nome].entradas += qtd;
+      if (m.tipo === 'saida') {
+        movimentos[nome].saidas += qtd;
+        const dataMov = m.dataMovimentacao?.toDate?.() || new Date(m.dataMovimentacao);
+        if (dataMov && dataMov >= inicioConsumo) movimentos[nome].consumo += qtd;
+      }
+    });
+
+    dadosOriginais = prodSnap.docs.map(doc => {
+      const d = doc.data();
+      const nomeBusca = d.nomeBusca || normalizarTexto(d.nome || '');
+      const mov = movimentos[nomeBusca] || { entradas: 0, saidas: 0, consumo: 0 };
+
+      const validadeStr = (() => {
+        if (d.validade?.toDate) return d.validade.toDate().toISOString().split('T')[0];
+        if (d.validade instanceof Date) return d.validade.toISOString().split('T')[0];
+        if (typeof d.validade === 'string') return d.validade;
+        return '';
+      })();
+
+      const diasPeriodo = Math.max(1, Math.round((Date.now() - inicioConsumo.getTime()) / 86400000));
+      const consumoMedio = mov.consumo / diasPeriodo;
+
+      return {
+        nome: d.nome || '-',
+        categoria: d.categoria || '-',
+        fornecedor: d.fornecedor || '-',
+        quantidade: Number(d.quantidade) || 0,
+        entradas: mov.entradas,
+        saidas: mov.saidas,
+        preco: Number(d.precoCompra) || 0,
+        consumoMedio,
+        validade: validadeStr
+      };
+    });
+
+    popularFiltros();
+    aplicaFiltros();
+  } catch (e) {
+    console.error('Erro ao carregar dados do estoque:', e);
+    dadosOriginais = [];
+    popularFiltros();
+    aplicaFiltros();
+  }
+}
 
 function popularFiltros() {
   const categorias = new Set();
@@ -85,7 +118,7 @@ function aplicaFiltros() {
 
     let dataOk = true;
     if (!isNaN(inicio) && !isNaN(fim)) {
-      // exemplo simplificado: sempre verdade pois dados estáticos não têm data
+      // Nesta versão não filtramos por período de movimentação
       dataOk = true;
     }
 
@@ -217,7 +250,6 @@ function registrarEventos() {
 
 // Inicialização
 window.addEventListener('DOMContentLoaded', () => {
-  popularFiltros();
   registrarEventos();
-  aplicaFiltros();
+  carregarDados();
 });
