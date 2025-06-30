@@ -31,30 +31,55 @@
       <h1>Relatórios de Estoque</h1>
 
       <!-- Filtros Avançados -->
-      <div class="filtros">
-        <input type="text" id="filtro-nome" placeholder="🔍 Produto..." list="lista-produtos">
-        <datalist id="lista-produtos"></datalist>
+      <fieldset class="filtros">
+        <div class="campo-filtro">
+          <label for="filtro-nome">Produto</label>
+          <input type="text" id="filtro-nome" placeholder="Buscar..." list="lista-produtos" title="Nome do produto para filtrar">
+          <datalist id="lista-produtos"></datalist>
+        </div>
 
-        <select id="filtro-categoria"></select>
-        <select id="filtro-fornecedor"></select>
+        <div class="campo-filtro">
+          <label for="filtro-categoria">Categoria</label>
+          <select id="filtro-categoria" title="Filtrar por categoria"></select>
+        </div>
 
-        <label for="filtro-inicio">De:</label>
-        <input type="date" id="filtro-inicio">
-        <label for="filtro-fim">Até:</label>
-        <input type="date" id="filtro-fim">
+        <div class="campo-filtro">
+          <label for="filtro-fornecedor">Fornecedor</label>
+          <select id="filtro-fornecedor" title="Filtrar por fornecedor"></select>
+        </div>
 
-        <select id="filtro-tipo">
-          <option value="todos">Todas</option>
-          <option value="entrada">Entradas</option>
-          <option value="saida">Saídas</option>
-        </select>
+        <div class="campo-filtro">
+          <label for="filtro-inicio">De</label>
+          <input type="date" id="filtro-inicio" title="Data inicial do período">
+        </div>
 
-        <label for="filtro-validade">Validade até:</label>
-        <input type="date" id="filtro-validade">
+        <div class="campo-filtro">
+          <label for="filtro-fim">Até</label>
+          <input type="date" id="filtro-fim" title="Data final do período">
+        </div>
 
-        <label><input type="checkbox" id="filtro-critico"> Estoque crítico</label>
-        <label><input type="checkbox" id="filtro-previsao"> Exibir por previsão de esgotamento</label>
-      </div>
+        <div class="campo-filtro">
+          <label for="filtro-tipo">Tipo</label>
+          <select id="filtro-tipo" title="Tipo de movimentação">
+            <option value="todos">Todas</option>
+            <option value="entrada">Entradas</option>
+            <option value="saida">Saídas</option>
+          </select>
+        </div>
+
+        <div class="campo-filtro">
+          <label for="filtro-validade">Validade até</label>
+          <input type="date" id="filtro-validade" title="Itens com validade até a data escolhida">
+        </div>
+
+        <div class="campo-filtro">
+          <label><input type="checkbox" id="filtro-critico" title="Somente itens abaixo do mínimo"> Estoque crítico</label>
+        </div>
+
+        <div class="campo-filtro">
+          <label><input type="checkbox" id="filtro-previsao" title="Ordenar por previsão de esgotamento"> Exibir por previsão de esgotamento</label>
+        </div>
+      </fieldset>
 
       <!-- Cards Totais -->
       <div id="cards-estoque-geral" class="cards">
@@ -89,5 +114,11 @@
   <script type="module" src="js/utils.js"></script>
   <script type="module" src="js/estoque/estoqueUnificado.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const spinner = document.getElementById('spinner');
+      if (spinner) spinner.style.display = 'none';
+    });
+  </script>
 </body>
 </html>

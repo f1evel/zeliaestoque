@@ -350,6 +350,33 @@ tr:last-child td {
   box-sizing: border-box;
 }
 
+/* 🔍 Filtros de páginas de relatório */
+.filtros {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 10px;
+  border: 1px solid #eee;
+  border-radius: 6px;
+}
+
+.campo-filtro label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.campo-filtro input,
+.campo-filtro select {
+  width: 100%;
+  padding: 6px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
 /* Responsivo */
 @media (max-width: 768px) {
   .app-container {
