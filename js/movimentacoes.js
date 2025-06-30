@@ -277,6 +277,7 @@ async function preencherValidadesDisponiveis() {
   const tipo = document.getElementById("tipo-movimentacao").value;
   mapaValidades = {};
 
+  // Limpa opções antigas do select
   selectValidadeSaida.innerHTML = "";
 
   if (tipo !== "saida" || nome.length < 2) return;
@@ -293,7 +294,8 @@ async function preencherValidadesDisponiveis() {
     const d = doc.data();
     if (d.validade?.toDate) {
       const val = d.validade.toDate().toISOString().split("T")[0];
-      const qtd = d.quantidade || 0;
+      const qtd = Number(d.quantidade) || 0;
+      if (qtd === 0) return;
       if (d.tipo === "entrada") {
         mapaValidades[val] = (mapaValidades[val] || 0) + qtd;
       } else if (d.tipo === "saida") {
@@ -514,7 +516,6 @@ function renderizarTabela(movimentacoes, termo = "") {
         <th>Data</th>
         <th>Validade</th>
         <th>Lote</th>
-        <th>Observações</th>
         <th>Ações</th>
       </tr>`;
 
@@ -529,7 +530,6 @@ function renderizarTabela(movimentacoes, termo = "") {
       <td>${dataMov}</td>
       <td>${m.validade?.toDate()?.toLocaleDateString("pt-BR") || "-"}</td>
       <td>${m.lote || "-"}</td>
-      <td>${m.observacao || "-"}</td>
       <td><button onclick="editarMovimentacao('${m.id}')">✏️ Editar</button></td>
     </tr>`;
   });
