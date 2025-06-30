@@ -244,6 +244,20 @@ function atualizarSelecao() {
 
 const grupoValidadeSaida = document.getElementById("grupo-validade-saida");
 const selectValidadeSaida = document.getElementById("select-validade-saida");
+selectValidadeSaida.addEventListener("change", atualizarPrecoPorValidade);
+
+async function atualizarPrecoPorValidade() {
+  const validadeSelecionada = selectValidadeSaida.value;
+  const nome = document.getElementById("nome-produto").value.trim();
+  document.getElementById("validade").value = validadeSelecionada;
+
+  if (!validadeSelecionada || !nome) return;
+
+  const preco = await obterPrecoDaValidade(nome, validadeSelecionada);
+  if (preco !== null) {
+    document.getElementById("preco-unitario").value = preco;
+  }
+}
 
 document.getElementById("tipo-movimentacao").addEventListener("change", atualizarCamposPorTipo);
 document.getElementById("nome-produto").addEventListener("change", atualizarCamposPorTipo);
@@ -271,8 +285,6 @@ function atualizarCamposPorTipo() {
 
 
 async function preencherValidadesDisponiveis() {
-  // 🧹 Remove handler anterior para evitar duplicidade
-  selectValidadeSaida.onchange = null;
   const nome = document.getElementById("nome-produto").value.trim();
   const tipo = document.getElementById("tipo-movimentacao").value;
   mapaValidades = {};
@@ -336,25 +348,8 @@ if (validadesDisponiveis.length > 0) {
     selectValidadeSaida.appendChild(opt);
   });
 
-  // 👉 Garante que o valor escondido também seja preenchido
-  document.getElementById("validade").value = validadesDisponiveis[0][0];
-
-  // 💰 Garante preenchimento automático do preço mesmo na primeira seleção
-  const precoInicial = await obterPrecoDaValidade(nome, validadesDisponiveis[0][0]);
-  if (precoInicial !== null) {
-    document.getElementById("preco-unitario").value = precoInicial;
-  }
-
-  // 🎯 Define handler único para mudanças de validade
-  selectValidadeSaida.onchange = async () => {
-    const validadeSelecionada = selectValidadeSaida.value;
-    document.getElementById("validade").value = validadeSelecionada;
-
-    const preco = await obterPrecoDaValidade(nome, validadeSelecionada);
-    if (preco !== null) {
-      document.getElementById("preco-unitario").value = preco;
-    }
-  };
+  selectValidadeSaida.value = validadesDisponiveis[0][0];
+  await atualizarPrecoPorValidade();
 
 } else {
   // ❌ Nenhuma validade com estoque positivo
