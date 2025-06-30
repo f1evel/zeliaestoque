@@ -69,6 +69,8 @@ let produtosCache = [];
 let editandoProdutoId = null;
 let produtoEmEdicao = null;
 let docRefEmEdicao = null;
+let metricasPrecoPorNome = {};
+let quantidadeTotalPorNome = {};
 
 
 // ==========================
@@ -87,10 +89,53 @@ async function carregarProdutos() {
 
     produtosCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
+    quantidadeTotalPorNome = {};
+    produtosCache.forEach(p => {
+      const nome = p.nomeBusca || normalizarTexto(p.nome || "");
+      quantidadeTotalPorNome[nome] = (quantidadeTotalPorNome[nome] || 0) + (p.quantidade || 0);
+    });
+
+    metricasPrecoPorNome = await carregarMetricasDePreco(empresaId);
+
     renderizarTabela(produtosCache);
   }, "❌ Erro ao carregar produtos.");
 }
 carregarProdutos();
+
+async function carregarMetricasDePreco(empresaId) {
+  const resultado = {};
+  const q = query(
+    collection(db, 'empresas', empresaId, 'movimentacoes'),
+    where('tipo', '==', 'entrada')
+  );
+  const snap = await getDocs(q);
+  snap.forEach(docu => {
+    const d = docu.data();
+    const nome = d.nomeBusca || normalizarTexto(d.nomeProduto || d.nome || '');
+    const preco = Number(d.precoUnitario);
+    const qtd = Number(d.quantidade) || 0;
+    if (isNaN(preco)) return;
+    if (!resultado[nome]) {
+      resultado[nome] = {
+        min: preco,
+        max: preco,
+        total: preco * qtd,
+        qtd
+      };
+    } else {
+      const r = resultado[nome];
+      r.min = Math.min(r.min, preco);
+      r.max = Math.max(r.max, preco);
+      r.total += preco * qtd;
+      r.qtd += qtd;
+    }
+  });
+  Object.keys(resultado).forEach(n => {
+    const r = resultado[n];
+    r.media = r.qtd ? r.total / r.qtd : r.min;
+  });
+  return resultado;
+}
 
 // ==========================
 // 🔥 Filtro da Tabela
@@ -153,10 +198,12 @@ function renderizarTabela(produtos, termo = "") {
         <tr>
           <th>Nome</th>
           <th>Categoria</th>
-          <th>Qtd</th>
-          <th>Mín.</th>
           <th>Estoque Atual</th>
+          <th>Mín.</th>
           <th>Preço</th>
+          <th>Preço Mín.</th>
+          <th>Preço Máx.</th>
+          <th>Preço Médio</th>
           <th>Validade</th>
           <th>Fornecedor</th>
           <th>Localização</th>
@@ -167,8 +214,10 @@ function renderizarTabela(produtos, termo = "") {
   `;
 
   ordenados.forEach(p => {
-    const dataValidade = formatarData(p.validade);
-    const alertaEstoque = p.quantidade <= p.quantidadeMinima;
+    const nomeRef = p.nomeBusca || normalizarTexto(p.nome || "");
+    const estoqueAtual = quantidadeTotalPorNome[nomeRef] || 0;
+    const dataValidade = estoqueAtual === 0 ? '-' : formatarData(p.validade);
+    const alertaEstoque = estoqueAtual <= p.quantidadeMinima;
     const diasParaVencer = calcularDiasParaVencimento(p.validade);
     const alertaValidade = diasParaVencer <= 15;
 
@@ -180,15 +229,24 @@ function renderizarTabela(produtos, termo = "") {
       p.precoCompra !== undefined && p.precoCompra !== null
         ? `R$ ${(Number(p.precoCompra) || 0).toFixed(2)}`
         : "-";
+    const metrica = metricasPrecoPorNome[nomeRef] || {};
+    const precoMin =
+      metrica.min !== undefined ? `R$ ${metrica.min.toFixed(2)}` : "-";
+    const precoMax =
+      metrica.max !== undefined ? `R$ ${metrica.max.toFixed(2)}` : "-";
+    const precoMed =
+      metrica.media !== undefined ? `R$ ${metrica.media.toFixed(2)}` : "-";
 
     html += `
       <tr ${style}>
         <td>${p.nome}</td>
         <td>${p.categoria || "-"}</td>
-        <td>${p.quantidade}</td>
+        <td>${estoqueAtual}</td>
         <td>${p.quantidadeMinima}</td>
-        <td>${p.quantidade}</td>
         <td>${preco}</td>
+        <td>${precoMin}</td>
+        <td>${precoMax}</td>
+        <td>${precoMed}</td>
         <td>${dataValidade}</td>
         <td>${p.fornecedor || "-"}</td>
         <td>${p.localizacao || "-"}</td>
