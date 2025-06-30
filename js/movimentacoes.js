@@ -277,31 +277,7 @@ async function preencherValidadesDisponiveis() {
   const tipo = document.getElementById("tipo-movimentacao").value;
   mapaValidades = {};
 
-  // 🔍 Pega validade e quantidade da aba Produtos, se houver
-  const produtoBase = produtosCache.find(p =>
-    normalizarTexto(p.nome) === normalizarTexto(nome)
-  );
-
-  if (produtoBase?.validade && produtoBase?.quantidade > 0) {
-    let dataValidade;
-
-    if (produtoBase.validade?.toDate) {
-      dataValidade = produtoBase.validade.toDate();
-    } else {
-      dataValidade = new Date(produtoBase.validade);
-    }
-
-    if (!isNaN(dataValidade.getTime())) {
-      const valStr = dataValidade.toISOString().split("T")[0];
-
-      if (!mapaValidades[valStr]) {
-        mapaValidades[valStr] = produtoBase.quantidade;
-      }
-    }
-  }
-
-selectValidadeSaida.innerHTML = "";
-
+  selectValidadeSaida.innerHTML = "";
 
   if (tipo !== "saida" || nome.length < 2) return;
 
@@ -312,6 +288,7 @@ selectValidadeSaida.innerHTML = "";
     where("nomeBusca", "==", nomeNormalizado)
   ));
 
+  let temMovimentacoes = false;
   snapshot.forEach(doc => {
     const d = doc.data();
     if (d.validade?.toDate) {
@@ -322,8 +299,27 @@ selectValidadeSaida.innerHTML = "";
       } else if (d.tipo === "saida") {
         mapaValidades[val] = (mapaValidades[val] || 0) - qtd;
       }
+      temMovimentacoes = true;
     }
   });
+
+  if (!temMovimentacoes) {
+    const produtoBase = produtosCache.find(p =>
+      normalizarTexto(p.nome) === nomeNormalizado
+    );
+    if (produtoBase?.validade && produtoBase?.quantidade > 0) {
+      let dataValidade;
+      if (produtoBase.validade?.toDate) {
+        dataValidade = produtoBase.validade.toDate();
+      } else {
+        dataValidade = new Date(produtoBase.validade);
+      }
+      if (!isNaN(dataValidade.getTime())) {
+        const valStr = dataValidade.toISOString().split("T")[0];
+        mapaValidades[valStr] = produtoBase.quantidade;
+      }
+    }
+  }
  // 🔄 Preenche o select com as validades em estoque
  // console.log("Mapa final de validades:", mapaValidades);
 const validadesDisponiveis = Object.entries(mapaValidades)
