@@ -388,6 +388,18 @@ async function salvarAlteracoesProduto() {
   try {
     await updateDoc(docRefEmEdicao, atualizados);
 
+    // 🔄 Se a validade mudou, atualiza nas movimentações relacionadas
+    const antigaValidade = produtoEmEdicao.validade?.toDate
+      ? produtoEmEdicao.validade.toDate().toISOString()
+      : produtoEmEdicao.validade || null;
+    const novaValidade = atualizados.validade?.toDate
+      ? atualizados.validade.toDate().toISOString()
+      : atualizados.validade || null;
+
+    if (antigaValidade !== novaValidade) {
+      await atualizarValidadeMovimentacoes(editandoProdutoId, atualizados.validade);
+    }
+
     const conv = v => {
       if (v?.toDate) return v.toDate().toISOString();
       return v ?? '';
@@ -668,4 +680,26 @@ document.getElementById('arquivo-csv')?.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (file) importarCSV(file);
 });
+
+// ==========================
+// 🔄 Atualizar validade nas movimentações
+// ==========================
+async function atualizarValidadeMovimentacoes(produtoId, novaValidade) {
+  try {
+    const empresaId = await getEmpresaIdDoUsuario();
+    const q = query(
+      collection(db, 'empresas', empresaId, 'movimentacoes'),
+      where('produtoId', '==', produtoId)
+    );
+    const snap = await getDocs(q);
+    const promises = [];
+    snap.forEach(docSnap => {
+      const ref = doc(db, 'empresas', empresaId, 'movimentacoes', docSnap.id);
+      promises.push(updateDoc(ref, { validade: novaValidade }));
+    });
+    await Promise.all(promises);
+  } catch (e) {
+    console.error('Erro ao atualizar validade nas movimentações:', e);
+  }
+}
 
