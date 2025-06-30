@@ -277,30 +277,8 @@ async function preencherValidadesDisponiveis() {
   const tipo = document.getElementById("tipo-movimentacao").value;
   mapaValidades = {};
 
-  // 🔍 Pega validade e quantidade da aba Produtos, se houver
-  const produtoBase = produtosCache.find(p =>
-    normalizarTexto(p.nome) === normalizarTexto(nome)
-  );
-
-  if (produtoBase?.validade && produtoBase?.quantidade > 0) {
-    let dataValidade;
-
-    if (produtoBase.validade?.toDate) {
-      dataValidade = produtoBase.validade.toDate();
-    } else {
-      dataValidade = new Date(produtoBase.validade);
-    }
-
-    if (!isNaN(dataValidade.getTime())) {
-      const valStr = dataValidade.toISOString().split("T")[0];
-
-      if (!mapaValidades[valStr]) {
-        mapaValidades[valStr] = produtoBase.quantidade;
-      }
-    }
-  }
-
-selectValidadeSaida.innerHTML = "";
+  // Limpa opções antigas do select
+  selectValidadeSaida.innerHTML = "";
 
 
   if (tipo !== "saida" || nome.length < 2) return;
@@ -316,7 +294,8 @@ selectValidadeSaida.innerHTML = "";
     const d = doc.data();
     if (d.validade?.toDate) {
       const val = d.validade.toDate().toISOString().split("T")[0];
-      const qtd = d.quantidade || 0;
+      const qtd = Number(d.quantidade) || 0;
+      if (qtd === 0) return;
       if (d.tipo === "entrada") {
         mapaValidades[val] = (mapaValidades[val] || 0) + qtd;
       } else if (d.tipo === "saida") {
@@ -518,7 +497,6 @@ function renderizarTabela(movimentacoes, termo = "") {
         <th>Data</th>
         <th>Validade</th>
         <th>Lote</th>
-        <th>Observações</th>
         <th>Ações</th>
       </tr>`;
 
@@ -533,7 +511,6 @@ function renderizarTabela(movimentacoes, termo = "") {
       <td>${dataMov}</td>
       <td>${m.validade?.toDate()?.toLocaleDateString("pt-BR") || "-"}</td>
       <td>${m.lote || "-"}</td>
-      <td>${m.observacao || "-"}</td>
       <td><button onclick="editarMovimentacao('${m.id}')">✏️ Editar</button></td>
     </tr>`;
   });
