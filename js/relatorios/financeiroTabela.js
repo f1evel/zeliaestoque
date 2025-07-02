@@ -23,6 +23,16 @@ function formatarResumoParcelas(parcelas = []) {
     .join('<br>');
 }
 
+function calcularValorAberto(registro) {
+  const parcelas = Array.isArray(registro.parcelas) && registro.parcelas.length > 0
+    ? registro.parcelas
+    : [{ valor: registro.valor, status: registro.status }];
+  return parcelas.reduce((s, p) => {
+    const v = Number(p.valor) || 0;
+    return p.status === 'pago' ? s : s + v;
+  }, 0);
+}
+
 // 🔥 Setar dados
 export function setDadosFinanceiro(novosDados) {
   dados = novosDados;
@@ -143,6 +153,7 @@ export function gerarTabelaFinanceiro() {
           <th>Data da compra</th>
           <th>Forma de pagamento</th>
           <th>Valor total</th>
+          <th>Valor em aberto</th>
           <th>Parcelas</th>
         </tr>
       </thead>
@@ -151,6 +162,7 @@ export function gerarTabelaFinanceiro() {
 
   filtrados.forEach(d => {
     const lanc = d.dataLancamento?.toLocaleDateString('pt-BR') || '-';
+    const aberto = calcularValorAberto(d);
     html += `
       <tr>
         <td>${d.compraId}</td>
@@ -158,6 +170,7 @@ export function gerarTabelaFinanceiro() {
         <td>${lanc}</td>
         <td>${d.formaPagamento}</td>
         <td>R$ ${(d.valor).toFixed(2)}</td>
+        <td class="valor-aberto">R$ ${aberto.toFixed(2)}</td>
         <td>
           ${formatarResumoParcelas(d.parcelas)}<br>
           <button onclick="abrirModalParcelas('${d.compraId}')">Ver</button>
