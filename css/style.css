@@ -572,3 +572,21 @@ tr.critico-suave {
 tr[title] {
   cursor: help;
 }
+/* Botões discretos com ícones para relatórios */
+button.btn-icon {
+  background-color: #fff;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+button.btn-icon:hover {
+  background-color: #f2f2f2;
+}
+button.btn-icon.btn-xs { font-size: 12px; padding: 4px; }
+button.btn-icon.btn-sm { font-size: 13px; padding: 5px; }
+button.btn-icon.btn-md { font-size: 14px; padding: 6px; }
+button.btn-icon.btn-lg { font-size: 15px; padding: 7px; }
+button.btn-icon.btn-xl { font-size: 16px; padding: 8px; }

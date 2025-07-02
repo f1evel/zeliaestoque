@@ -56,10 +56,10 @@
         <select id="filtro-fornecedor-consumo"></select>
         <select id="filtro-mes-consumo"></select>
 
-        <button id="botao-limpar-consumo">🧹 Limpar</button>
-        <button id="botao-exportar-csv-consumo">📄 CSV</button>
-        <button id="botao-exportar-excel-consumo">📊 Excel</button>
-        <button id="botao-exportar-pdf-consumo">🖨️ PDF</button>
+        <button id="botao-limpar-consumo" class="btn-icon btn-sm">🧹</button>
+        <button id="botao-exportar-csv-consumo" class="btn-icon btn-md">📄</button>
+        <button id="botao-exportar-excel-consumo" class="btn-icon btn-lg">📊</button>
+        <button id="botao-exportar-pdf-consumo" class="btn-icon btn-xl">🖨️</button>
       </div>
 
       <!-- 📊 Cards -->
@@ -107,9 +107,9 @@
         <label for="filtro-preco-max-entradas">Preço máximo:</label>
         <input type="number" id="filtro-preco-max-entradas" min="0" step="0.01" style="width:80px;">
 
-        <button id="botao-limpar-entradas">🧹 Limpar</button>
-        <button id="botao-exportar-excel-entradas">📊 Excel</button>
-        <button id="botao-exportar-pdf-entradas">🖨️ PDF</button>
+        <button id="botao-limpar-entradas" class="btn-icon btn-sm">🧹</button>
+        <button id="botao-exportar-excel-entradas" class="btn-icon btn-lg">📊</button>
+        <button id="botao-exportar-pdf-entradas" class="btn-icon btn-xl">🖨️</button>
       </div>
 
       <div id="cards-entradas" class="cards">
@@ -158,8 +158,8 @@
         <label for="filtro-data-fim-saidas">Até:</label>
         <input type="date" id="filtro-data-fim-saidas">
 
-        <button id="botao-limpar-saidas">🧹 Limpar</button>
-        <button id="botao-exportar-excel-saidas">📊 Excel</button>
+        <button id="botao-limpar-saidas" class="btn-icon btn-sm">🧹</button>
+        <button id="botao-exportar-excel-saidas" class="btn-icon btn-lg">📊</button>
       </div>
 
       <div id="tabela-saidas"></div>
@@ -183,11 +183,11 @@
         <label><input type="checkbox" id="filtro-lote-ativo"> Lote ativo</label>
         <label>Dias p/ vencer:</label>
         <input type="number" id="input-dias-val" value="15" min="1" style="width: 60px;">
-        <button id="botao-atualizar-estoque">🔄 Atualizar</button>
-        <button id="botao-limpar-estoque">🧹 Limpar</button>
-        <button id="botao-exportar-csv-estoque">📄 CSV</button>
-        <button id="botao-exportar-excel-estoque">📊 Excel</button>
-        <button id="botao-exportar-pdf-estoque">🖨️ PDF</button>
+        <button id="botao-atualizar-estoque" class="btn-icon btn-xs">🔄</button>
+        <button id="botao-limpar-estoque" class="btn-icon btn-sm">🧹</button>
+        <button id="botao-exportar-csv-estoque" class="btn-icon btn-md">📄</button>
+        <button id="botao-exportar-excel-estoque" class="btn-icon btn-lg">📊</button>
+        <button id="botao-exportar-pdf-estoque" class="btn-icon btn-xl">🖨️</button>
         <button id="botao-gerar-pedido">🛒 Gerar pedido automático</button>
       </div>
 
@@ -209,10 +209,10 @@
         <input type="number" id="input-meses-previsao" value="3" min="1" style="width: 60px;">
         <label><input type="checkbox" id="check-apenas-critico"> Somente críticos</label>
         <input type="number" id="input-limite-previsao" value="30" min="1" style="width:60px"> dias
-        <button id="botao-atualizar-previsao">🔄 Atualizar</button>
-        <button id="botao-limpar-previsao">🧹 Limpar</button>
-        <button id="botao-exportar-csv-previsao">📄 CSV</button>
-        <button id="botao-exportar-excel-previsao">📊 Excel</button>
+        <button id="botao-atualizar-previsao" class="btn-icon btn-xs">🔄</button>
+        <button id="botao-limpar-previsao" class="btn-icon btn-sm">🧹</button>
+        <button id="botao-exportar-csv-previsao" class="btn-icon btn-md">📄</button>
+        <button id="botao-exportar-excel-previsao" class="btn-icon btn-lg">📊</button>
         <button id="botao-exportar-filtrado-previsao">⏬ Exportar Críticos</button>
       </div>
 
