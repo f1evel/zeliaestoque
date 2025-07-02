@@ -29,21 +29,39 @@
     <h1>💰 Financeiro</h1>
 
     <div class="filtros">
-      <label>De:</label>
-      <input type="date" id="fin-data-inicio">
-      <label>Até:</label>
-      <input type="date" id="fin-data-fim">
+      <div class="campo-filtro">
+        <label for="fin-data-inicio">De</label>
+        <input type="date" id="fin-data-inicio">
+      </div>
+      <div class="campo-filtro">
+        <label for="fin-data-fim">Até</label>
+        <input type="date" id="fin-data-fim">
+      </div>
 
-      <input type="text" id="fin-compra-id" placeholder="CompraID" list="lista-compra-fin" style="width:140px;">
-      <datalist id="lista-compra-fin"></datalist>
-      <select id="fin-fornecedor"></select>
-      <select id="fin-forma"></select>
-      <select id="fin-status"></select>
+      <div class="campo-filtro">
+        <label for="fin-compra-id">CompraID</label>
+        <input type="text" id="fin-compra-id" placeholder="Buscar..." list="lista-compra-fin">
+        <datalist id="lista-compra-fin"></datalist>
+      </div>
+      <div class="campo-filtro">
+        <label for="fin-fornecedor">Fornecedor</label>
+        <select id="fin-fornecedor"></select>
+      </div>
+      <div class="campo-filtro">
+        <label for="fin-forma">Forma</label>
+        <select id="fin-forma"></select>
+      </div>
+      <div class="campo-filtro">
+        <label for="fin-status">Status</label>
+        <select id="fin-status"></select>
+      </div>
 
-      <button id="botao-atualizar-fin">🔄 Atualizar</button>
-      <button id="botao-limpar-fin">🧹 Limpar</button>
-      <button id="botao-exportar-csv-fin">📄 CSV</button>
-      <button id="botao-exportar-excel-fin">📊 Excel</button>
+      <div class="campo-filtro botoes">
+        <button id="botao-atualizar-fin" class="btn-acao">🔄 Atualizar</button>
+        <button id="botao-limpar-fin" class="btn-acao">🧹 Limpar</button>
+        <button id="botao-exportar-csv-fin" class="btn-acao">📥 CSV</button>
+        <button id="botao-exportar-excel-fin" class="btn-acao">🖨️ Excel</button>
+      </div>
     </div>
 
     <div id="cards-financeiro" class="cards">
