@@ -2,6 +2,7 @@
 
 import { normalizarTexto, parseDataLocal } from '../utils.js';
 import { atualizarCardsFinanceiro } from './financeiroTotais.js';
+import { gerarTabelaFinanceiroCategorias } from './financeiroCategorias.js';
 
 let dados = [];
 let filtrosIniciados = false;
@@ -153,4 +154,5 @@ export function gerarTabelaFinanceiro() {
   lista.innerHTML = html;
 
   atualizarCardsFinanceiro(filtrados);
+  gerarTabelaFinanceiroCategorias(filtrados);
 }
