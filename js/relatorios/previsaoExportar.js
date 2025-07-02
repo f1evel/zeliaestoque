@@ -3,13 +3,14 @@
 // 👉 Exportar dados para CSV
 export async function exportarPrevisaoCSV(dados) {
   const linhas = [
-    ["Produto", "Categoria", "Fornecedor", "Qtd", "Consumo/Mês", "Dias Estoque", "Prev. Esgotamento", "Última Saída"],
+    ["Produto", "Categoria", "Fornecedor", "Qtd", "Consumo/Mês", "Média Dias/Unid", "Dias Estoque", "Prev. Esgotamento", "Última Saída"],
     ...dados.map(d => [
       d.nome,
       d.categoria,
       d.fornecedor,
       d.quantidade,
       d.consumoMensal,
+      d.mediaDiasPorUnidade,
       d.diasDeEstoque === Infinity ? "-" : d.diasDeEstoque,
       d.dataPrevistaEsgotamento ? d.dataPrevistaEsgotamento.toLocaleDateString('pt-BR') : "-",
       d.ultimaSaida ? d.ultimaSaida.toLocaleDateString('pt-BR') : "-"
@@ -48,6 +49,8 @@ export async function exportarPrevisaoExcel(dados) {
     Fornecedor: d.fornecedor,
     Quantidade: d.quantidade,
     Consumo_Mensal: d.consumoMensal,
+    Media_Dias_Unidade: d.mediaDiasPorUnidade,
+    Dias_Previsao: d.diasPrevisao === Infinity ? "-" : d.diasPrevisao,
     Dias_Estoque: d.diasDeEstoque === Infinity ? "-" : d.diasDeEstoque,
     Previsao_Esgotamento: d.dataPrevistaEsgotamento ? d.dataPrevistaEsgotamento.toLocaleDateString('pt-BR') : "-",
     Ultima_Saida: d.ultimaSaida ? d.ultimaSaida.toLocaleDateString('pt-BR') : "-"
