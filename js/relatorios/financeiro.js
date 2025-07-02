@@ -71,10 +71,11 @@ window.abrirModalParcelas = async function (compraId) {
     const q = query(collection(db, 'empresas', empresaId, 'movimentacoes'), where('compraId', '==', compraId), where('tipo', '==', 'entrada'));
     const snap = await getDocs(q);
     if (!snap.empty) {
-      html += '<h4>Produtos</h4><table class="tabela"><thead><tr><th>Produto</th><th>Qtd</th><th>Preço</th></tr></thead><tbody>';
+      html += '<h4>Produtos</h4><table class="tabela"><thead><tr><th>Produto</th><th>Categoria</th><th>Qtd</th><th>Preço unitário</th><th>Subtotal</th></tr></thead><tbody>';
       snap.docs.forEach(doc => {
         const d = doc.data();
-        html += `<tr><td>${d.nomeProduto}</td><td>${d.quantidade}</td><td>R$ ${(d.precoUnitario || 0).toFixed(2)}</td></tr>`;
+        const subtotal = (d.quantidade || 0) * (d.precoUnitario || 0);
+        html += `<tr><td>${d.nomeProduto}</td><td>${d.categoria || '-'}</td><td>${d.quantidade}</td><td>R$ ${(d.precoUnitario || 0).toFixed(2)}</td><td>R$ ${subtotal.toFixed(2)}</td></tr>`;
       });
       html += '</tbody></table><br />';
     }
