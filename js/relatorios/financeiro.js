@@ -3,9 +3,9 @@
 import { carregarDadosFinanceiro } from './financeiroDados.js';
 import { setDadosFinanceiro, gerarFiltrosFinanceiro, gerarTabelaFinanceiro } from './financeiroTabela.js';
 import { exportarFinanceiroCSV, exportarFinanceiroExcel } from './financeiroExportar.js';
-import { mostrarSpinner, esconderSpinner } from '../utils.js';
+import { mostrarSpinner, esconderSpinner, mostrarMensagem } from '../utils.js';
 import { db, getEmpresaIdDoUsuario } from '../firebaseConfig.js';
-import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+import { collection, getDocs, query, where, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
 let dadosFinanceiro = [];
 
@@ -86,10 +86,12 @@ window.abrirModalParcelas = async function (compraId) {
   if (!registro.parcelas || registro.parcelas.length === 0) {
     html += '<p>Sem parcelas cadastradas.</p>';
   } else {
-    html += `<h4>Parcelas</h4><table class="tabela"><thead><tr><th>#</th><th>Valor</th><th>Vencimento</th><th>Status</th></tr></thead><tbody>`;
+    html += `<h4>Parcelas</h4><table class="tabela"><thead><tr><th>#</th><th>Valor</th><th>Vencimento</th><th>Status</th><th></th></tr></thead><tbody>`;
     registro.parcelas.forEach(p => {
       const venc = p.vencimento ? new Date(p.vencimento).toLocaleDateString('pt-BR') : '-';
-      html += `<tr><td>${p.numero}</td><td>R$ ${(p.valor || 0).toFixed(2)}</td><td>${venc}</td><td>${p.status}</td></tr>`;
+      const pago = p.status === 'pago';
+      const btn = pago ? '' : `<button onclick="marcarParcelaComoPaga('${compraId}', ${p.numero})">Marcar como pago</button>`;
+      html += `<tr><td>${p.numero}</td><td>R$ ${(p.valor || 0).toFixed(2)}</td><td>${venc}</td><td>${p.status}</td><td>${btn}</td></tr>`;
     });
     html += '</tbody></table>';
   }
@@ -103,4 +105,34 @@ window.abrirModalParcelas = async function (compraId) {
 window.fecharModalParcelas = function () {
   document.getElementById('modal-parcelas').style.display = 'none';
   document.getElementById('fundo-modal-parcelas').style.display = 'none';
+};
+
+// ✅ Marcar parcela como paga
+window.marcarParcelaComoPaga = async function (compraId, numero) {
+  const hoje = new Date().toISOString().split('T')[0];
+  const data = prompt('Data do pagamento (yyyy-mm-dd):', hoje);
+  if (!data) return;
+
+  try {
+    mostrarSpinner();
+    const empresaId = await getEmpresaIdDoUsuario();
+    const q = query(collection(db, 'empresas', empresaId, 'financeiro'), where('compraId', '==', compraId));
+    const snap = await getDocs(q);
+    if (snap.empty) throw new Error('Registro não encontrado');
+    const ref = snap.docs[0].ref;
+    const finData = snap.docs[0].data();
+    const parcelas = Array.isArray(finData.parcelas) ? finData.parcelas.slice() : [];
+    const idx = parcelas.findIndex(p => p.numero === numero);
+    if (idx === -1) throw new Error('Parcela não encontrada');
+    parcelas[idx] = { ...parcelas[idx], status: 'pago', dataPagamento: data };
+    await updateDoc(ref, { parcelas });
+    mostrarMensagem('✅ Parcela marcada como paga!');
+    await atualizarTabelaFinanceiro();
+    abrirModalParcelas(compraId);
+  } catch (e) {
+    console.error('Erro ao atualizar parcela', e);
+    alert('❌ Erro ao marcar parcela como paga.');
+  } finally {
+    esconderSpinner();
+  }
 };
