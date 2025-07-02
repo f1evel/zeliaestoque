@@ -151,7 +151,7 @@ export function gerarTabelaFinanceiro() {
           <th>CompraID</th>
           <th>Fornecedor</th>
           <th>Data da compra</th>
-          <th>Forma de pagamento</th>
+          <th>Forma<br>de Pagamento</th>
           <th>Valor total</th>
           <th>Valor em aberto</th>
           <th>Parcelas</th>
