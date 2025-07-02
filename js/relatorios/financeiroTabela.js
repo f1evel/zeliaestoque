@@ -163,10 +163,15 @@ export function gerarTabelaFinanceiro() {
   filtrados.forEach(d => {
     const lanc = d.dataLancamento?.toLocaleDateString('pt-BR') || '-';
     const aberto = calcularValorAberto(d);
+    const nomeFornecedor = d.fornecedorOuCliente || '-';
+    const fornecedorEscapado = nomeFornecedor.replace(/"/g, '&quot;');
+    const fornecedorCurto = nomeFornecedor.length > 20
+      ? nomeFornecedor.slice(0, 20) + '...'
+      : nomeFornecedor;
     html += `
       <tr>
         <td>${d.compraId}</td>
-        <td>${d.fornecedorOuCliente}</td>
+        <td class="fornecedor-cell" title="${fornecedorEscapado}">${fornecedorCurto}</td>
         <td>${lanc}</td>
         <td>${d.formaPagamento}</td>
         <td>R$ ${(d.valor).toFixed(2)}</td>
