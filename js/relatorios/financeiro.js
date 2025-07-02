@@ -4,7 +4,7 @@ import { carregarDadosFinanceiro } from './financeiroDados.js';
 import { setDadosFinanceiro, gerarFiltrosFinanceiro, gerarTabelaFinanceiro, dadosFiltradosFinanceiro } from './financeiroTabela.js';
 import { carregarEntradasFinanceiro } from './financeiroCategorias.js';
 import { exportarFinanceiroCSV, exportarFinanceiroExcel, exportarFinanceiroPDF } from './financeiroExportar.js';
-import { mostrarSpinner, esconderSpinner, mostrarMensagem, parseDataBR } from '../utils.js';
+import { mostrarSpinner, esconderSpinner, mostrarMensagem, parseDataBR, formatarCompraIdCurto } from '../utils.js';
 import { db, getEmpresaIdDoUsuario } from '../firebaseConfig.js';
 import { collection, getDocs, query, where, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
@@ -117,7 +117,7 @@ window.abrirModalParcelas = async function (compraId) {
   const registro = dadosFinanceiro.find(d => d.compraId === compraId);
   if (!registro) return;
 
-  document.getElementById('modal-compra-id').textContent = compraId;
+  document.getElementById('modal-compra-id').textContent = formatarCompraIdCurto(compraId);
   const cont = document.getElementById('parcelas-detalhes');
 
   let html = '';

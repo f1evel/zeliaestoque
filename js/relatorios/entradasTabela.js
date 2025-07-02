@@ -1,4 +1,4 @@
-import { normalizarTexto, parseDataLocal } from '../utils.js';
+import { normalizarTexto, parseDataLocal, formatarCompraIdCurto } from '../utils.js';
 import { atualizarCardsEntradas } from './entradasTotais.js';
 import { gerarGraficoEntradas } from './entradasGraficos.js';
 
@@ -127,7 +127,7 @@ function aplicarFiltros() {
         <td>${validade}</td>
         <td>${d.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
         <td>${d.fornecedor}</td>
-        ${mostrarCompraId ? `<td>${d.compraId}</td>` : ''}
+        ${mostrarCompraId ? `<td>${formatarCompraIdCurto(d.compraId)}</td>` : ''}
         <td>${data}</td>
         <td><button onclick="abrirModalDetalhesEntrada('${d.id}')">Ver Detalhes</button></td>
       </tr>

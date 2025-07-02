@@ -1,6 +1,6 @@
 // financeiroTabela.js — Geração de tabela e filtros
 
-import { normalizarTexto, parseDataLocal } from '../utils.js';
+import { normalizarTexto, parseDataLocal, formatarCompraIdCurto } from '../utils.js';
 import { atualizarCardsFinanceiro } from './financeiroTotais.js';
 import { gerarTabelaFinanceiroCategorias } from './financeiroCategorias.js';
 
@@ -170,7 +170,7 @@ export function gerarTabelaFinanceiro() {
       : nomeFornecedor;
     html += `
       <tr>
-        <td>${d.compraId}</td>
+        <td>${formatarCompraIdCurto(d.compraId)}</td>
         <td class="fornecedor-cell" title="${fornecedorEscapado}">${fornecedorCurto}</td>
         <td>${lanc}</td>
         <td>${d.formaPagamento}</td>
