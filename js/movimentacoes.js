@@ -63,6 +63,18 @@ document.addEventListener("DOMContentLoaded", () => {
   if (campoData && !campoData.value) {
     campoData.value = hoje;
   }
+
+  const nomeArmazenado = sessionStorage.getItem('nomeProdutoMovimentacao');
+  if (nomeArmazenado) {
+    const inputNome = document.getElementById('nome-produto');
+    if (inputNome) {
+      inputNome.value = nomeArmazenado;
+      sessionStorage.removeItem('nomeProdutoMovimentacao');
+      setTimeout(() => {
+        document.getElementById('tipo-movimentacao')?.focus();
+      }, 10);
+    }
+  }
 });
 
 // =========================

@@ -312,8 +312,7 @@ async function adicionarProduto() {
       const snapshot = await getDocs(q);
 
       if (!snapshot.empty) {
-        // console.warn("⚠️ Produto já existe!");
-        abrirModalProdutoExiste();
+        abrirModalProdutoExiste(nome);
         return;
       }
 
@@ -550,7 +549,7 @@ document.getElementById("nome").addEventListener("blur", function () {
     if (!snapshot.empty) {
       const existeOutro = snapshot.docs.some(doc => doc.id !== editandoProdutoId);
       if (existeOutro) {
-        abrirModalProdutoExiste();
+        abrirModalProdutoExiste(input.value.trim());
         input.value = "";
         const sugestoes = document.getElementById("sugestoes-nome");
         if (sugestoes) sugestoes.style.display = "none";

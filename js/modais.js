@@ -23,12 +23,33 @@ export function fecharModal(idModal) {
 
 // ✅ Modal: Produto Já Existe
 
-export function abrirModalProdutoExiste() {
+let produtoDuplicadoTemp = "";
+
+export function abrirModalProdutoExiste(nomeProduto) {
+  produtoDuplicadoTemp = nomeProduto || "";
   abrirModal('modal-produto-existe');
+  const btnIr = document.getElementById('btn-ir-movimentacoes');
+  btnIr?.focus();
 }
 
 export function fecharModalProdutoExiste() {
   fecharModal('modal-produto-existe');
+}
+
+export function irParaMovimentacoesComNome() {
+  if (produtoDuplicadoTemp) {
+    sessionStorage.setItem('nomeProdutoMovimentacao', produtoDuplicadoTemp);
+  }
+  window.location.href = 'movimentacoes.html';
+}
+
+export function cadastrarOutroProduto() {
+  fecharModalProdutoExiste();
+  const campoNome = document.getElementById('nome');
+  if (campoNome) {
+    campoNome.value = '';
+    campoNome.focus();
+  }
 }
 
 
@@ -122,5 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 window.fecharModalProdutoExiste = fecharModalProdutoExiste;
+window.irParaMovimentacoesComNome = irParaMovimentacoesComNome;
+window.cadastrarOutroProduto = cadastrarOutroProduto;
 window.cancelarConfirmacao = cancelarConfirmacao;
 window.confirmarAcao = confirmarAcao;
