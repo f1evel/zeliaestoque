@@ -11,6 +11,46 @@ export function setDadosFinanceiro(novosDados) {
   dados = novosDados;
 }
 
+// 🔍 Obter dados conforme filtros aplicados
+export function dadosFiltradosFinanceiro() {
+  const fornecedorFiltro = document.getElementById('fin-fornecedor').value;
+  const formaFiltro = document.getElementById('fin-forma').value;
+  const compraFiltro = document.getElementById('fin-compra-id').value.trim();
+  const statusFiltro = document.getElementById('fin-status').value;
+  const catProdFiltro = document.getElementById('fin-categoria-prod').value;
+  const inicio = document.getElementById('fin-data-inicio').value;
+  const fim = document.getElementById('fin-data-fim').value;
+  const inicioData = inicio ? parseDataLocal(inicio) : null;
+  const fimData = fim ? parseDataLocal(fim) : null;
+
+  return dados.filter(d => {
+    const fornMatch = fornecedorFiltro === '' || d.fornecedorOuCliente === fornecedorFiltro;
+    const formaMatch = formaFiltro === '' || d.formaPagamento === formaFiltro;
+    const compraMatch = compraFiltro === '' || d.compraId === compraFiltro;
+    const statusMatch = statusFiltro === '' || d.statusParcelas === statusFiltro;
+    const catProdMatch = catProdFiltro === '' || (Array.isArray(d.categoriasProdutos) && d.categoriasProdutos.includes(catProdFiltro));
+
+    let vencMatch = true;
+    if (inicioData || fimData) {
+      const vencs = [];
+      if (Array.isArray(d.parcelas)) {
+        d.parcelas.forEach(p => {
+          if (p.vencimento) vencs.push(parseDataLocal(p.vencimento));
+        });
+      }
+      if (vencs.length === 0 && d.dataVencimento) vencs.push(parseDataLocal(d.dataVencimento));
+      vencMatch = vencs.some(v => {
+        if (!v || isNaN(v)) return false;
+        if (inicioData && v < inicioData) return false;
+        if (fimData && v > fimData) return false;
+        return true;
+      });
+    }
+
+    return fornMatch && formaMatch && compraMatch && statusMatch && catProdMatch && vencMatch;
+  });
+}
+
 // 🔍 Gerar filtros dinâmicos
 export function gerarFiltrosFinanceiro() {
   const fornecedores = new Set();
@@ -69,42 +109,7 @@ export function gerarFiltrosFinanceiro() {
 export function gerarTabelaFinanceiro() {
   const lista = document.getElementById("tabela-financeiro");
 
-  const fornecedorFiltro = document.getElementById('fin-fornecedor').value;
-  const formaFiltro = document.getElementById('fin-forma').value;
-  const compraFiltro = document.getElementById('fin-compra-id').value.trim();
-  const statusFiltro = document.getElementById('fin-status').value;
-  const catProdFiltro = document.getElementById('fin-categoria-prod').value;
-  const inicio = document.getElementById('fin-data-inicio').value;
-  const fim = document.getElementById('fin-data-fim').value;
-  const inicioData = inicio ? parseDataLocal(inicio) : null;
-  const fimData = fim ? parseDataLocal(fim) : null;
-
-  const filtrados = dados.filter(d => {
-    const fornMatch = fornecedorFiltro === '' || d.fornecedorOuCliente === fornecedorFiltro;
-    const formaMatch = formaFiltro === '' || d.formaPagamento === formaFiltro;
-    const compraMatch = compraFiltro === '' || d.compraId === compraFiltro;
-    const statusMatch = statusFiltro === '' || d.statusParcelas === statusFiltro;
-    const catProdMatch = catProdFiltro === '' || (Array.isArray(d.categoriasProdutos) && d.categoriasProdutos.includes(catProdFiltro));
-
-    let vencMatch = true;
-    if (inicioData || fimData) {
-      const vencs = [];
-      if (Array.isArray(d.parcelas)) {
-        d.parcelas.forEach(p => {
-          if (p.vencimento) vencs.push(parseDataLocal(p.vencimento));
-        });
-      }
-      if (vencs.length === 0 && d.dataVencimento) vencs.push(parseDataLocal(d.dataVencimento));
-      vencMatch = vencs.some(v => {
-        if (!v || isNaN(v)) return false;
-        if (inicioData && v < inicioData) return false;
-        if (fimData && v > fimData) return false;
-        return true;
-      });
-    }
-
-    return fornMatch && formaMatch && compraMatch && statusMatch && catProdMatch && vencMatch;
-  });
+  const filtrados = dadosFiltradosFinanceiro();
 
   if (filtrados.length === 0) {
     lista.innerHTML = "<p>❌ Nenhum dado encontrado.</p>";
