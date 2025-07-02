@@ -65,9 +65,34 @@
     </div>
 
     <div id="cards-financeiro" class="cards">
-      <div class="card"><strong>A pagar:</strong> <span id="total-pagar">-</span></div>
-      <div class="card"><strong>Pagos:</strong> <span id="total-pagos">-</span></div>
-      <div class="card"><strong>Recebidos:</strong> <span id="total-recebidos">-</span></div>
+      <div class="resumo-card" id="card-total-comprado">
+        <div class="icone">💸</div>
+        <div class="texto">
+          <div class="titulo text-sm text-gray-500">Total comprado</div>
+          <div class="valor text-xl font-semibold" id="total-comprado">-</div>
+        </div>
+      </div>
+      <div class="resumo-card pago" id="card-total-pago">
+        <div class="icone">📅</div>
+        <div class="texto">
+          <div class="titulo text-sm text-gray-500">Total pago</div>
+          <div class="valor text-xl font-semibold" id="total-pago">-</div>
+        </div>
+      </div>
+      <div class="resumo-card pendente" id="card-total-pendente">
+        <div class="icone">⏳</div>
+        <div class="texto">
+          <div class="titulo text-sm text-gray-500">Total pendente</div>
+          <div class="valor text-xl font-semibold" id="total-pendente">-</div>
+        </div>
+      </div>
+      <div class="resumo-card vencido" id="card-total-vencido">
+        <div class="icone">🔴</div>
+        <div class="texto">
+          <div class="titulo text-sm text-gray-500">Total vencido</div>
+          <div class="valor text-xl font-semibold" id="total-vencido">-</div>
+        </div>
+      </div>
     </div>
 
     <div id="tabela-financeiro"></div>
