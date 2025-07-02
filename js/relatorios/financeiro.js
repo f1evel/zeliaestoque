@@ -44,6 +44,21 @@ function exibirAlertaVencidas() {
   }
 }
 
+// 🔢 Calcula status geral das parcelas de uma compra
+function calcularStatusParcelas(parcelas = []) {
+  const hoje = new Date();
+  let status = 'pago';
+  let temVencida = false;
+  parcelas.forEach(p => {
+    const venc = p.vencimento ? new Date(p.vencimento) : null;
+    if (p.status !== 'pago') {
+      status = 'pendente';
+      if (venc && venc < hoje) temVencida = true;
+    }
+  });
+  return temVencida ? 'vencido' : status;
+}
+
 // 🔄 Atualizar tudo
 export async function atualizarTabelaFinanceiro() {
   try {
@@ -177,6 +192,16 @@ window.marcarParcelaComoPaga = async function (compraId, numero) {
     if (idx === -1) throw new Error('Parcela não encontrada');
     parcelas[idx] = { ...parcelas[idx], status: 'pago', dataPagamento: data };
     await updateDoc(ref, { parcelas });
+
+    // Atualiza localmente para refletir imediatamente na tabela
+    const pos = dadosFinanceiro.findIndex(d => d.compraId === compraId);
+    if (pos !== -1) {
+      dadosFinanceiro[pos].parcelas = parcelas;
+      dadosFinanceiro[pos].statusParcelas = calcularStatusParcelas(parcelas);
+      setDadosFinanceiro(dadosFinanceiro);
+      gerarTabelaFinanceiro();
+    }
+
     mostrarMensagem('✅ Parcela marcada como paga!');
     await atualizarTabelaFinanceiro();
     abrirModalParcelas(compraId);
