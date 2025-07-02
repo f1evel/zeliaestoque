@@ -124,3 +124,13 @@ export function calcularDiasParaVencimento(validade) {
     return Infinity;
   }
 }
+
+// 👉 Formatar compraId em formato curto (ex: "#1 (30/06/2025)")
+export function formatarCompraIdCurto(id) {
+  if (!id || typeof id !== 'string') return id;
+  const m = id.match(/compra_(\d{4})-?(\d{2})-?(\d{2})_(\d+)/);
+  if (!m) return id;
+  const [, ano, mes, dia, numeroRaw] = m;
+  const numero = String(Number(numeroRaw));
+  return `#${numero} (${dia}/${mes}/${ano})`;
+}
