@@ -151,10 +151,12 @@
 
   <div id="modal-produto-existe" class="modal">
     <div class="modal-content">
-      <p>⚠️ Ops! Esse produto já está cadastrado em nosso estoque.<br>
-      Para registrar uma nova entrada, vá até a aba <strong>Movimentações</strong>.</p>
-
-      <button onclick="fecharModalProdutoExiste()">OK</button>
+      <p>⚠️ Opa! Esse produto já está cadastrado no seu estoque!<br>
+      Deseja lançar uma movimentação para esse produto ou cadastrar um novo no sistema?</p>
+      <div style="text-align:right; margin-top: 20px;">
+        <button id="btn-ir-movimentacoes" onclick="irParaMovimentacoesComNome()">Ir para movimentações</button>
+        <button id="btn-cadastrar-outro" onclick="cadastrarOutroProduto()">Cadastrar outro produto</button>
+      </div>
     </div>
   </div>
 
