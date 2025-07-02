@@ -141,10 +141,36 @@ a {
 .main-content {
   flex: 1;
   padding: 40px;
+  background-color: #fff;
 }
 
 .main-content h1 {
   margin-bottom: 30px;
+}
+
+/* Abas de relatórios */
+.abas {
+  margin-bottom: 20px;
+}
+
+.aba {
+  background-color: #fff;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-right: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.aba:hover {
+  background-color: #f2f2f2;
+}
+
+.aba.ativa {
+  background-color: #009688;
+  color: #fff;
 }
 
 form {
@@ -477,6 +503,7 @@ table tbody tr:hover {
 
   .main-content {
     padding: 20px;
+    background-color: #fff;
   }
 }
 
