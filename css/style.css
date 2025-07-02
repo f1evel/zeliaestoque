@@ -476,6 +476,29 @@ table tbody tr:hover {
   box-sizing: border-box;
 }
 
+/* Ajustes de largura para filtros do financeiro */
+.filtros-financeiro {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 10px;
+  border: 1px solid #eee;
+  border-radius: 6px;
+}
+.filtros-financeiro .campo-filtro {
+  flex: 1 1 180px;
+}
+.filtros-financeiro .campo-filtro.estreito {
+  flex: 1 1 120px;
+  max-width: 160px;
+}
+.filtros-financeiro .campo-filtro.estreito select {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Grupo de botões nos filtros */
 .botoes {
   display: flex;
