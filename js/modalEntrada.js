@@ -188,13 +188,29 @@ function exibirParcelas(parcelas) {
 /**
  * 🔧 Geração automática de compraId
  */
-window.gerarNovoCompraId = function () {
-  const agora = new Date();
-  const dataStr = agora.toISOString().split("T")[0].replace(/-/g, "");
-  const aleatorio = Math.floor(Math.random() * 1000).toString().padStart(3, "0");
-  const id = `compra_${dataStr}_${aleatorio}`;
-  const input = document.getElementById("entrada-compra-id");
-  if (input) input.value = id;
+window.gerarNovoCompraId = async function () {
+  try {
+    const hoje = new Date();
+    const dataISO = hoje.toISOString().split("T")[0];
+    const empresaId = await getEmpresaIdDoUsuario();
+    const snap = await getDocs(collection(db, "empresas", empresaId, "financeiro"));
+    let maior = 0;
+    snap.forEach(docSnap => {
+      const cid = docSnap.data().compraId || "";
+      const m = cid.match(/compra_(\d{4})-?(\d{2})-?(\d{2})_(\d+)/);
+      if (!m) return;
+      const data = `${m[1]}-${m[2]}-${m[3]}`;
+      if (data === dataISO) {
+        maior = Math.max(maior, parseInt(m[4], 10));
+      }
+    });
+    const novoNumero = maior + 1;
+    const id = `compra_${dataISO}_${novoNumero}`;
+    const input = document.getElementById("entrada-compra-id");
+    if (input) input.value = id;
+  } catch (e) {
+    console.error("Erro ao gerar compraId:", e);
+  }
 };
 
 /**
