@@ -9,6 +9,39 @@ import { collection, getDocs, query, where, doc, updateDoc } from "https://www.g
 
 let dadosFinanceiro = [];
 
+function exibirAlertaVencidas() {
+  const aviso = document.getElementById('alerta-vencidas');
+  if (!aviso) return;
+
+  const hoje = new Date();
+  let totalVencidas = 0;
+
+  dadosFinanceiro.forEach(d => {
+    const parcelas = Array.isArray(d.parcelas) && d.parcelas.length > 0
+      ? d.parcelas
+      : [{ vencimento: d.dataVencimento, status: d.status }];
+    parcelas.forEach(p => {
+      const venc = p.vencimento ? new Date(p.vencimento) : null;
+      if (p.status !== 'pago' && venc && venc < hoje) totalVencidas++;
+    });
+  });
+
+  if (totalVencidas > 0) {
+    aviso.innerHTML = `⚠️ Atenção: Você possui ${totalVencidas} parcelas vencidas. <a href="#" id="btn-ver-vencidas">Clique aqui</a> para visualizá-las.`;
+    aviso.style.display = 'block';
+    const btn = document.getElementById('btn-ver-vencidas');
+    btn?.addEventListener('click', e => {
+      e.preventDefault();
+      document.getElementById('fin-status').value = 'vencido';
+      gerarTabelaFinanceiro();
+      aviso.style.display = 'none';
+    }, { once: true });
+  } else {
+    aviso.style.display = 'none';
+    aviso.innerHTML = '';
+  }
+}
+
 // 🔄 Atualizar tudo
 export async function atualizarTabelaFinanceiro() {
   try {
@@ -19,6 +52,7 @@ export async function atualizarTabelaFinanceiro() {
     setDadosFinanceiro(dadosFinanceiro);
     gerarFiltrosFinanceiro();
     gerarTabelaFinanceiro();
+    exibirAlertaVencidas();
 
   } catch (error) {
     console.error("❌ Erro ao atualizar financeiro:", error);
