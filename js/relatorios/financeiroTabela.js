@@ -7,6 +7,22 @@ import { gerarTabelaFinanceiroCategorias } from './financeiroCategorias.js';
 let dados = [];
 let filtrosIniciados = false;
 
+function formatarResumoParcelas(parcelas = []) {
+  if (!Array.isArray(parcelas) || parcelas.length === 0) return '-';
+  const total = parcelas.length;
+  const hoje = new Date();
+  return parcelas
+    .sort((a, b) => (a.numero || 0) - (b.numero || 0))
+    .map(p => {
+      let status = 'pendente';
+      if (p.status === 'pago') status = 'pago';
+      else if (p.vencimento && new Date(p.vencimento) < hoje) status = 'vencida';
+      const icone = status === 'pago' ? '✅' : status === 'vencida' ? '❌' : '⚠️';
+      return `${p.numero}/${total} – R$ ${(Number(p.valor) || 0).toFixed(2)} – ${icone} ${status}`;
+    })
+    .join('<br>');
+}
+
 // 🔥 Setar dados
 export function setDadosFinanceiro(novosDados) {
   dados = novosDados;
@@ -143,7 +159,7 @@ export function gerarTabelaFinanceiro() {
         <td>${d.formaPagamento}</td>
         <td>R$ ${(d.valor).toFixed(2)}</td>
         <td>
-          ${d.parcelas.length} (${d.statusParcelas})
+          ${formatarResumoParcelas(d.parcelas)}<br>
           <button onclick="abrirModalParcelas('${d.compraId}')">Ver</button>
         </td>
       </tr>
