@@ -17,16 +17,19 @@ export function gerarFiltrosFinanceiro() {
   const formas = new Set();
   const compras = new Set();
   const statusParcelas = new Set();
+  const categoriasProd = new Set();
 
   const selFornecedor = document.getElementById('fin-fornecedor').value;
   const selForma = document.getElementById('fin-forma').value;
   const selStatus = document.getElementById('fin-status').value;
+  const selCatProd = document.getElementById('fin-categoria-prod').value;
 
   dados.forEach(d => {
     if (d.fornecedorOuCliente) fornecedores.add(d.fornecedorOuCliente);
     if (d.formaPagamento) formas.add(d.formaPagamento);
     if (d.compraId) compras.add(d.compraId);
     if (d.statusParcelas) statusParcelas.add(d.statusParcelas);
+    if (Array.isArray(d.categoriasProdutos)) d.categoriasProdutos.forEach(c => categoriasProd.add(c));
   });
 
   document.getElementById('fin-fornecedor').innerHTML =
@@ -41,15 +44,20 @@ export function gerarFiltrosFinanceiro() {
     `<option value="">Status</option>` +
     [...statusParcelas].sort().map(s => `<option value="${s}">${s}</option>`).join('');
 
+  document.getElementById('fin-categoria-prod').innerHTML =
+    `<option value="">Categoria prod.</option>` +
+    [...categoriasProd].sort().map(c => `<option value="${c}">${c}</option>`).join('');
+
   document.getElementById('lista-compra-fin').innerHTML =
     [...compras].sort().map(c => `<option value="${c}">`).join('');
 
   document.getElementById('fin-fornecedor').value = selFornecedor;
   document.getElementById('fin-forma').value = selForma;
   document.getElementById('fin-status').value = selStatus;
+  document.getElementById('fin-categoria-prod').value = selCatProd;
 
   if (!filtrosIniciados) {
-    ['fin-fornecedor','fin-forma','fin-status','fin-compra-id','fin-data-inicio','fin-data-fim']
+    ['fin-fornecedor','fin-forma','fin-status','fin-categoria-prod','fin-compra-id','fin-data-inicio','fin-data-fim']
       .forEach(id => {
         document.getElementById(id)?.addEventListener('input', gerarTabelaFinanceiro);
       });
@@ -65,6 +73,7 @@ export function gerarTabelaFinanceiro() {
   const formaFiltro = document.getElementById('fin-forma').value;
   const compraFiltro = document.getElementById('fin-compra-id').value.trim();
   const statusFiltro = document.getElementById('fin-status').value;
+  const catProdFiltro = document.getElementById('fin-categoria-prod').value;
   const inicio = document.getElementById('fin-data-inicio').value;
   const fim = document.getElementById('fin-data-fim').value;
   const inicioData = inicio ? parseDataLocal(inicio) : null;
@@ -75,6 +84,7 @@ export function gerarTabelaFinanceiro() {
     const formaMatch = formaFiltro === '' || d.formaPagamento === formaFiltro;
     const compraMatch = compraFiltro === '' || d.compraId === compraFiltro;
     const statusMatch = statusFiltro === '' || d.statusParcelas === statusFiltro;
+    const catProdMatch = catProdFiltro === '' || (Array.isArray(d.categoriasProdutos) && d.categoriasProdutos.includes(catProdFiltro));
 
     let vencMatch = true;
     if (inicioData || fimData) {
@@ -93,7 +103,7 @@ export function gerarTabelaFinanceiro() {
       });
     }
 
-    return fornMatch && formaMatch && compraMatch && statusMatch && vencMatch;
+    return fornMatch && formaMatch && compraMatch && statusMatch && catProdMatch && vencMatch;
   });
 
   if (filtrados.length === 0) {

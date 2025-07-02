@@ -35,6 +35,7 @@ export function limparFiltrosFinanceiro() {
   document.getElementById('fin-fornecedor').value = '';
   document.getElementById('fin-forma').value = '';
   document.getElementById('fin-status').value = '';
+  document.getElementById('fin-categoria-prod').value = '';
 
   gerarTabelaFinanceiro();
 }

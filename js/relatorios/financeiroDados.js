@@ -1,7 +1,7 @@
 // financeiroDados.js — Buscar dados do Firestore
 
 import { db, getEmpresaIdDoUsuario } from '../firebaseConfig.js';
-import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+import { collection, getDocs, query, orderBy, where } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
 export async function carregarDadosFinanceiro(periodoMeses = 3) {
   const hoje = new Date();
@@ -13,6 +13,17 @@ export async function carregarDadosFinanceiro(periodoMeses = 3) {
     query(collection(db, "empresas", empresaId, "financeiro"), orderBy("dataLancamento", "desc"))
   );
 
+  const categoriasPorCompra = {};
+  const movSnap = await getDocs(
+    query(collection(db, 'empresas', empresaId, 'movimentacoes'), where('tipo', '==', 'entrada'))
+  );
+  movSnap.forEach(m => {
+    const d = m.data();
+    if (!d.compraId) return;
+    if (!categoriasPorCompra[d.compraId]) categoriasPorCompra[d.compraId] = new Set();
+    if (d.categoria) categoriasPorCompra[d.compraId].add(d.categoria);
+  });
+
   return snapshot.docs
     .map(doc => {
       const d = doc.data();
@@ -23,7 +34,7 @@ export async function carregarDadosFinanceiro(periodoMeses = 3) {
       const parcelas = Array.isArray(d.parcelas) ? d.parcelas : [];
 
       const hoje = new Date();
-      let statusParcelas = "paga";
+      let statusParcelas = "pago";
       let temVencida = false;
       parcelas.forEach(p => {
         const venc = p.vencimento ? new Date(p.vencimento) : null;
@@ -32,7 +43,11 @@ export async function carregarDadosFinanceiro(periodoMeses = 3) {
           if (venc && venc < hoje) temVencida = true;
         }
       });
-      if (temVencida) statusParcelas = "vencida";
+      if (temVencida) statusParcelas = "vencido";
+
+      const categorias = categoriasPorCompra[d.compraId]
+        ? Array.from(categoriasPorCompra[d.compraId])
+        : [];
 
       return {
         id: doc.id,
@@ -44,6 +59,7 @@ export async function carregarDadosFinanceiro(periodoMeses = 3) {
         compraId: d.compraId || "-",
         parcelas,
         statusParcelas,
+        categoriasProdutos: categorias,
         fornecedorOuCliente: d.fornecedorOuCliente || "-",
         formaPagamento: d.formaPagamento || "-",
         dataLancamento: dataLanc,
