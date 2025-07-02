@@ -216,6 +216,12 @@ table {
   width: 140px;
 }
 
+#tabela-financeiro th:nth-child(4),
+#tabela-financeiro td:nth-child(4) {
+  min-width: 120px;
+  white-space: normal;
+}
+
 #tabela-financeiro th:nth-child(5),
 #tabela-financeiro td:nth-child(5),
 #tabela-financeiro th:nth-child(6),
