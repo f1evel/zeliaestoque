@@ -4,7 +4,7 @@ import { carregarDadosFinanceiro } from './financeiroDados.js';
 import { setDadosFinanceiro, gerarFiltrosFinanceiro, gerarTabelaFinanceiro, dadosFiltradosFinanceiro } from './financeiroTabela.js';
 import { carregarEntradasFinanceiro } from './financeiroCategorias.js';
 import { exportarFinanceiroCSV, exportarFinanceiroExcel, exportarFinanceiroPDF } from './financeiroExportar.js';
-import { mostrarSpinner, esconderSpinner, mostrarMensagem } from '../utils.js';
+import { mostrarSpinner, esconderSpinner, mostrarMensagem, parseDataBR } from '../utils.js';
 import { db, getEmpresaIdDoUsuario } from '../firebaseConfig.js';
 import { collection, getDocs, query, where, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
@@ -152,9 +152,17 @@ window.fecharModalParcelas = function () {
 
 // ✅ Marcar parcela como paga
 window.marcarParcelaComoPaga = async function (compraId, numero) {
-  const hoje = new Date().toISOString().split('T')[0];
-  const data = prompt('Data do pagamento (yyyy-mm-dd):', hoje);
-  if (!data) return;
+  const hojeStr = new Date().toLocaleDateString('pt-BR');
+  const entrada = prompt('Digite a data (DD/MM/AAAA):', hojeStr);
+  if (!entrada) return;
+
+  const dataObj = parseDataBR(entrada);
+  if (isNaN(dataObj.getTime())) {
+    alert('Data inválida. Utilize o formato DD/MM/AAAA.');
+    return;
+  }
+
+  const data = dataObj.toISOString().split('T')[0];
 
   try {
     mostrarSpinner();

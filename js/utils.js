@@ -95,6 +95,14 @@ export function parseDataLocal(str) {
   return new Date(ano, mes - 1, dia);
 }
 
+// 👉 Converter string DD/MM/AAAA para Date no horário local
+export function parseDataBR(str) {
+  if (!str) return new Date(NaN);
+  const [dia, mes, ano] = str.split("/").map(Number);
+  if (!dia || !mes || !ano) return new Date(NaN);
+  return new Date(ano, mes - 1, dia);
+}
+
 // 👉 Calcular dias restantes para vencimento
 export function calcularDiasParaVencimento(validade) {
   try {
