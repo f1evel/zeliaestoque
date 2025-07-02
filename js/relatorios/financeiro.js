@@ -2,12 +2,14 @@
 
 import { carregarDadosFinanceiro } from './financeiroDados.js';
 import { setDadosFinanceiro, gerarFiltrosFinanceiro, gerarTabelaFinanceiro, dadosFiltradosFinanceiro } from './financeiroTabela.js';
+import { carregarEntradasFinanceiro } from './financeiroCategorias.js';
 import { exportarFinanceiroCSV, exportarFinanceiroExcel, exportarFinanceiroPDF } from './financeiroExportar.js';
 import { mostrarSpinner, esconderSpinner, mostrarMensagem } from '../utils.js';
 import { db, getEmpresaIdDoUsuario } from '../firebaseConfig.js';
 import { collection, getDocs, query, where, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
 let dadosFinanceiro = [];
+let entradasFinanceiro = [];
 
 function exibirAlertaVencidas() {
   const aviso = document.getElementById('alerta-vencidas');
@@ -48,6 +50,7 @@ export async function atualizarTabelaFinanceiro() {
     mostrarSpinner();
 
     dadosFinanceiro = await carregarDadosFinanceiro();
+    entradasFinanceiro = await carregarEntradasFinanceiro();
 
     setDadosFinanceiro(dadosFinanceiro);
     gerarFiltrosFinanceiro();
