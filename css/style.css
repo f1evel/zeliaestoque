@@ -217,7 +217,9 @@ table {
 }
 
 #tabela-financeiro th:nth-child(5),
-#tabela-financeiro td:nth-child(5) {
+#tabela-financeiro td:nth-child(5),
+#tabela-financeiro th:nth-child(6),
+#tabela-financeiro td:nth-child(6) {
   text-align: right;
 }
 
@@ -277,6 +279,9 @@ table tbody tr:hover {
 .resumo-card.pago { background-color: #eafaf1; }
 .resumo-card.pendente { background-color: #fff8e6; }
 .resumo-card.vencido { background-color: #fdecea; }
+.valor-aberto {
+  color: #f39c12;
+}
 
 .resumo-card .titulo { font-size: 14px; color: #6b7280; }
 .resumo-card .valor { font-size: 20px; font-weight: 600; }
