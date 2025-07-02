@@ -15,24 +15,20 @@ export async function carregarDadosPrevisao(periodoMeses = 3) {
       collection(db, "empresas", empresaId, "movimentacoes"),
       where("tipo", "==", "saida"),
       where("dataMovimentacao", ">=", Timestamp.fromDate(dataInicio)),
-      orderBy("dataMovimentacao", "desc")
+      orderBy("dataMovimentacao", "asc")
     )
   );
 
-  const mapaConsumo = {};
+  const mapaSaidas = {};
   movSnap.forEach(doc => {
     const d = doc.data();
     const id = d.produtoId;
     if (!id) return;
     const qtd = Number(d.quantidade) || 0;
     const dataMov = d.dataMovimentacao?.toDate();
-    if (!mapaConsumo[id]) {
-      mapaConsumo[id] = { total: 0, ultimaSaida: null };
-    }
-    mapaConsumo[id].total += qtd;
-    if (dataMov && (!mapaConsumo[id].ultimaSaida || dataMov > mapaConsumo[id].ultimaSaida)) {
-      mapaConsumo[id].ultimaSaida = dataMov;
-    }
+    if (!dataMov) return;
+    if (!mapaSaidas[id]) mapaSaidas[id] = [];
+    mapaSaidas[id].push({ data: dataMov, quantidade: qtd });
   });
 
   const snapshot = await getDocs(collection(db, "empresas", empresaId, "produtos"));
@@ -40,17 +36,45 @@ export async function carregarDadosPrevisao(periodoMeses = 3) {
   return snapshot.docs.map(doc => {
     const data = doc.data();
 
-    const consumoTotal = mapaConsumo[doc.id]?.total || 0;
-    const ultimaSaida = mapaConsumo[doc.id]?.ultimaSaida || null;
-    const consumoMensal = consumoTotal / periodoMeses;
-    const quantidade = Number(data.quantidade) || 0;
+    const saidas = (mapaSaidas[doc.id] || []).sort((a, b) => a.data - b.data);
+    const quantidadeEstoque = Number(data.quantidade) || 0;
     const quantidadeMinima = Number(data.quantidadeMinima) || 0;
 
-    const diasDeEstoque = consumoMensal > 0 ? Math.floor((quantidade * 30) / consumoMensal) : Infinity;
+    let mediaDiasPorUnidade = null;
+    let diasPrevisao = Infinity;
+    let dataPrevistaEsgotamento = null;
+    let consumoMensal = 0;
+    let consumoIndefinido = false;
 
-    const dataPrevistaEsgotamento = consumoMensal > 0
-      ? new Date(hoje.getTime() + diasDeEstoque * 24 * 60 * 60 * 1000)
-      : null;
+    if (saidas.length >= 2) {
+      let somaIntervalos = 0;
+      let quantidadeConsumida = 0;
+      for (let i = 0; i < saidas.length - 1; i++) {
+        const atual = saidas[i];
+        const proxima = saidas[i + 1];
+        const diffDias = (proxima.data - atual.data) / 86400000;
+        somaIntervalos += diffDias;
+        quantidadeConsumida += Number(atual.quantidade) || 0;
+      }
+
+      const consumoDiario = quantidadeConsumida > 0 ? quantidadeConsumida / somaIntervalos : 0;
+      consumoMensal = consumoDiario * 30;
+      if (quantidadeConsumida > 0) {
+        mediaDiasPorUnidade = somaIntervalos / quantidadeConsumida;
+        diasPrevisao = mediaDiasPorUnidade * quantidadeEstoque;
+        if (isFinite(diasPrevisao)) {
+          dataPrevistaEsgotamento = new Date(hoje.getTime() + diasPrevisao * 86400000);
+        }
+      } else {
+        consumoIndefinido = true;
+      }
+    } else {
+      consumoIndefinido = true;
+    }
+
+    const ultimaSaida = saidas.length > 0 ? saidas[saidas.length - 1].data : null;
+
+    const diasDeEstoque = diasPrevisao;
 
     return {
       id: doc.id,
@@ -58,12 +82,15 @@ export async function carregarDadosPrevisao(periodoMeses = 3) {
       nomeBusca: normalizarTexto(data.nome || ""),
       categoria: data.categoria || "-",
       fornecedor: data.fornecedor || "-",
-      quantidade,
+      quantidade: quantidadeEstoque,
       quantidadeMinima,
       consumoMensal,
+      mediaDiasPorUnidade,
       diasDeEstoque,
+      diasPrevisao,
       dataPrevistaEsgotamento,
       ultimaSaida,
+      consumoIndefinido,
       lote: data.lote || "-",
       observacoes: data.observacoes || ""
     };

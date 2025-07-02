@@ -47,7 +47,8 @@ export function gerarTabelaPrevisao() {
           <th>Fornecedor</th>
           <th>Qtd</th>
           <th>Consumo/Mês</th>
-          <th>Dias Estoque</th>
+          <th>Média Dias/Unid</th>
+          <th>Dias Previsão</th>
           <th>Prev. Esgotamento</th>
           <th>Última Saída</th>
           <th></th>
@@ -70,7 +71,8 @@ export function gerarTabelaPrevisao() {
         <td>${p.fornecedor}</td>
         <td>${p.quantidade}</td>
         <td>${p.consumoMensal}</td>
-        <td>${p.diasDeEstoque === Infinity ? "-" : p.diasDeEstoque}</td>
+        <td>${p.mediaDiasPorUnidade ?? '-'}</td>
+        <td>${p.diasPrevisao === Infinity ? '-' : p.diasPrevisao}</td>
         <td>${dataPrevista}</td>
         <td>${dataUltima}</td>
         <td><button class="btn-repor" onclick="solicitarReposicao('${p.id}')">Reposição</button></td>
