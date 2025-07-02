@@ -235,6 +235,13 @@ th, td {
   text-align: left;
 }
 
+.fornecedor-cell {
+  max-width: 20ch;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 th {
   background-color: #fafafa;
 }
