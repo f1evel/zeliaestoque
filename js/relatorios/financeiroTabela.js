@@ -7,6 +7,32 @@ import { gerarTabelaFinanceiroCategorias } from './financeiroCategorias.js';
 let dados = [];
 let filtrosIniciados = false;
 
+// 📝 Atualizar descrição dos filtros aplicados
+export function atualizarDescricaoFiltrosFinanceiro() {
+  const inicio = document.getElementById('fin-data-inicio').value;
+  const fim = document.getElementById('fin-data-fim').value;
+  const forma = document.getElementById('fin-forma').value;
+  const fornecedor = document.getElementById('fin-fornecedor').value;
+  const status = document.getElementById('fin-status').value;
+  const categoria = document.getElementById('fin-categoria-prod').value;
+  const compraId = document.getElementById('fin-compra-id').value.trim();
+
+  const partes = [];
+  if (inicio || fim) partes.push(`entre ${inicio || '...'} e ${fim || '...'}`);
+  if (forma) partes.push(`forma de pagamento: ${forma}`);
+  if (fornecedor) partes.push(`fornecedor: ${fornecedor}`);
+  if (compraId) partes.push(`CompraID: ${compraId}`);
+  if (categoria) partes.push(`categoria: ${categoria}`);
+  if (status) partes.push(`status: ${status}`);
+
+  const texto = partes.length > 0
+    ? `Exibindo dados de compras ${partes.join(', ')}.`
+    : 'Exibindo todos os dados de compras.';
+
+  const el = document.getElementById('descricao-filtros-fin');
+  if (el) el.textContent = texto;
+}
+
 function formatarResumoParcelas(parcelas = []) {
   if (!Array.isArray(parcelas) || parcelas.length === 0) return '-';
   const total = parcelas.length;
@@ -141,6 +167,7 @@ export function gerarTabelaFinanceiro() {
   if (filtrados.length === 0) {
     lista.innerHTML = "<p>❌ Nenhum dado encontrado.</p>";
     atualizarCardsFinanceiro([]);
+    atualizarDescricaoFiltrosFinanceiro();
     return;
   }
 
@@ -190,4 +217,5 @@ export function gerarTabelaFinanceiro() {
 
   atualizarCardsFinanceiro(filtrados);
   gerarTabelaFinanceiroCategorias(filtrados);
+  atualizarDescricaoFiltrosFinanceiro();
 }
