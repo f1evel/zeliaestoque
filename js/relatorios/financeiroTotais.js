@@ -1,4 +1,5 @@
 // financeiroTotais.js — Cálculo e atualização dos cards
+import { formatarPreco } from '../utils.js';
 
 export function calcularTotaisFinanceiro(dados) {
   let totalComprado = 0;
@@ -36,8 +37,8 @@ export function calcularTotaisFinanceiro(dados) {
 export function atualizarCardsFinanceiro(dados) {
   const totais = calcularTotaisFinanceiro(dados);
 
-  document.getElementById('total-comprado').textContent = `R$ ${totais.totalComprado.toFixed(2)}`;
-  document.getElementById('total-pago').textContent = `R$ ${totais.totalPago.toFixed(2)}`;
-  document.getElementById('total-pendente').textContent = `R$ ${totais.totalPendente.toFixed(2)}`;
-  document.getElementById('total-vencido').textContent = `R$ ${totais.totalVencido.toFixed(2)}`;
+  document.getElementById('total-comprado').textContent = formatarPreco(totais.totalComprado);
+  document.getElementById('total-pago').textContent = formatarPreco(totais.totalPago);
+  document.getElementById('total-pendente').textContent = formatarPreco(totais.totalPendente);
+  document.getElementById('total-vencido').textContent = formatarPreco(totais.totalVencido);
 }

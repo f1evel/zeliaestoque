@@ -3,7 +3,7 @@
 
 import { db, getEmpresaIdDoUsuario } from '../firebaseConfig.js';
 import { collection, getDocs } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js';
-import { normalizarTexto, parseDataLocal } from '../utils.js';
+import { normalizarTexto, parseDataLocal, formatarPreco, formatarDataBrasileira } from '../utils.js';
 
 // Dados carregados do Firestore
 let dadosOriginais = [];
@@ -194,10 +194,10 @@ function renderizarTabela() {
       <td>${d.quantidadeMinima}</td>
       <td>${d.entradas}</td>
       <td>${d.saidas}</td>
-      <td>${d.preco.toFixed(2)}</td>
+      <td>${formatarPreco(d.preco)}</td>
       <td>${d.consumoMedio.toFixed(1)}</td>
       <td>${dias}</td>
-      <td>${d.validade}</td>
+      <td>${formatarDataBrasileira(d.validade)}</td>
       <td>${d.categoria}</td>
       <td class="fornecedor-cell" title="${fornEsc}">${fornCurto}</td>
     </tr>`;
@@ -215,8 +215,8 @@ function atualizarCards() {
 
   document.getElementById('card-produtos').textContent = totalProdutos;
   document.getElementById('card-unidades').textContent = totalUnidades;
-  document.getElementById('card-valor-medio').textContent = valorMedio.toFixed(2);
-  document.getElementById('card-valor-total').textContent = totalValor.toFixed(2);
+  document.getElementById('card-valor-medio').textContent = formatarPreco(valorMedio);
+  document.getElementById('card-valor-total').textContent = formatarPreco(totalValor);
 }
 
 function gerarGraficos() {

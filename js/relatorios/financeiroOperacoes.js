@@ -1,6 +1,6 @@
 import { carregarDadosEntradas } from './entradasDados.js';
 import { carregarDadosConsumo } from './consumoDados.js';
-import { parseDataLocal, normalizarTexto } from '../utils.js';
+import { parseDataLocal, normalizarTexto, formatarPreco } from '../utils.js';
 
 let entradas = [];
 let saidas = [];
@@ -99,8 +99,8 @@ export function atualizarOperacoesPeriodo() {
 
   document.getElementById('valor-produtos-comprados').textContent = prodComprados.toLocaleString('pt-BR');
   document.getElementById('valor-produtos-consumidos').textContent = prodConsumidos.toLocaleString('pt-BR');
-  document.getElementById('valor-gasto-compras').textContent = valorCompras.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  document.getElementById('valor-total-saidas').textContent = valorSaidas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  document.getElementById('valor-gasto-compras').textContent = formatarPreco(valorCompras);
+  document.getElementById('valor-total-saidas').textContent = formatarPreco(valorSaidas);
 
   gerarGrafico(entradasFiltradas, saidasFiltradas);
 }

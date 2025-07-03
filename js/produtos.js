@@ -32,7 +32,8 @@ import {
   calcularDiasParaVencimento,
   executarComSpinner,
   parseDataLocal,
-  distanciaLevenshtein
+  distanciaLevenshtein,
+  formatarPreco
 } from './utils.js';
 
 // 🔧 Formatador de datas
@@ -233,15 +234,15 @@ function renderizarTabela(produtos, termo = "") {
 
     const preco =
       p.precoCompra !== undefined && p.precoCompra !== null
-        ? `R$ ${(Number(p.precoCompra) || 0).toFixed(2)}`
+        ? formatarPreco(Number(p.precoCompra) || 0)
         : "-";
     const metrica = metricasPrecoPorNome[nomeRef] || {};
     const precoMin =
-      metrica.min !== undefined ? `R$ ${metrica.min.toFixed(2)}` : "-";
+      metrica.min !== undefined ? formatarPreco(metrica.min) : "-";
     const precoMax =
-      metrica.max !== undefined ? `R$ ${metrica.max.toFixed(2)}` : "-";
+      metrica.max !== undefined ? formatarPreco(metrica.max) : "-";
     const precoMed =
-      metrica.media !== undefined ? `R$ ${metrica.media.toFixed(2)}` : "-";
+      metrica.media !== undefined ? formatarPreco(metrica.media) : "-";
 
     html += `
       <tr ${style}>
@@ -746,7 +747,7 @@ window.verDetalhes = async function(id) {
     document.getElementById('det-quantidade').textContent = p.quantidade ?? '-';
     document.getElementById('det-preco').textContent =
       p.precoCompra !== undefined && p.precoCompra !== null
-        ? `R$ ${(Number(p.precoCompra) || 0).toFixed(2)}`
+        ? formatarPreco(Number(p.precoCompra) || 0)
         : '-';
     document.getElementById('det-fornecedor').textContent = p.fornecedor || '-';
     document.getElementById('det-validade').textContent = formatarData(p.validade);

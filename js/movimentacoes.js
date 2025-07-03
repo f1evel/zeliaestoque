@@ -12,7 +12,8 @@ import {
   calcularDiasParaVencimento,
   mostrarSpinner,
   esconderSpinner,
-  parseDataLocal
+  parseDataLocal,
+  formatarPreco
 } from './utils.js';
 import { registrarHistorico } from './historico.js';
 
@@ -532,8 +533,8 @@ function renderizarTabela(movimentacoes, termo = "") {
       <td>${m.nomeProduto}</td>
       <td>${m.tipo}</td>
       <td>${m.quantidade}</td>
-      <td>R$ ${m.precoUnitario?.toFixed(2) || "-"}</td>
-      <td>R$ ${(m.custoTotal || 0).toFixed(2)}</td>
+      <td>${m.precoUnitario != null ? formatarPreco(m.precoUnitario) : "-"}</td>
+      <td>${formatarPreco(m.custoTotal || 0)}</td>
       <td>${dataMov}</td>
       <td>${m.validade?.toDate()?.toLocaleDateString("pt-BR") || "-"}</td>
       <td>${m.lote || "-"}</td>

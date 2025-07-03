@@ -5,7 +5,7 @@ import { setDadosFinanceiro, gerarFiltrosFinanceiro, gerarTabelaFinanceiro, dado
 import { carregarEntradasFinanceiro } from './financeiroCategorias.js';
 import { carregarOperacoes } from './financeiroOperacoes.js';
 import { exportarFinanceiroCSV, exportarFinanceiroExcel, exportarFinanceiroPDF } from './financeiroExportar.js';
-import { mostrarSpinner, esconderSpinner, mostrarMensagem, parseDataBR, formatarCompraIdCurto } from '../utils.js';
+import { mostrarSpinner, esconderSpinner, mostrarMensagem, parseDataBR, formatarCompraIdCurto, formatarPreco } from '../utils.js';
 import { db, getEmpresaIdDoUsuario } from '../firebaseConfig.js';
 import { collection, getDocs, query, where, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
@@ -146,7 +146,7 @@ window.abrirModalParcelas = async function (compraId) {
       const btn = pago
         ? `<button onclick="marcarParcelaComoNaoPaga('${compraId}', ${p.numero})">Marcar como não pago</button>`
         : `<button onclick="marcarParcelaComoPaga('${compraId}', ${p.numero})">Marcar como pago</button>`;
-      htmlParcelas += `<tr><td>${p.numero}/${total}</td><td>R$ ${(p.valor || 0).toFixed(2)}</td><td>${venc}</td><td>${statusTexto}</td><td>${btn}</td></tr>`;
+      htmlParcelas += `<tr><td>${p.numero}/${total}</td><td>${formatarPreco(p.valor || 0)}</td><td>${venc}</td><td>${statusTexto}</td><td>${btn}</td></tr>`;
     });
     htmlParcelas += '</tbody></table>';
   }
@@ -178,7 +178,7 @@ window.abrirModalParcelas = async function (compraId) {
       htmlProdutos += '<h4>Produtos</h4><table class="tabela"><thead><tr><th>Produto</th><th>Quantidade</th><th>Preço unitário</th><th>Total</th></tr></thead><tbody>';
       Object.values(agrupados).forEach(p => {
         const total = p.quantidade * p.preco;
-        htmlProdutos += `<tr><td>${p.nome}</td><td>${p.quantidade}</td><td>R$ ${p.preco.toFixed(2)}</td><td>R$ ${total.toFixed(2)}</td></tr>`;
+        htmlProdutos += `<tr><td>${p.nome}</td><td>${p.quantidade}</td><td>${formatarPreco(p.preco)}</td><td>${formatarPreco(total)}</td></tr>`;
       });
       htmlProdutos += '</tbody></table>';
     }
