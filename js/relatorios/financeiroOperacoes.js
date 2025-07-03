@@ -44,8 +44,16 @@ function gerarGrafico(entradasFiltradas, saidasFiltradas) {
   });
   const meses = Array.from(mesesSet).sort();
 
-  const dadosEntradas = meses.map(m => entradasFiltradas.filter(e => e.data && `${e.data.getFullYear()}-${String(e.data.getMonth()+1).padStart(2,'0')}` === m).reduce((a,c) => a + (c.quantidade || 0), 0));
-  const dadosSaidas = meses.map(m => saidasFiltradas.filter(s => s.data && `${s.data.getFullYear()}-${String(s.data.getMonth()+1).padStart(2,'0')}` === m).reduce((a,c) => a + (c.quantidade || 0), 0));
+  const dadosEntradas = meses.map(m =>
+    entradasFiltradas
+      .filter(e => e.data && `${e.data.getFullYear()}-${String(e.data.getMonth() + 1).padStart(2, '0')}` === m)
+      .reduce((a, c) => a + (c.quantidade || 0) * (c.preco || 0), 0)
+  );
+  const dadosSaidas = meses.map(m =>
+    saidasFiltradas
+      .filter(s => s.data && `${s.data.getFullYear()}-${String(s.data.getMonth() + 1).padStart(2, '0')}` === m)
+      .reduce((a, c) => a + (c.custoTotal || (c.quantidade || 0) * (c.precoUnitario || 0)), 0)
+  );
 
   grafico = new Chart(ctx, {
     type: 'line',
@@ -92,13 +100,9 @@ export function atualizarOperacoesPeriodo() {
   const entradasFiltradas = filtrar(entradas, inicio, fim, categoria, fornecedor);
   const saidasFiltradas = filtrar(saidas, inicio, fim, categoria, fornecedor);
 
-  const prodComprados = entradasFiltradas.reduce((s,e) => s + (e.quantidade || 0), 0);
   const valorCompras = entradasFiltradas.reduce((s,e) => s + (e.quantidade || 0)*(e.preco || 0), 0);
-  const prodConsumidos = saidasFiltradas.reduce((s,sai) => s + (sai.quantidade || 0), 0);
   const valorSaidas = saidasFiltradas.reduce((s,sai) => s + (sai.custoTotal || (sai.quantidade || 0)*(sai.precoUnitario || 0)), 0);
 
-  document.getElementById('valor-produtos-comprados').textContent = prodComprados.toLocaleString('pt-BR');
-  document.getElementById('valor-produtos-consumidos').textContent = prodConsumidos.toLocaleString('pt-BR');
   document.getElementById('valor-gasto-compras').textContent = formatarPreco(valorCompras);
   document.getElementById('valor-total-saidas').textContent = formatarPreco(valorSaidas);
 
