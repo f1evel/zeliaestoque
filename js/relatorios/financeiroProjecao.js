@@ -67,10 +67,10 @@ function gerarGrafico(projecoes) {
   });
 }
 
-async function atualizarProjecao() {
+export async function atualizarProjecao(dadosExternos = null) {
   try {
     mostrarSpinner();
-    const dados = await carregarDadosFinanceiro();
+    const dados = dadosExternos || await carregarDadosFinanceiro();
     const mapa = {};
     dados.forEach(d => {
       const parcelas = Array.isArray(d.parcelas) && d.parcelas.length > 0

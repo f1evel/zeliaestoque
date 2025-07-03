@@ -20,18 +20,12 @@ export async function carregarEntradasFinanceiro() {
     return {
       compraId: d.compraId || '-',
       categoria: d.categoria || '-',
+      quantidade: Number(d.quantidade) || 0,
       custoTotal: custo,
       dataMovimentacao: dataMov
     };
   });
   return entradas;
-}
-
-function mesesEntre(inicio, fim) {
-  if (!inicio || !fim) return 1;
-  const i = new Date(inicio.getFullYear(), inicio.getMonth(), 1);
-  const f = new Date(fim.getFullYear(), fim.getMonth(), 1);
-  return (f.getFullYear() - i.getFullYear()) * 12 + (f.getMonth() - i.getMonth()) + 1;
 }
 
 export function gerarTabelaFinanceiroCategorias(finDados) {
@@ -55,8 +49,9 @@ export function gerarTabelaFinanceiroCategorias(finDados) {
     if (fimData && data && data > fimData) return;
 
     const cat = e.categoria || '-';
-    const val = e.custoTotal || 0;
-    totais[cat] = (totais[cat] || 0) + val;
+    if (!totais[cat]) totais[cat] = { valor: 0, quantidade: 0 };
+    totais[cat].valor += e.custoTotal || 0;
+    totais[cat].quantidade += e.quantidade || 0;
 
     if (data) {
       if (!minData || data < minData) minData = data;
@@ -66,17 +61,14 @@ export function gerarTabelaFinanceiroCategorias(finDados) {
 
   const categorias = Object.keys(totais);
   if (categorias.length === 0) {
-    cont.innerHTML = '<p>❌ Nenhum dado encontrado.</p>';
+    cont.innerHTML = '<p>Nenhum gasto encontrado nesta categoria no período selecionado.</p>';
     return;
   }
 
-  const meses = inicioData && fimData ? mesesEntre(inicioData, fimData) : mesesEntre(minData, maxData);
-
-  let html = `<table class="tabela"><thead><tr><th>Categoria</th><th>Total Gasto</th><th>Custo Médio por Mês</th></tr></thead><tbody>`;
+  let html = `<table class="tabela"><thead><tr><th>Categoria</th><th>Quantidade comprada</th><th>Valor total gasto</th></tr></thead><tbody>`;
   categorias.sort().forEach(cat => {
-    const total = totais[cat];
-    const medio = total / (meses || 1);
-    html += `<tr><td>${cat}</td><td>R$ ${total.toFixed(2)}</td><td>R$ ${medio.toFixed(2)}</td></tr>`;
+    const info = totais[cat];
+    html += `<tr><td>${cat}</td><td>${info.quantidade.toLocaleString('pt-BR')} unidades</td><td>R$ ${info.valor.toFixed(2)}</td></tr>`;
   });
   html += '</tbody></table>';
   cont.innerHTML = html;

@@ -18,6 +18,7 @@ export async function carregarDadosEntradas() {
       id: doc.id,
       nome: d.nomeProduto || '-',
       fornecedor: d.fornecedor || '-',
+      categoria: d.categoria || '-',
       quantidade: Number(d.quantidade) || 0,
       validade: d.validade?.toDate() || null,
       preco: Number(d.precoUnitario) || 0,

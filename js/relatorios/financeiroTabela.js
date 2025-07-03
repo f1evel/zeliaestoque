@@ -4,6 +4,7 @@ import { normalizarTexto, parseDataLocal, formatarCompraIdCurto, formatarDataISO
 import { atualizarCardsFinanceiro } from './financeiroTotais.js';
 import { gerarTabelaFinanceiroCategorias } from './financeiroCategorias.js';
 import { atualizarOperacoesPeriodo } from './financeiroOperacoes.js';
+import { atualizarProjecao } from './financeiroProjecao.js';
 
 let dados = [];
 let filtrosIniciados = false;
@@ -86,6 +87,7 @@ export function dadosFiltradosFinanceiro() {
   const compraFiltro = document.getElementById('fin-compra-id').value.trim();
   const statusFiltro = document.getElementById('fin-status').value;
   const catProdFiltro = document.getElementById('fin-categoria-prod').value;
+  const catProdNorm = normalizarTexto(catProdFiltro);
   const inicio = document.getElementById('fin-data-inicio').value;
   const fim = document.getElementById('fin-data-fim').value;
   const inicioData = inicio ? parseDataLocal(inicio) : null;
@@ -106,7 +108,7 @@ export function dadosFiltradosFinanceiro() {
         statusMatch = d.statusParcelas === statusFiltro;
       }
     }
-    const catProdMatch = catProdFiltro === '' || (Array.isArray(d.categoriasProdutos) && d.categoriasProdutos.includes(catProdFiltro));
+    const catProdMatch = catProdNorm === '' || (Array.isArray(d.categoriasProdutos) && d.categoriasProdutos.some(c => normalizarTexto(c) === catProdNorm));
 
     let vencMatch = true;
     if (inicioData || fimData) {
@@ -135,7 +137,7 @@ export function gerarFiltrosFinanceiro() {
   const formas = new Set();
   const compras = new Set();
   const statusParcelas = new Set();
-  const categoriasProd = new Set();
+  const categoriasProdMap = new Map();
 
   const selFornecedor = document.getElementById('fin-fornecedor').value;
   const selForma = document.getElementById('fin-forma').value;
@@ -147,7 +149,12 @@ export function gerarFiltrosFinanceiro() {
     if (d.formaPagamento) formas.add(d.formaPagamento);
     if (d.compraId) compras.add(d.compraId);
     if (d.statusParcelas) statusParcelas.add(d.statusParcelas);
-    if (Array.isArray(d.categoriasProdutos)) d.categoriasProdutos.forEach(c => categoriasProd.add(c));
+    if (Array.isArray(d.categoriasProdutos)) {
+      d.categoriasProdutos.forEach(c => {
+        const norm = normalizarTexto(c);
+        if (!categoriasProdMap.has(norm)) categoriasProdMap.set(norm, c);
+      });
+    }
   });
 
   // Garante que todos os status principais estejam disponíveis no filtro
@@ -166,8 +173,8 @@ export function gerarFiltrosFinanceiro() {
     [...statusParcelas].sort().map(s => `<option value="${s}">${s}</option>`).join('');
 
   document.getElementById('fin-categoria-prod').innerHTML =
-    `<option value="">Categoria prod.</option>` +
-    [...categoriasProd].sort().map(c => {
+    `<option value="">Categoria</option>` +
+    [...categoriasProdMap.values()].sort((a,b) => a.localeCompare(b)).map(c => {
       const t = c.length > 20 ? c.slice(0,17) + "..." : c;
       return `<option value="${c}" title="${c}">${t}</option>`;
     }).join("");
@@ -196,11 +203,18 @@ export function gerarTabelaFinanceiro() {
   const lista = document.getElementById("tabela-financeiro");
 
   const filtrados = dadosFiltradosFinanceiro();
+  const catFiltroNorm = normalizarTexto(document.getElementById('fin-categoria-prod').value);
 
   if (filtrados.length === 0) {
-    lista.innerHTML = "<p>❌ Nenhum dado encontrado.</p>";
+    const msg = catFiltroNorm
+      ? 'Nenhum gasto encontrado nesta categoria no período selecionado.'
+      : '❌ Nenhum dado encontrado.';
+    lista.innerHTML = `<p>${msg}</p>`;
     atualizarCardsFinanceiro([]);
+    gerarTabelaFinanceiroCategorias([]);
     atualizarDescricaoFiltrosFinanceiro();
+    atualizarOperacoesPeriodo();
+    atualizarProjecao([]);
     return;
   }
 
@@ -255,4 +269,5 @@ export function gerarTabelaFinanceiro() {
   gerarTabelaFinanceiroCategorias(filtrados);
   atualizarDescricaoFiltrosFinanceiro();
   atualizarOperacoesPeriodo();
+  atualizarProjecao(filtrados);
 }
