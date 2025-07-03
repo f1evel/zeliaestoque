@@ -1,6 +1,6 @@
 // financeiroTabela.js — Geração de tabela e filtros
 
-import { normalizarTexto, parseDataLocal, formatarCompraIdCurto } from '../utils.js';
+import { normalizarTexto, parseDataLocal, formatarCompraIdCurto, formatarDataISOParaBR } from '../utils.js';
 import { atualizarCardsFinanceiro } from './financeiroTotais.js';
 import { gerarTabelaFinanceiroCategorias } from './financeiroCategorias.js';
 
@@ -11,23 +11,21 @@ let filtrosIniciados = false;
 export function atualizarDescricaoFiltrosFinanceiro() {
   const inicio = document.getElementById('fin-data-inicio').value;
   const fim = document.getElementById('fin-data-fim').value;
-  const forma = document.getElementById('fin-forma').value;
-  const fornecedor = document.getElementById('fin-fornecedor').value;
-  const status = document.getElementById('fin-status').value;
-  const categoria = document.getElementById('fin-categoria-prod').value;
-  const compraId = document.getElementById('fin-compra-id').value.trim();
+  const fornecedor = document.getElementById('fin-fornecedor').value.trim();
 
-  const partes = [];
-  if (inicio || fim) partes.push(`entre ${inicio || '...'} e ${fim || '...'}`);
-  if (forma) partes.push(`forma de pagamento: ${forma}`);
-  if (fornecedor) partes.push(`fornecedor: ${fornecedor}`);
-  if (compraId) partes.push(`CompraID: ${compraId}`);
-  if (categoria) partes.push(`categoria: ${categoria}`);
-  if (status) partes.push(`status: ${status}`);
+  const inicioBR = formatarDataISOParaBR(inicio);
+  const fimBR = formatarDataISOParaBR(fim);
 
-  const texto = partes.length > 0
-    ? `Exibindo dados de compras ${partes.join(', ')}.`
-    : 'Exibindo todos os dados de compras.';
+  let texto = 'Exibindo todos os dados de compras.';
+
+  if (inicio || fim) {
+    texto = `Exibindo compras de ${inicioBR || '...'} até ${fimBR || '...'}`;
+  }
+
+  if (fornecedor) {
+    const intervalo = inicio || fim ? ` entre ${inicioBR || '...'} e ${fimBR || '...'}` : '';
+    texto = `Exibindo compras do fornecedor ${fornecedor}${intervalo}`;
+  }
 
   const el = document.getElementById('descricao-filtros-fin');
   if (el) el.textContent = texto;
