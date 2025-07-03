@@ -35,18 +35,12 @@ export function atualizarDescricaoFiltrosFinanceiro() {
 
 function formatarResumoParcelas(parcelas = []) {
   if (!Array.isArray(parcelas) || parcelas.length === 0) return '-';
-  const total = parcelas.length;
-  const hoje = new Date();
-  return parcelas
-    .sort((a, b) => (a.numero || 0) - (b.numero || 0))
-    .map(p => {
-      let status = 'pendente';
-      if (p.status === 'pago') status = 'pago';
-      else if (p.vencimento && new Date(p.vencimento) < hoje) status = 'vencida';
-      const icone = status === 'pago' ? '✅' : status === 'vencida' ? '❌' : '⚠️';
-      return `${p.numero}/${total} – R$ ${(Number(p.valor) || 0).toFixed(2)} – ${icone} ${status}`;
-    })
-    .join('<br>');
+
+  const pendentes = parcelas.filter(p => p.status !== 'pago').length;
+  if (pendentes === 0) return 'Nenhuma pendente';
+
+  const plural = pendentes > 1 ? 's' : '';
+  return `${pendentes} parcela${plural} pendente${plural}`;
 }
 
 function calcularValorAberto(registro) {
