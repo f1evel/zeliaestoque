@@ -211,7 +211,7 @@ export function gerarTabelaFinanceiro() {
         <td class="valor-aberto">R$ ${aberto.toFixed(2)}</td>
         <td>
           ${formatarResumoParcelas(d.parcelas)}<br>
-          <button onclick="abrirModalParcelas('${d.compraId}')">Ver</button>
+          <button onclick="abrirModalParcelas('${d.compraId}')">Detalhes</button>
         </td>
       </tr>
     `;
