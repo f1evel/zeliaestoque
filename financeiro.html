@@ -29,6 +29,41 @@
     <h1>💰 Financeiro</h1>
     <div id="alerta-vencidas" class="alert-aviso" style="display:none; margin-bottom:10px;"></div>
 
+    <section id="operacoes-periodo" style="margin-bottom:20px;">
+      <h2>Operações financeiras por período</h2>
+      <div id="cards-operacoes-periodo" class="cards">
+        <div class="resumo-card" id="card-produtos-comprados">
+          <div class="icone">📥</div>
+          <div class="texto">
+            <div class="titulo text-sm text-gray-500">Produtos comprados</div>
+            <div class="valor text-xl font-semibold" id="valor-produtos-comprados">-</div>
+          </div>
+        </div>
+        <div class="resumo-card" id="card-produtos-consumidos">
+          <div class="icone">📦</div>
+          <div class="texto">
+            <div class="titulo text-sm text-gray-500">Produtos consumidos</div>
+            <div class="valor text-xl font-semibold" id="valor-produtos-consumidos">-</div>
+          </div>
+        </div>
+        <div class="resumo-card" id="card-valor-compras">
+          <div class="icone">💰</div>
+          <div class="texto">
+            <div class="titulo text-sm text-gray-500">Valor total gasto</div>
+            <div class="valor text-xl font-semibold" id="valor-gasto-compras">-</div>
+          </div>
+        </div>
+        <div class="resumo-card" id="card-valor-saidas-periodo">
+          <div class="icone">💸</div>
+          <div class="texto">
+            <div class="titulo text-sm text-gray-500">Valor total em saídas</div>
+            <div class="valor text-xl font-semibold" id="valor-total-saidas">-</div>
+          </div>
+        </div>
+      </div>
+      <canvas id="grafico-operacoes" style="max-height:300px; margin-top:10px;"></canvas>
+    </section>
+
     <div class="filtros filtros-financeiro">
       <div class="campo-filtro estreito">
         <label for="fin-data-inicio">De</label>
@@ -140,6 +175,7 @@
 <script type="module" src="js/utils.js"></script>
 <script type="module" src="js/modais.js"></script>
 <script type="module" src="js/relatorios/financeiro.js"></script>
+<script type="module" src="js/relatorios/financeiroOperacoes.js"></script>
 <script type="module" src="js/relatorios/financeiroExportar.js"></script>
 <script type="module" src="js/relatorios/financeiroGraficos.js"></script>
 <script type="module" src="js/relatorios/financeiroTotais.js"></script>

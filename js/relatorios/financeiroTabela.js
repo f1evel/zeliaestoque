@@ -3,6 +3,7 @@
 import { normalizarTexto, parseDataLocal, formatarCompraIdCurto, formatarDataISOParaBR } from '../utils.js';
 import { atualizarCardsFinanceiro } from './financeiroTotais.js';
 import { gerarTabelaFinanceiroCategorias } from './financeiroCategorias.js';
+import { atualizarOperacoesPeriodo } from './financeiroOperacoes.js';
 
 let dados = [];
 let filtrosIniciados = false;
@@ -253,4 +254,5 @@ export function gerarTabelaFinanceiro() {
   atualizarCardsFinanceiro(filtrados);
   gerarTabelaFinanceiroCategorias(filtrados);
   atualizarDescricaoFiltrosFinanceiro();
+  atualizarOperacoesPeriodo();
 }
