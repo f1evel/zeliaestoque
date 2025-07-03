@@ -2,7 +2,7 @@
 
 import { normalizarTexto, parseDataLocal, formatarCompraIdCurto, formatarDataISOParaBR, formatarPreco } from '../utils.js';
 import { atualizarCardsFinanceiro } from './financeiroTotais.js';
-import { gerarTabelaFinanceiroCategorias } from './financeiroCategorias.js';
+import { gerarTabelaFinanceiroCategorias, obterCategoriasEntradas } from './financeiroCategorias.js';
 import { atualizarOperacoesPeriodo } from './financeiroOperacoes.js';
 import { atualizarProjecao } from './financeiroProjecao.js';
 
@@ -138,6 +138,7 @@ export function gerarFiltrosFinanceiro() {
   const compras = new Set();
   const statusParcelas = new Set();
   const categoriasProdMap = new Map();
+  const categoriasEntradas = obterCategoriasEntradas();
 
   const selFornecedor = document.getElementById('fin-fornecedor').value;
   const selForma = document.getElementById('fin-forma').value;
@@ -155,6 +156,11 @@ export function gerarFiltrosFinanceiro() {
         if (!categoriasProdMap.has(norm)) categoriasProdMap.set(norm, c);
       });
     }
+  });
+
+  categoriasEntradas.forEach(c => {
+    const norm = normalizarTexto(c);
+    if (!categoriasProdMap.has(norm)) categoriasProdMap.set(norm, c);
   });
 
   // Garante que todos os status principais estejam disponíveis no filtro
