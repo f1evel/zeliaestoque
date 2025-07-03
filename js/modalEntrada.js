@@ -260,13 +260,14 @@ window.confirmarEntradaEstoque = async function () {
     const custoTotal = quantidade * precoUnitario;
     const dataTimestamp = Timestamp.now();
 
+    const valoresParcelas = dividirValorEmParcelas(custoTotal, numParcelas);
     const parcelas = [];
     for (let i = 0; i < numParcelas; i++) {
       const input = document.getElementById(`parcela-venc-${i}`);
       if (input) {
         parcelas.push({
           numero: i + 1,
-          valor: Math.round((custoTotal / numParcelas) * 100) / 100,
+          valor: valoresParcelas[i],
           vencimento: input.value,
           status: "pendente"
         });
@@ -314,11 +315,11 @@ window.confirmarEntradaEstoque = async function () {
 
       const novoValorTotal = (finData.valorTotal || 0) + custoTotal;
       const numParcelasTotais = parcelasExistentes.length || parcelas.length;
-      const novoValorParcela = Math.round((novoValorTotal / numParcelasTotais) * 100) / 100;
+      const novosValores = dividirValorEmParcelas(novoValorTotal, numParcelasTotais);
       const parcelasAtualizadas = parcelasExistentes.map((p, idx) => ({
         ...p,
         numero: idx + 1,
-        valor: novoValorParcela
+        valor: novosValores[idx]
       }));
 
       await updateDoc(finRef, {
@@ -360,9 +361,19 @@ window.confirmarEntradaEstoque = async function () {
 
 //Gerar parcelas//
 
+// Calcula os valores das parcelas garantindo que a soma seja exatamente igual ao total
+function dividirValorEmParcelas(valorTotal, numParcelas) {
+  const totalCentavos = Math.round(valorTotal * 100);
+  const valorBase = Math.floor(totalCentavos / numParcelas);
+  const valores = new Array(numParcelas).fill(valorBase);
+  const resto = totalCentavos - valorBase * numParcelas;
+  valores[numParcelas - 1] += resto;
+  return valores.map(v => parseFloat((v / 100).toFixed(2)));
+}
+
 function gerarParcelasAutomaticamente(valorTotal, numParcelas, dataInicial) {
   const parcelas = [];
-  const valorParcela = Math.round((valorTotal / numParcelas) * 100) / 100; // Arredondamento com 2 casas
+  const valores = dividirValorEmParcelas(valorTotal, numParcelas);
 
   const dataBase = parseDataLocal(dataInicial);
   for (let i = 0; i < numParcelas; i++) {
@@ -371,7 +382,7 @@ function gerarParcelasAutomaticamente(valorTotal, numParcelas, dataInicial) {
 
     parcelas.push({
       numero: i + 1,
-      valor: valorParcela,
+      valor: valores[i],
       vencimento: vencimento.toISOString().split("T")[0],
       status: "pendente"
     });
