@@ -126,6 +126,7 @@ window.abrirModalParcelas = async function (compraId) {
 
   let htmlParcelas = '';
   let htmlProdutos = '';
+  let totalCompra = 0;
 
   // Parcelas
   if (!registro.parcelas || registro.parcelas.length === 0) {
@@ -178,9 +179,12 @@ window.abrirModalParcelas = async function (compraId) {
       htmlProdutos += '<h4>Produtos</h4><table class="tabela"><thead><tr><th>Produto</th><th>Quantidade</th><th>Preço unitário</th><th>Total</th></tr></thead><tbody>';
       Object.values(agrupados).forEach(p => {
         const total = p.quantidade * p.preco;
+        totalCompra += total;
         htmlProdutos += `<tr><td>${p.nome}</td><td>${p.quantidade}</td><td>${formatarPreco(p.preco)}</td><td>${formatarPreco(total)}</td></tr>`;
       });
-      htmlProdutos += '</tbody></table>';
+      htmlProdutos += `<tr><th colspan="3" style="text-align:right;">Total da compra</th><th>${formatarPreco(totalCompra || registro.valor)}</th></tr></tbody></table>`;
+    } else {
+      htmlProdutos += `<p><strong>Total da compra:</strong> ${formatarPreco(registro.valor)}</p>`;
     }
   } catch (e) {
     console.error('Erro ao buscar produtos da compra', e);
