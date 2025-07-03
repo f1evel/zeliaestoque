@@ -1,6 +1,6 @@
 import { carregarDadosEntradas } from './entradasDados.js';
 import { carregarDadosConsumo } from './consumoDados.js';
-import { parseDataLocal } from '../utils.js';
+import { parseDataLocal, normalizarTexto } from '../utils.js';
 
 let entradas = [];
 let saidas = [];
@@ -12,12 +12,14 @@ export async function carregarOperacoes() {
 }
 
 function filtrar(lista, inicio, fim, categoria, fornecedor) {
+  const catNorm = normalizarTexto(categoria);
+  const fornNorm = normalizarTexto(fornecedor);
   return lista.filter(item => {
     const data = item.data;
     if (inicio && data && data < inicio) return false;
     if (fim && data && data > fim) return false;
-    if (categoria && item.categoria !== categoria) return false;
-    if (fornecedor && item.fornecedor !== fornecedor) return false;
+    if (categoria && normalizarTexto(item.categoria) !== catNorm) return false;
+    if (fornecedor && normalizarTexto(item.fornecedor) !== fornNorm) return false;
     return true;
   });
 }
