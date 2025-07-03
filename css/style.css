@@ -646,3 +646,9 @@ button.btn-icon.btn-sm { font-size: 13px; padding: 5px; }
 button.btn-icon.btn-md { font-size: 14px; padding: 6px; }
 button.btn-icon.btn-lg { font-size: 15px; padding: 7px; }
 button.btn-icon.btn-xl { font-size: 16px; padding: 8px; }
+
+/* Descrição de filtros aplicados */
+.descricao-filtros {
+  margin: 10px 0;
+  color: #6b7280;
+}
