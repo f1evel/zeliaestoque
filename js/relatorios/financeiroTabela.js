@@ -36,11 +36,33 @@ export function atualizarDescricaoFiltrosFinanceiro() {
 function formatarResumoParcelas(parcelas = []) {
   if (!Array.isArray(parcelas) || parcelas.length === 0) return '-';
 
-  const pendentes = parcelas.filter(p => p.status !== 'pago').length;
-  if (pendentes === 0) return 'Nenhuma pendente';
+  const total = parcelas.length;
+  const pagas = parcelas.filter(p => p.status === 'pago').length;
+  const pendentes = total - pagas;
 
-  const plural = pendentes > 1 ? 's' : '';
-  return `${pendentes} parcela${plural} pendente${plural}`;
+  let texto;
+  if (pendentes === 0) {
+    texto = 'Nenhuma pendente';
+  } else {
+    const plural = pendentes > 1 ? 's' : '';
+    texto = `${pendentes} parcela${plural} pendente${plural}`;
+  }
+
+  if (pagas > 0 && pendentes > 0) {
+    texto += `<br><small>${pagas} de ${total} pagas</small>`;
+  }
+
+  return texto;
+}
+
+function calcularValorPago(registro) {
+  const parcelas = Array.isArray(registro.parcelas) && registro.parcelas.length > 0
+    ? registro.parcelas
+    : [{ valor: registro.valor, status: registro.status }];
+  return parcelas.reduce((s, p) => {
+    const v = Number(p.valor) || 0;
+    return p.status === 'pago' ? s + v : s;
+  }, 0);
 }
 
 function calcularValorAberto(registro) {
@@ -74,7 +96,17 @@ export function dadosFiltradosFinanceiro() {
     const fornMatch = fornecedorFiltro === '' || d.fornecedorOuCliente === fornecedorFiltro;
     const formaMatch = formaFiltro === '' || d.formaPagamento === formaFiltro;
     const compraMatch = compraFiltro === '' || d.compraId === compraFiltro;
-    const statusMatch = statusFiltro === '' || d.statusParcelas === statusFiltro;
+    let statusMatch = true;
+    if (statusFiltro) {
+      if (statusFiltro === 'pago') {
+        const parcelas = Array.isArray(d.parcelas) && d.parcelas.length > 0
+          ? d.parcelas
+          : [{ status: d.status }];
+        statusMatch = parcelas.some(p => p.status === 'pago');
+      } else {
+        statusMatch = d.statusParcelas === statusFiltro;
+      }
+    }
     const catProdMatch = catProdFiltro === '' || (Array.isArray(d.categoriasProdutos) && d.categoriasProdutos.includes(catProdFiltro));
 
     let vencMatch = true;
@@ -118,6 +150,9 @@ export function gerarFiltrosFinanceiro() {
     if (d.statusParcelas) statusParcelas.add(d.statusParcelas);
     if (Array.isArray(d.categoriasProdutos)) d.categoriasProdutos.forEach(c => categoriasProd.add(c));
   });
+
+  // Garante que todos os status principais estejam disponíveis no filtro
+  ['pago', 'pendente', 'vencido'].forEach(s => statusParcelas.add(s));
 
   document.getElementById('fin-fornecedor').innerHTML =
     `<option value="">Fornecedor</option>` +
@@ -179,6 +214,7 @@ export function gerarTabelaFinanceiro() {
           <th>Data da compra</th>
           <th>Forma<br>de Pagamento</th>
           <th>Valor total</th>
+          <th>Valor pago</th>
           <th>Valor em aberto</th>
           <th>Parcelas</th>
         </tr>
@@ -189,6 +225,7 @@ export function gerarTabelaFinanceiro() {
   filtrados.forEach(d => {
     const lanc = d.dataLancamento?.toLocaleDateString('pt-BR') || '-';
     const aberto = calcularValorAberto(d);
+    const pago = calcularValorPago(d);
     const nomeFornecedor = d.fornecedorOuCliente || '-';
     const fornecedorEscapado = nomeFornecedor.replace(/"/g, '&quot;');
     const fornecedorCurto = nomeFornecedor.length > 20
@@ -202,6 +239,7 @@ export function gerarTabelaFinanceiro() {
         <td>${lanc}</td>
         <td>${d.formaPagamento}</td>
         <td>R$ ${(d.valor).toFixed(2)}</td>
+        <td>R$ ${pago.toFixed(2)}</td>
         <td class="valor-aberto">R$ ${aberto.toFixed(2)}</td>
         <td>
           ${formatarResumoParcelas(d.parcelas)}<br>
