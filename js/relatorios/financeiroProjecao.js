@@ -34,24 +34,35 @@ function gerarGrafico(projecoes) {
   if (grafico) grafico.destroy();
 
   grafico = new Chart(ctx, {
-    type: 'bar',
+    type: 'line',
     data: {
       labels: projecoes.map(p => formatarMes(p.mes)),
       datasets: [{
-        label: 'Valor previsto',
+        label: 'Total a vencer',
         data: projecoes.map(p => p.valor),
-        backgroundColor: 'rgba(54, 162, 235, 0.5)',
-        borderColor: 'rgba(54, 162, 235, 1)',
-        borderWidth: 1
+        borderColor: '#60a5fa',
+        backgroundColor: 'transparent',
+        tension: 0.2,
+        pointRadius: 3
       }]
     },
     options: {
       responsive: true,
       plugins: {
         legend: { display: false },
-        title: { display: true, text: 'Projeção de Pagamentos Futuros' }
+        title: { display: false }
       },
-      scales: { y: { beginAtZero: true } }
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: '#6b7280', font: { size: 12 } }
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: '#e5e7eb' },
+          ticks: { color: '#6b7280', font: { size: 12 } }
+        }
+      }
     }
   });
 }
@@ -66,7 +77,7 @@ async function atualizarProjecao() {
         ? d.parcelas
         : [{ valor: d.valor, vencimento: d.dataVencimento, status: d.status }];
       parcelas.forEach(p => {
-        if (p.status === 'pago') return;
+        if (!['pendente', 'vencido', 'vencida'].includes(p.status)) return;
         const venc = p.vencimento ? new Date(p.vencimento) : null;
         if (!venc || isNaN(venc)) return;
         const chave = `${venc.getFullYear()}-${('0'+(venc.getMonth()+1)).slice(-2)}`;
