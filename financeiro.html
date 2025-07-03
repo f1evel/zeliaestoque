@@ -32,11 +32,11 @@
     <div class="filtros filtros-financeiro">
       <div class="campo-filtro estreito">
         <label for="fin-data-inicio">De</label>
-        <input type="date" id="fin-data-inicio">
+        <input type="date" id="fin-data-inicio" class="campo-data">
       </div>
       <div class="campo-filtro estreito">
         <label for="fin-data-fim">Até</label>
-        <input type="date" id="fin-data-fim">
+        <input type="date" id="fin-data-fim" class="campo-data">
       </div>
 
       <div class="campo-filtro">
@@ -52,9 +52,9 @@
         <label for="fin-forma">Forma</label>
         <select id="fin-forma"></select>
       </div>
-      <div class="campo-filtro">
+      <div class="campo-filtro estreito">
         <label for="fin-categoria-prod">Categoria prod.</label>
-        <select id="fin-categoria-prod"></select>
+        <select id="fin-categoria-prod" class="campo-categoria"></select>
       </div>
       <div class="campo-filtro">
         <label for="fin-status">Status</label>
@@ -62,11 +62,11 @@
       </div>
 
       <div class="campo-filtro botoes">
-        <button id="botao-atualizar-fin" class="btn-icon btn-xs">🔄</button>
-        <button id="botao-limpar-fin" class="btn-icon btn-sm">🧹</button>
-        <button id="botao-exportar-csv-fin" class="btn-icon btn-md">📄</button>
-        <button id="botao-exportar-excel-fin" class="btn-icon btn-lg">📊</button>
-        <button id="botao-exportar-pdf-fin" class="btn-icon btn-xl">🖨️</button>
+        <button id="botao-atualizar-fin" class="botao-acao" title="Atualizar relatório">🔄</button>
+        <button id="botao-limpar-fin" class="botao-acao" title="Limpar filtros">🧹</button>
+        <button id="botao-exportar-csv-fin" class="botao-acao" title="Exportar CSV">📄</button>
+        <button id="botao-exportar-excel-fin" class="botao-acao" title="Exportar Excel">📊</button>
+        <button id="botao-exportar-pdf-fin" class="botao-acao" title="Exportar PDF">🖨️</button>
       </div>
     </div>
 

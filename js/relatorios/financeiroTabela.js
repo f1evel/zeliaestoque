@@ -139,7 +139,10 @@ export function gerarFiltrosFinanceiro() {
 
   document.getElementById('fin-categoria-prod').innerHTML =
     `<option value="">Categoria prod.</option>` +
-    [...categoriasProd].sort().map(c => `<option value="${c}">${c}</option>`).join('');
+    [...categoriasProd].sort().map(c => {
+      const t = c.length > 20 ? c.slice(0,17) + "..." : c;
+      return `<option value="${c}" title="${c}">${t}</option>`;
+    }).join("");
 
   document.getElementById('lista-compra-fin').innerHTML =
     [...compras].sort().map(c => `<option value="${c}">`).join('');
@@ -148,12 +151,14 @@ export function gerarFiltrosFinanceiro() {
   document.getElementById('fin-forma').value = selForma;
   document.getElementById('fin-status').value = selStatus;
   document.getElementById('fin-categoria-prod').value = selCatProd;
+  document.getElementById("fin-categoria-prod").title = document.getElementById("fin-categoria-prod").value;
 
   if (!filtrosIniciados) {
     ['fin-fornecedor','fin-forma','fin-status','fin-categoria-prod','fin-compra-id','fin-data-inicio','fin-data-fim']
       .forEach(id => {
         document.getElementById(id)?.addEventListener('input', gerarTabelaFinanceiro);
       });
+    document.getElementById("fin-categoria-prod")?.addEventListener("change", e => { e.target.title = e.target.value; });
     filtrosIniciados = true;
   }
 }

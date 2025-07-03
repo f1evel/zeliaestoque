@@ -652,3 +652,28 @@ button.btn-icon.btn-xl { font-size: 16px; padding: 8px; }
   margin: 10px 0;
   color: #6b7280;
 }
+
+/* Botões de ação uniformes */
+.botao-acao {
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+/* Campos de data compactos */
+.campo-data {
+  max-width: 130px;
+  min-width: 100px;
+  padding: 4px;
+}
+
+/* Campo de categoria compacto */
+.campo-categoria {
+  max-width: 160px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
