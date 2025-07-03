@@ -113,39 +113,24 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // 📑 Modal de parcelas
+
 window.abrirModalParcelas = async function (compraId) {
   const registro = dadosFinanceiro.find(d => d.compraId === compraId);
   if (!registro) return;
 
   document.getElementById('modal-compra-id').textContent = formatarCompraIdCurto(compraId);
-  const cont = document.getElementById('parcelas-detalhes');
+  const contParcelas = document.getElementById('parcelas-detalhes');
+  const contProdutos = document.getElementById('produtos-compra-detalhes');
 
-  let html = '';
-
-  // Produtos relacionados
-  try {
-    const empresaId = await getEmpresaIdDoUsuario();
-    const q = query(collection(db, 'empresas', empresaId, 'movimentacoes'), where('compraId', '==', compraId), where('tipo', '==', 'entrada'));
-    const snap = await getDocs(q);
-    if (!snap.empty) {
-      html += '<h4>Produtos</h4><table class="tabela"><thead><tr><th>Produto</th><th>Categoria</th><th>Qtd</th><th>Preço unitário</th><th>Subtotal</th></tr></thead><tbody>';
-      snap.docs.forEach(doc => {
-        const d = doc.data();
-        const subtotal = (d.quantidade || 0) * (d.precoUnitario || 0);
-        html += `<tr><td>${d.nomeProduto}</td><td>${d.categoria || '-'}</td><td>${d.quantidade}</td><td>R$ ${(d.precoUnitario || 0).toFixed(2)}</td><td>R$ ${subtotal.toFixed(2)}</td></tr>`;
-      });
-      html += '</tbody></table><br />';
-    }
-  } catch (e) {
-    console.error('Erro ao buscar produtos da compra', e);
-  }
+  let htmlParcelas = '';
+  let htmlProdutos = '';
 
   // Parcelas
   if (!registro.parcelas || registro.parcelas.length === 0) {
-    html += '<p>Sem parcelas cadastradas.</p>';
+    htmlParcelas += '<p>Sem parcelas cadastradas.</p>';
   } else {
     const total = registro.parcelas.length;
-    html += `<h4>Parcelas</h4><table class="tabela"><thead><tr><th>#</th><th>Valor</th><th>Vencimento</th><th>Status</th><th>Ações</th></tr></thead><tbody>`;
+    htmlParcelas += `<h4>Parcelas</h4><table class="tabela"><thead><tr><th>#</th><th>Valor</th><th>Vencimento</th><th>Status</th><th>Ações</th></tr></thead><tbody>`;
     registro.parcelas.forEach(p => {
       const vencDate = p.vencimento ? new Date(p.vencimento) : null;
       const venc = vencDate ? vencDate.toLocaleDateString('pt-BR') : '-';
@@ -159,12 +144,48 @@ window.abrirModalParcelas = async function (compraId) {
       const btn = pago
         ? `<button onclick="marcarParcelaComoNaoPaga('${compraId}', ${p.numero})">Marcar como não pago</button>`
         : `<button onclick="marcarParcelaComoPaga('${compraId}', ${p.numero})">Marcar como pago</button>`;
-      html += `<tr><td>${p.numero}/${total}</td><td>R$ ${(p.valor || 0).toFixed(2)}</td><td>${venc}</td><td>${statusTexto}</td><td>${btn}</td></tr>`;
+      htmlParcelas += `<tr><td>${p.numero}/${total}</td><td>R$ ${(p.valor || 0).toFixed(2)}</td><td>${venc}</td><td>${statusTexto}</td><td>${btn}</td></tr>`;
     });
-    html += '</tbody></table>';
+    htmlParcelas += '</tbody></table>';
   }
 
-  cont.innerHTML = html;
+  // Produtos relacionados
+  try {
+    const empresaId = await getEmpresaIdDoUsuario();
+    const q = query(
+      collection(db, 'empresas', empresaId, 'movimentacoes'),
+      where('compraId', '==', compraId),
+      where('tipo', '==', 'entrada')
+    );
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      const agrupados = {};
+      snap.docs.forEach(doc => {
+        const d = doc.data();
+        const key = `${d.produtoId || d.nomeProduto}|${d.precoUnitario || 0}`;
+        if (!agrupados[key]) {
+          agrupados[key] = {
+            nome: d.nomeProduto,
+            quantidade: 0,
+            preco: Number(d.precoUnitario) || 0
+          };
+        }
+        agrupados[key].quantidade += Number(d.quantidade) || 0;
+      });
+
+      htmlProdutos += '<h4>Produtos</h4><table class="tabela"><thead><tr><th>Produto</th><th>Quantidade</th><th>Preço unitário</th><th>Total</th></tr></thead><tbody>';
+      Object.values(agrupados).forEach(p => {
+        const total = p.quantidade * p.preco;
+        htmlProdutos += `<tr><td>${p.nome}</td><td>${p.quantidade}</td><td>R$ ${p.preco.toFixed(2)}</td><td>R$ ${total.toFixed(2)}</td></tr>`;
+      });
+      htmlProdutos += '</tbody></table>';
+    }
+  } catch (e) {
+    console.error('Erro ao buscar produtos da compra', e);
+  }
+
+  contParcelas.innerHTML = htmlParcelas;
+  contProdutos.innerHTML = htmlProdutos;
 
   document.getElementById('modal-parcelas').style.display = 'block';
   document.getElementById('fundo-modal-parcelas').style.display = 'block';
