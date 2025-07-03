@@ -3,6 +3,7 @@
 import { carregarDadosFinanceiro } from './financeiroDados.js';
 import { setDadosFinanceiro, gerarFiltrosFinanceiro, gerarTabelaFinanceiro, dadosFiltradosFinanceiro } from './financeiroTabela.js';
 import { carregarEntradasFinanceiro } from './financeiroCategorias.js';
+import { carregarOperacoes } from './financeiroOperacoes.js';
 import { exportarFinanceiroCSV, exportarFinanceiroExcel, exportarFinanceiroPDF } from './financeiroExportar.js';
 import { mostrarSpinner, esconderSpinner, mostrarMensagem, parseDataBR, formatarCompraIdCurto } from '../utils.js';
 import { db, getEmpresaIdDoUsuario } from '../firebaseConfig.js';
@@ -66,6 +67,7 @@ export async function atualizarTabelaFinanceiro() {
 
     dadosFinanceiro = await carregarDadosFinanceiro();
     entradasFinanceiro = await carregarEntradasFinanceiro();
+    await carregarOperacoes();
 
     setDadosFinanceiro(dadosFinanceiro);
     gerarFiltrosFinanceiro();
