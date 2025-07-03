@@ -28,6 +28,14 @@ export async function carregarEntradasFinanceiro() {
   return entradas;
 }
 
+export function obterCategoriasEntradas() {
+  return Array.from(new Set(
+    entradas
+      .map(e => e.categoria)
+      .filter(c => c && c !== '-')
+  ));
+}
+
 export function gerarTabelaFinanceiroCategorias(finDados) {
   const cont = document.getElementById('tabela-fin-categorias');
   if (!cont) return;
