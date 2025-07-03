@@ -13,7 +13,7 @@ import {
   Timestamp
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-import { mostrarErro, normalizarTexto, parseDataLocal } from './utils.js';
+import { mostrarErro, normalizarTexto, parseDataLocal, formatarCompraIdBR } from './utils.js';
 import { registrarHistorico } from './historico.js';
 
 let produtoCadastroAtual = null;
@@ -72,7 +72,7 @@ export async function abrirModalEntrada(produto) {
         }
       });
       lista.innerHTML = Array.from(ids)
-        .map(id => `<option value="${id}"></option>`)
+        .map(id => `<option value="${id}">${formatarCompraIdBR(id)}</option>`)
         .join("\n");
     }
   } catch (erro) {

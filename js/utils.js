@@ -114,7 +114,8 @@ export function parseDataLocal(str) {
   if (!str) return new Date(NaN);
   const [ano, mes, dia] = str.split("-").map(Number);
   if (!ano || !mes || !dia) return new Date(NaN);
-  return new Date(ano, mes - 1, dia);
+  // Ajuste para UTC-3
+  return new Date(Date.UTC(ano, mes - 1, dia, 3));
 }
 
 // 👉 Converter string DD/MM/AAAA para Date no horário local
@@ -122,7 +123,8 @@ export function parseDataBR(str) {
   if (!str) return new Date(NaN);
   const [dia, mes, ano] = str.split("/").map(Number);
   if (!dia || !mes || !ano) return new Date(NaN);
-  return new Date(ano, mes - 1, dia);
+  // Ajuste para UTC-3
+  return new Date(Date.UTC(ano, mes - 1, dia, 3));
 }
 
 // 👉 Calcular dias restantes para vencimento
@@ -155,4 +157,14 @@ export function formatarCompraIdCurto(id) {
   const [, ano, mes, dia, numeroRaw] = m;
   const numero = String(Number(numeroRaw));
   return `#${numero} (${dia}/${mes}/${ano})`;
+}
+
+// 👉 Formatar compraId em formato longo (ex: "Compra 1 - 30/06/2025")
+export function formatarCompraIdBR(id) {
+  if (!id || typeof id !== 'string') return id;
+  const m = id.match(/compra_(\d{4})-?(\d{2})-?(\d{2})_(\d+)/);
+  if (!m) return id;
+  const [, ano, mes, dia, numeroRaw] = m;
+  const numero = String(Number(numeroRaw));
+  return `Compra ${numero} - ${dia}/${mes}/${ano}`;
 }
