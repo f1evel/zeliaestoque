@@ -13,7 +13,7 @@ import {
   Timestamp
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-import { mostrarErro, normalizarTexto, parseDataLocal, formatarCompraIdBR } from './utils.js';
+import { mostrarErro, normalizarTexto, parseDataLocal, formatarCompraIdBR, formatarPreco } from './utils.js';
 import { registrarHistorico } from './historico.js';
 
 let produtoCadastroAtual = null;
@@ -176,7 +176,7 @@ function exibirParcelas(parcelas) {
   parcelas.forEach((p, index) => {
     html += `<tr>
       <td style="text-align:center;">${p.numero}</td>
-      <td style="text-align:center;">${(p.valor || 0).toFixed(2)}</td>
+      <td style="text-align:center;">${formatarPreco(p.valor || 0)}</td>
       <td style="text-align:center;"><input type="date" id="parcela-venc-${index}" value="${p.vencimento}" /></td>
     </tr>`;
   });
@@ -247,8 +247,8 @@ window.confirmarEntradaEstoque = async function () {
     const media = await calcularPrecoMedioEntradas(produtoCadastroAtual.id);
     if (media && precoUnitario > media * 5) {
       const continuar = confirm(
-        `⚠️ O preço informado (R$ ${precoUnitario.toFixed(2)}) ` +
-        `está acima da média anterior de R$ ${media.toFixed(2)}. ` +
+        `⚠️ O preço informado (${formatarPreco(precoUnitario)}) ` +
+        `está acima da média anterior de ${formatarPreco(media)}. ` +
         'Deseja continuar mesmo assim?'
       );
       if (!continuar) {
@@ -414,7 +414,7 @@ function atualizarParcelasPreview() {
   parcelas.forEach((p, index) => {
     html += `<tr>
       <td style="text-align:center;">${p.numero}</td>
-      <td style="text-align:center;">${p.valor.toFixed(2)}</td>
+      <td style="text-align:center;">${formatarPreco(p.valor)}</td>
       <td style="text-align:center;">
         <input type="date" id="parcela-venc-${index}" value="${p.vencimento}" />
       </td>

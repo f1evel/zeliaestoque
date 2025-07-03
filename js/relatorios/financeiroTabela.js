@@ -1,6 +1,6 @@
 // financeiroTabela.js — Geração de tabela e filtros
 
-import { normalizarTexto, parseDataLocal, formatarCompraIdCurto, formatarDataISOParaBR } from '../utils.js';
+import { normalizarTexto, parseDataLocal, formatarCompraIdCurto, formatarDataISOParaBR, formatarPreco } from '../utils.js';
 import { atualizarCardsFinanceiro } from './financeiroTotais.js';
 import { gerarTabelaFinanceiroCategorias } from './financeiroCategorias.js';
 import { atualizarOperacoesPeriodo } from './financeiroOperacoes.js';
@@ -251,9 +251,9 @@ export function gerarTabelaFinanceiro() {
         <td class="fornecedor-cell" title="${fornecedorEscapado}">${fornecedorCurto}</td>
         <td>${lanc}</td>
         <td>${d.formaPagamento}</td>
-        <td>R$ ${(d.valor).toFixed(2)}</td>
-        <td>R$ ${pago.toFixed(2)}</td>
-        <td class="valor-aberto">R$ ${aberto.toFixed(2)}</td>
+        <td>${formatarPreco(d.valor)}</td>
+        <td>${formatarPreco(pago)}</td>
+        <td class="valor-aberto">${formatarPreco(aberto)}</td>
         <td>
           ${formatarResumoParcelas(d.parcelas)}<br>
           <button onclick="abrirModalParcelas('${d.compraId}')">Detalhes</button>

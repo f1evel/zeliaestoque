@@ -1,3 +1,5 @@
+import { formatarPreco } from '../utils.js';
+
 export async function exportarEntradasExcel(dados) {
   const { utils, writeFile } = await import('https://cdn.sheetjs.com/xlsx-latest/package/xlsx.mjs');
 
@@ -45,7 +47,7 @@ export async function exportarEntradasPDF(dados) {
     d.nome,
     d.quantidade,
     d.validade ? d.validade.toLocaleDateString('pt-BR') : '-',
-    d.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+    formatarPreco(d.preco),
     d.fornecedor,
     d.compraId,
     d.data ? d.data.toLocaleDateString('pt-BR') : '-'

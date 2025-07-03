@@ -2,7 +2,7 @@
 
 import { db, getEmpresaIdDoUsuario } from '../firebaseConfig.js';
 import { collection, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js';
-import { parseDataLocal } from '../utils.js';
+import { parseDataLocal, formatarPreco } from '../utils.js';
 
 let entradas = [];
 
@@ -68,7 +68,7 @@ export function gerarTabelaFinanceiroCategorias(finDados) {
   let html = `<table class="tabela"><thead><tr><th>Categoria</th><th>Quantidade comprada</th><th>Valor total gasto</th></tr></thead><tbody>`;
   categorias.sort().forEach(cat => {
     const info = totais[cat];
-    html += `<tr><td>${cat}</td><td>${info.quantidade.toLocaleString('pt-BR')} unidades</td><td>R$ ${info.valor.toFixed(2)}</td></tr>`;
+    html += `<tr><td>${cat}</td><td>${info.quantidade.toLocaleString('pt-BR')} unidades</td><td>${formatarPreco(info.valor)}</td></tr>`;
   });
   html += '</tbody></table>';
   cont.innerHTML = html;

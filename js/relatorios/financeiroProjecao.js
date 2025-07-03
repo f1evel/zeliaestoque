@@ -1,6 +1,6 @@
 // financeiroProjecao.js — Projeção de pagamentos futuros
 import { carregarDadosFinanceiro } from './financeiroDados.js';
-import { mostrarSpinner, esconderSpinner } from '../utils.js';
+import { mostrarSpinner, esconderSpinner, formatarPreco } from '../utils.js';
 
 let grafico = null;
 
@@ -21,7 +21,7 @@ function gerarTabela(projecoes) {
 
   let html = `<table class="tabela"><thead><tr><th>Mês</th><th>Valor Total Previsto</th></tr></thead><tbody>`;
   projecoes.forEach(p => {
-    html += `<tr><td>${formatarMes(p.mes)}</td><td>R$ ${p.valor.toFixed(2)}</td></tr>`;
+    html += `<tr><td>${formatarMes(p.mes)}</td><td>${formatarPreco(p.valor)}</td></tr>`;
   });
   html += '</tbody></table>';
   cont.innerHTML = html;

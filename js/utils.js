@@ -176,3 +176,16 @@ export function formatarCompraIdBR(id) {
   const numero = String(Number(numeroRaw));
   return `Compra ${numero} - ${dia}/${mes}/${ano}`;
 }
+
+// 👉 Formatar valores monetários no padrão brasileiro (R$ 12,34)
+export function formatarPreco(valor) {
+  const num = Number(valor) || 0;
+  return `R$ ${num.toFixed(2).replace('.', ',')}`;
+}
+
+// 👉 Formatar datas em DD/MM/AAAA
+export function formatarDataBrasileira(data) {
+  const d = data?.toDate ? data.toDate() : new Date(data);
+  if (isNaN(d)) return '';
+  return d.toLocaleDateString('pt-BR');
+}

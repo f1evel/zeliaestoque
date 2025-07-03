@@ -1,5 +1,7 @@
 // financeiroExportar.js
 
+import { formatarPreco } from '../utils.js';
+
 function nomeRelatorio(ext) {
   const d = new Date();
   const pad = n => String(n).padStart(2, '0');
@@ -85,10 +87,10 @@ export async function exportarFinanceiroPDF(dados) {
   }
 
   const totais = calcularTotaisFinanceiro(dados);
-  doc.text(`Total comprado: R$ ${totais.totalComprado.toFixed(2)}`, 14, 30);
-  doc.text(`Total pago: R$ ${totais.totalPago.toFixed(2)}`, 14, 36);
-  doc.text(`Total pendente: R$ ${totais.totalPendente.toFixed(2)}`, 14, 42);
-  doc.text(`Total vencido: R$ ${totais.totalVencido.toFixed(2)}`, 14, 48);
+  doc.text(`Total comprado: ${formatarPreco(totais.totalComprado)}`, 14, 30);
+  doc.text(`Total pago: ${formatarPreco(totais.totalPago)}`, 14, 36);
+  doc.text(`Total pendente: ${formatarPreco(totais.totalPendente)}`, 14, 42);
+  doc.text(`Total vencido: ${formatarPreco(totais.totalVencido)}`, 14, 48);
 
   const linhas = [];
   dados.forEach(d => {
@@ -97,7 +99,7 @@ export async function exportarFinanceiroPDF(dados) {
       d.fornecedorOuCliente,
       d.dataLancamento ? d.dataLancamento.toLocaleDateString('pt-BR') : '-',
       d.formaPagamento,
-      (d.valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+      formatarPreco(d.valor || 0)
     ];
     const parcelas = Array.isArray(d.parcelas) && d.parcelas.length > 0
       ? d.parcelas
@@ -106,7 +108,7 @@ export async function exportarFinanceiroPDF(dados) {
       linhas.push([
         ...base,
         p.numero,
-        (p.valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+        formatarPreco(p.valor || 0),
         p.vencimento ? new Date(p.vencimento).toLocaleDateString('pt-BR') : '-',
         p.status,
         p.dataPagamento ? new Date(p.dataPagamento).toLocaleDateString('pt-BR') : '-'
