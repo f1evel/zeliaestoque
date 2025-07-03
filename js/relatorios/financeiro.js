@@ -144,12 +144,22 @@ window.abrirModalParcelas = async function (compraId) {
   if (!registro.parcelas || registro.parcelas.length === 0) {
     html += '<p>Sem parcelas cadastradas.</p>';
   } else {
-    html += `<h4>Parcelas</h4><table class="tabela"><thead><tr><th>#</th><th>Valor</th><th>Vencimento</th><th>Status</th><th></th></tr></thead><tbody>`;
+    const total = registro.parcelas.length;
+    html += `<h4>Parcelas</h4><table class="tabela"><thead><tr><th>#</th><th>Valor</th><th>Vencimento</th><th>Status</th><th>Ações</th></tr></thead><tbody>`;
     registro.parcelas.forEach(p => {
-      const venc = p.vencimento ? new Date(p.vencimento).toLocaleDateString('pt-BR') : '-';
+      const vencDate = p.vencimento ? new Date(p.vencimento) : null;
+      const venc = vencDate ? vencDate.toLocaleDateString('pt-BR') : '-';
       const pago = p.status === 'pago';
-      const btn = pago ? '' : `<button onclick="marcarParcelaComoPaga('${compraId}', ${p.numero})">Marcar como pago</button>`;
-      html += `<tr><td>${p.numero}</td><td>R$ ${(p.valor || 0).toFixed(2)}</td><td>${venc}</td><td>${p.status}</td><td>${btn}</td></tr>`;
+      let statusTexto = '❌ Pendente';
+      if (pago) {
+        statusTexto = '✅ Pago';
+      } else if (vencDate && vencDate < new Date()) {
+        statusTexto = '⚠️ Vencido';
+      }
+      const btn = pago
+        ? `<button onclick="marcarParcelaComoNaoPaga('${compraId}', ${p.numero})">Marcar como não pago</button>`
+        : `<button onclick="marcarParcelaComoPaga('${compraId}', ${p.numero})">Marcar como pago</button>`;
+      html += `<tr><td>${p.numero}/${total}</td><td>R$ ${(p.valor || 0).toFixed(2)}</td><td>${venc}</td><td>${statusTexto}</td><td>${btn}</td></tr>`;
     });
     html += '</tbody></table>';
   }
@@ -208,6 +218,43 @@ window.marcarParcelaComoPaga = async function (compraId, numero) {
   } catch (e) {
     console.error('Erro ao atualizar parcela', e);
     alert('❌ Erro ao marcar parcela como paga.');
+  } finally {
+    esconderSpinner();
+  }
+};
+
+// ❌ Marcar parcela como não paga
+window.marcarParcelaComoNaoPaga = async function (compraId, numero) {
+  if (!confirm('Marcar esta parcela como não paga?')) return;
+
+  try {
+    mostrarSpinner();
+    const empresaId = await getEmpresaIdDoUsuario();
+    const q = query(collection(db, 'empresas', empresaId, 'financeiro'), where('compraId', '==', compraId));
+    const snap = await getDocs(q);
+    if (snap.empty) throw new Error('Registro não encontrado');
+    const ref = snap.docs[0].ref;
+    const finData = snap.docs[0].data();
+    const parcelas = Array.isArray(finData.parcelas) ? finData.parcelas.slice() : [];
+    const idx = parcelas.findIndex(p => p.numero === numero);
+    if (idx === -1) throw new Error('Parcela não encontrada');
+    parcelas[idx] = { ...parcelas[idx], status: 'pendente', dataPagamento: null };
+    await updateDoc(ref, { parcelas });
+
+    const pos = dadosFinanceiro.findIndex(d => d.compraId === compraId);
+    if (pos !== -1) {
+      dadosFinanceiro[pos].parcelas = parcelas;
+      dadosFinanceiro[pos].statusParcelas = calcularStatusParcelas(parcelas);
+      setDadosFinanceiro(dadosFinanceiro);
+      gerarTabelaFinanceiro();
+    }
+
+    mostrarMensagem('❌ Parcela marcada como não paga!');
+    await atualizarTabelaFinanceiro();
+    abrirModalParcelas(compraId);
+  } catch (e) {
+    console.error('Erro ao atualizar parcela', e);
+    alert('❌ Erro ao marcar parcela como não paga.');
   } finally {
     esconderSpinner();
   }
