@@ -662,6 +662,10 @@ button.btn-icon.btn-xl { font-size: 16px; padding: 8px; }
   font-size: 0.85rem;
   cursor: pointer;
 }
+/* Hover leve para botões de ação */
+.botao-acao:hover {
+  background: #f2f2f2;
+}
 
 /* Campos de data compactos */
 .campo-data {

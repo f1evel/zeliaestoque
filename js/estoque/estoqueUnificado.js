@@ -256,6 +256,94 @@ function gerarGraficos() {
   });
 }
 
+// 🧹 Limpar todos os filtros
+function limparFiltros() {
+  document.getElementById('filtro-nome').value = '';
+  document.getElementById('filtro-categoria').value = '';
+  document.getElementById('filtro-fornecedor').value = '';
+  document.getElementById('filtro-inicio').value = '';
+  document.getElementById('filtro-fim').value = '';
+  document.getElementById('filtro-tipo').value = 'todos';
+  document.getElementById('filtro-validade').value = '';
+  document.getElementById('filtro-critico').checked = false;
+  document.getElementById('filtro-previsao').checked = false;
+  document.getElementById('filtro-periodo').value = '3';
+  document.getElementById('filtro-dias-esgotamento').value = 30;
+  document.getElementById('container-periodo').style.display = 'none';
+  document.getElementById('container-dias-esgotamento').style.display = 'none';
+  periodoConsumoMeses = 3;
+  carregarDados();
+}
+
+// 📄 Exportar dados filtrados para CSV
+async function exportarCSV(dados) {
+  const linhas = [
+    ['Produto','Qtd Atual','Mínimo','Entradas','Saídas','Preço Médio','Consumo/Mês','Previsão','Validade','Categoria','Fornecedor'],
+    ...dados.map(d => [
+      d.nome,
+      d.quantidade,
+      d.quantidadeMinima,
+      d.entradas,
+      d.saidas,
+      d.preco,
+      d.consumoMedio.toFixed(1),
+      calculaPrevisao(d),
+      d.validade ? new Date(d.validade).toLocaleDateString('pt-BR') : '-',
+      d.categoria,
+      d.fornecedor
+    ])
+  ];
+
+  const csvContent = linhas
+    .map(l => l.map(c => `"${(c ?? '').toString().replace(/"/g,'""')}"`).join(','))
+    .join('\n');
+
+  try {
+    await fetch('https://us-central1-zelia-1.cloudfunctions.net/salvarCSV', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nomeArquivo: `relatorio_estoque_${Date.now()}.csv`,
+        conteudo: csvContent
+      })
+    });
+  } catch(e) {
+    console.error('Erro ao enviar CSV:', e);
+  }
+}
+
+// 🖨️ Exportar dados filtrados para PDF
+async function exportarPDF(dados) {
+  const { jsPDF } = await import('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.es.min.js');
+
+  const doc = new jsPDF();
+  doc.text('Relatório de Estoque', 14, 16);
+
+  const linhas = dados.map(d => [
+    d.nome,
+    d.quantidade,
+    d.quantidadeMinima,
+    d.entradas,
+    d.saidas,
+    d.preco,
+    d.consumoMedio.toFixed(1),
+    calculaPrevisao(d),
+    d.validade ? new Date(d.validade).toLocaleDateString('pt-BR') : '-',
+    d.categoria,
+    d.fornecedor
+  ]);
+
+  doc.autoTable({
+    head: [[
+      'Produto','Qtd','Mín','Entradas','Saídas','Preço','Cons/Mês','Prev','Validade','Categoria','Fornecedor'
+    ]],
+    body: linhas,
+    startY: 20
+  });
+
+  doc.save(`relatorio_estoque_${Date.now()}.pdf`);
+}
+
 function registrarEventos() {
   ['filtro-nome','filtro-categoria','filtro-fornecedor','filtro-inicio','filtro-fim','filtro-tipo','filtro-validade','filtro-critico','filtro-previsao','filtro-periodo','filtro-dias-esgotamento']
     .forEach(id => {
@@ -278,6 +366,10 @@ function registrarEventos() {
     periodoConsumoMeses = val === 0 ? null : val;
     carregarDados();
   });
+
+  document.getElementById('botao-limpar-estoque-geral')?.addEventListener('click', limparFiltros);
+  document.getElementById('botao-exportar-csv-estoque-geral')?.addEventListener('click', () => exportarCSV(dadosFiltrados));
+  document.getElementById('botao-exportar-pdf-estoque-geral')?.addEventListener('click', () => exportarPDF(dadosFiltrados));
 }
 
 // Inicialização
