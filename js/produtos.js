@@ -31,7 +31,8 @@ import {
   mostrarErro,
   calcularDiasParaVencimento,
   executarComSpinner,
-  parseDataLocal
+  parseDataLocal,
+  distanciaLevenshtein
 } from './utils.js';
 
 // 🔧 Formatador de datas
@@ -71,6 +72,10 @@ let produtoEmEdicao = null;
 let docRefEmEdicao = null;
 let metricasPrecoPorNome = {};
 let quantidadeTotalPorNome = {};
+let nomesProdutosUnicos = [];
+let timeoutSugestaoNome = null;
+let indiceSugestaoNome = -1;
+let itensSugestaoNome = [];
 
 
 // ==========================
@@ -88,6 +93,7 @@ async function carregarProdutos() {
     // console.log(`✅ Produtos carregados: ${snapshot.docs.length}`);
 
     produtosCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    nomesProdutosUnicos = [...new Set(produtosCache.map(p => p.nome))];
 
     quantidadeTotalPorNome = {};
     produtosCache.forEach(p => {
@@ -531,7 +537,84 @@ async function carregarSugestoes() {
   document.getElementById("lista-fornecedores").innerHTML =
     [...fornecedores].sort().map(f => `<option value="${f}">`).join("");
 }
+
 carregarSugestoes();
+
+// ==========================
+// 🔍 Autocomplete de Nome
+// ==========================
+const inputNomeProduto = document.getElementById('nome');
+const listaSugestoesNome = document.getElementById('sugestoes-nome');
+
+inputNomeProduto.addEventListener('input', () => {
+  const termoOriginal = inputNomeProduto.value.trim();
+  const termo = normalizarTexto(termoOriginal);
+  if (listaSugestoesNome) {
+    listaSugestoesNome.innerHTML = '';
+    listaSugestoesNome.style.display = 'none';
+  }
+  indiceSugestaoNome = -1;
+  itensSugestaoNome = [];
+
+  if (termo.length < 2) return;
+
+  clearTimeout(timeoutSugestaoNome);
+  timeoutSugestaoNome = setTimeout(() => {
+    const encontrados = nomesProdutosUnicos.filter(n => {
+      const norm = normalizarTexto(n);
+      if (norm.includes(termo) || termo.includes(norm)) return true;
+      return distanciaLevenshtein(norm, termo) <= 2;
+    });
+
+    if (encontrados.length && listaSugestoesNome) {
+      encontrados.slice(0, 10).forEach(n => {
+        const item = document.createElement('li');
+        item.textContent = n;
+        item.className = 'autocomplete-item';
+        item.addEventListener('click', () => {
+          inputNomeProduto.value = n;
+          listaSugestoesNome.innerHTML = '';
+          listaSugestoesNome.style.display = 'none';
+          if (confirm('⚠️ Um produto com nome semelhante já existe. Deseja ir para a aba de Movimentações para dar entrada ou saída neste item?')) {
+            sessionStorage.setItem('nomeProdutoMovimentacao', n);
+            window.location.href = 'movimentacoes.html';
+          }
+        });
+        listaSugestoesNome.appendChild(item);
+        itensSugestaoNome.push(item);
+      });
+      listaSugestoesNome.style.display = 'block';
+    }
+  }, 300);
+});
+
+inputNomeProduto.addEventListener('keydown', e => {
+  if (!listaSugestoesNome || itensSugestaoNome.length === 0) return;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (indiceSugestaoNome < itensSugestaoNome.length - 1) {
+      indiceSugestaoNome++;
+      atualizarSelecaoNome();
+    }
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (indiceSugestaoNome > 0) {
+      indiceSugestaoNome--;
+      atualizarSelecaoNome();
+    }
+  } else if (e.key === 'Enter' || e.key === 'Tab') {
+    if (indiceSugestaoNome >= 0 && indiceSugestaoNome < itensSugestaoNome.length) {
+      e.preventDefault();
+      itensSugestaoNome[indiceSugestaoNome].click();
+    }
+  }
+});
+
+function atualizarSelecaoNome() {
+  itensSugestaoNome.forEach((item, index) => {
+    item.classList.toggle('selecionado', index === indiceSugestaoNome);
+  });
+}
 
 // ==========================
 // 🔥 Alerta ao Perder Foco
