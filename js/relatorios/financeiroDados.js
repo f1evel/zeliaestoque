@@ -66,6 +66,7 @@ export async function carregarDadosFinanceiro(periodoMeses = 3) {
         dataVencimento: dataVenc,
         dataPagamento: dataPag,
         observacoes: d.observacoes || "-",
+        produtos: Array.isArray(d.produtos) ? d.produtos : [],
         mes: dataLanc ? `${dataLanc.getFullYear()}-${String(dataLanc.getMonth() + 1).padStart(2, '0')}` : "",
       };
     })
