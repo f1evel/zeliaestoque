@@ -185,6 +185,9 @@ function renderizarTabela() {
     const dias = calculaPrevisao(d);
     const classe = d.quantidade < d.quantidadeMinima ?
       (document.getElementById('filtro-critico').checked ? 'critico' : 'critico-suave') : '';
+    const fornTxt = d.fornecedor || '-';
+    const fornEsc = fornTxt.replace(/"/g, '&quot;');
+    const fornCurto = fornTxt.length > 20 ? fornTxt.slice(0, 20) + '...' : fornTxt;
     html += `<tr class="${classe}">
       <td>${d.nome}</td>
       <td>${d.quantidade}</td>
@@ -196,7 +199,7 @@ function renderizarTabela() {
       <td>${dias}</td>
       <td>${d.validade}</td>
       <td>${d.categoria}</td>
-      <td>${d.fornecedor}</td>
+      <td class="fornecedor-cell" title="${fornEsc}">${fornCurto}</td>
     </tr>`;
   });
 

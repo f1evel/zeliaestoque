@@ -168,9 +168,10 @@ export function gerarTabelaFinanceiro() {
     const fornecedorCurto = nomeFornecedor.length > 20
       ? nomeFornecedor.slice(0, 20) + '...'
       : nomeFornecedor;
+    const compraEscapado = (d.compraId || '').replace(/"/g, '&quot;');
     html += `
       <tr>
-        <td>${formatarCompraIdCurto(d.compraId)}</td>
+        <td class="compra-id-cell" title="${compraEscapado}">${formatarCompraIdCurto(d.compraId)}</td>
         <td class="fornecedor-cell" title="${fornecedorEscapado}">${fornecedorCurto}</td>
         <td>${lanc}</td>
         <td>${d.formaPagamento}</td>

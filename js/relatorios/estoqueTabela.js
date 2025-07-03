@@ -84,6 +84,9 @@ export function gerarTabelaEstoque() {
     else if (validadeProxima) cor = "background:#fff4e5;"; // laranja claro
     else if (estoqueCritico) cor = "background:#fffbe5;"; // amarelo claro
 
+    const fornTxt = p.fornecedor || '-';
+    const fornEsc = fornTxt.replace(/"/g, '&quot;');
+    const fornCurto = fornTxt.length > 20 ? fornTxt.slice(0, 20) + '...' : fornTxt;
     html += `
       <tr style="${cor}">
         <td>${p.nome}</td>
@@ -92,7 +95,7 @@ export function gerarTabelaEstoque() {
         <td>${validadeFormatada}</td>
         <td>${p.diasParaVencer ?? "-"}</td>
         <td>${p.categoria}</td>
-        <td>${p.fornecedor}</td>
+        <td class="fornecedor-cell" title="${fornEsc}">${fornCurto}</td>
       </tr>
     `;
   });

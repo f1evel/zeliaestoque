@@ -267,6 +267,12 @@ th, td {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.compra-id-cell {
+  max-width: 20ch;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 th {
   background-color: #fafafa;
