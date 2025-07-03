@@ -248,7 +248,7 @@ function renderizarTabela(produtos, termo = "") {
         <td>${precoMax}</td>
         <td>${precoMed}</td>
         <td>${dataValidade}</td>
-        <td>${p.fornecedor || "-"}</td>
+        <td class="fornecedor-cell" title="${(p.fornecedor || '-').replace(/"/g, '&quot;')}">${(p.fornecedor || '-').length > 20 ? (p.fornecedor || '-').slice(0, 20) + '...' : (p.fornecedor || '-')}</td>
         <td>${p.localizacao || "-"}</td>
         <td>
           <button onclick="verDetalhes('${p.id}')">👁️ Detalhes</button>

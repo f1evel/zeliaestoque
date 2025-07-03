@@ -120,14 +120,19 @@ function aplicarFiltros() {
     let tooltip = `Usuário: ${d.usuario || '-'}\nObs.: ${d.observacoes || 'Nenhuma'}\nModificado: ${modificado}`;
     tooltip = tooltip.replace(/"/g, '&quot;');
 
+    const fornTxt = d.fornecedor || '-';
+    const fornEsc = fornTxt.replace(/"/g, '&quot;');
+    const fornCurto = fornTxt.length > 20 ? fornTxt.slice(0, 20) + '...' : fornTxt;
+    const compraEsc = (d.compraId || '').replace(/"/g, '&quot;');
+
     html += `
       <tr title="${tooltip}">
         <td>${d.nome}</td>
         <td>${d.quantidade}</td>
         <td>${validade}</td>
         <td>${d.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-        <td>${d.fornecedor}</td>
-        ${mostrarCompraId ? `<td>${formatarCompraIdCurto(d.compraId)}</td>` : ''}
+        <td class="fornecedor-cell" title="${fornEsc}">${fornCurto}</td>
+        ${mostrarCompraId ? `<td class="compra-id-cell" title="${compraEsc}">${formatarCompraIdCurto(d.compraId)}</td>` : ''}
         <td>${data}</td>
         <td><button onclick="abrirModalDetalhesEntrada('${d.id}')">Ver Detalhes</button></td>
       </tr>

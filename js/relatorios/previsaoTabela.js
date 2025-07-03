@@ -64,11 +64,14 @@ export function gerarTabelaPrevisao() {
     const dataUltima = p.ultimaSaida ? p.ultimaSaida.toLocaleDateString('pt-BR') : "-";
     const classe = p.diasDeEstoque !== Infinity && p.diasDeEstoque <= 15 ? 'critico' : '';
 
+    const fornTxt = p.fornecedor || '-';
+    const fornEsc = fornTxt.replace(/"/g, '&quot;');
+    const fornCurto = fornTxt.length > 20 ? fornTxt.slice(0, 20) + '...' : fornTxt;
     html += `
       <tr class="${classe}">
         <td>${p.nome}</td>
         <td>${p.categoria}</td>
-        <td>${p.fornecedor}</td>
+        <td class="fornecedor-cell" title="${fornEsc}">${fornCurto}</td>
         <td>${p.quantidade}</td>
         <td>${p.consumoMensal}</td>
         <td>${p.mediaDiasPorUnidade ?? '-'}</td>

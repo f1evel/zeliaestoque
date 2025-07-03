@@ -49,6 +49,9 @@ function aplicarFiltrosEAtualizarTabela() {
 
   filtrados.forEach(d => {
     const mesAno = d.data ? `${String(d.data.getMonth()+1).padStart(2,'0')}/${d.data.getFullYear()}` : "-";
+    const fornTxt = d.fornecedor || '-';
+    const fornEsc = fornTxt.replace(/"/g, '&quot;');
+    const fornCurto = fornTxt.length > 20 ? fornTxt.slice(0, 20) + '...' : fornTxt;
     html += `
       <tr>
         <td>${d.nome}</td>
@@ -56,7 +59,7 @@ function aplicarFiltrosEAtualizarTabela() {
         <td>${(d.quantidade || 0).toLocaleString('pt-BR')}</td>
         <td>${d.unidade}</td>
         <td>${d.categoria}</td>
-        <td>${d.fornecedor}</td>
+        <td class="fornecedor-cell" title="${fornEsc}">${fornCurto}</td>
       </tr>
     `;
   });
