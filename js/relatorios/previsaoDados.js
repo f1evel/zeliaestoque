@@ -1,7 +1,7 @@
 // previsaoDados.js — Dados da previsão de esgotamento
 
 import { db, getEmpresaIdDoUsuario } from '../firebaseConfig.js';
-import { collection, getDocs, query, where, orderBy, Timestamp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+import { collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 import { normalizarTexto } from '../utils.js';
 
 export async function carregarDadosPrevisao(periodoMeses = 3) {
@@ -14,7 +14,6 @@ export async function carregarDadosPrevisao(periodoMeses = 3) {
     query(
       collection(db, "empresas", empresaId, "movimentacoes"),
       where("tipo", "==", "saida"),
-      where("dataMovimentacao", ">=", Timestamp.fromDate(dataInicio)),
       orderBy("dataMovimentacao", "asc")
     )
   );
@@ -36,7 +35,9 @@ export async function carregarDadosPrevisao(periodoMeses = 3) {
   return snapshot.docs.map(doc => {
     const data = doc.data();
 
-    const saidas = (mapaSaidas[doc.id] || []).sort((a, b) => a.data - b.data);
+    const todasSaidas = (mapaSaidas[doc.id] || []).sort((a, b) => a.data - b.data);
+    const saidasPeriodo = todasSaidas.filter(s => s.data >= dataInicio);
+    const saidas = saidasPeriodo.length >= 2 ? saidasPeriodo : todasSaidas;
     const quantidadeEstoque = Number(data.quantidade) || 0;
     const quantidadeMinima = Number(data.quantidadeMinima) || 0;
 
