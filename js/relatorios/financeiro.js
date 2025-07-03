@@ -153,6 +153,7 @@ window.abrirModalParcelas = async function (compraId) {
   }
 
   // Produtos relacionados
+  let movSnap = null;
   try {
     const empresaId = await getEmpresaIdDoUsuario();
     const q = query(
@@ -160,34 +161,45 @@ window.abrirModalParcelas = async function (compraId) {
       where('compraId', '==', compraId),
       where('tipo', '==', 'entrada')
     );
-    const snap = await getDocs(q);
-    if (!snap.empty) {
-      const agrupados = {};
-      snap.docs.forEach(doc => {
-        const d = doc.data();
-        const key = `${d.produtoId || d.nomeProduto}|${d.precoUnitario || 0}`;
-        if (!agrupados[key]) {
-          agrupados[key] = {
-            nome: d.nomeProduto,
-            quantidade: 0,
-            preco: Number(d.precoUnitario) || 0
-          };
-        }
-        agrupados[key].quantidade += Number(d.quantidade) || 0;
-      });
-
-      htmlProdutos += '<h4>Produtos</h4><table class="tabela"><thead><tr><th>Produto</th><th>Quantidade</th><th>Preço unitário</th><th>Total</th></tr></thead><tbody>';
-      Object.values(agrupados).forEach(p => {
-        const total = p.quantidade * p.preco;
-        totalCompra += total;
-        htmlProdutos += `<tr><td>${p.nome}</td><td>${p.quantidade}</td><td>${formatarPreco(p.preco)}</td><td>${formatarPreco(total)}</td></tr>`;
-      });
-      htmlProdutos += `<tr><th colspan="3" style="text-align:right;">Total da compra</th><th>${formatarPreco(totalCompra || registro.valor)}</th></tr></tbody></table>`;
-    } else {
-      htmlProdutos += `<p><strong>Total da compra:</strong> ${formatarPreco(registro.valor)}</p>`;
-    }
+    movSnap = await getDocs(q);
   } catch (e) {
     console.error('Erro ao buscar produtos da compra', e);
+  }
+
+  if (movSnap && !movSnap.empty) {
+    const agrupados = {};
+    movSnap.docs.forEach(doc => {
+      const d = doc.data();
+      const key = `${d.produtoId || d.nomeProduto}|${d.precoUnitario || 0}`;
+      if (!agrupados[key]) {
+        agrupados[key] = {
+          nome: d.nomeProduto,
+          quantidade: 0,
+          preco: Number(d.precoUnitario) || 0
+        };
+      }
+      agrupados[key].quantidade += Number(d.quantidade) || 0;
+    });
+
+    htmlProdutos += '<h4>Produtos</h4><table class="tabela"><thead><tr><th>Produto</th><th>Quantidade</th><th>Preço unitário</th><th>Total</th></tr></thead><tbody>';
+    Object.values(agrupados).forEach(p => {
+      const total = p.quantidade * p.preco;
+      totalCompra += total;
+      htmlProdutos += `<tr><td>${p.nome}</td><td>${p.quantidade}</td><td>${formatarPreco(p.preco)}</td><td>${formatarPreco(total)}</td></tr>`;
+    });
+    htmlProdutos += `</tbody><tfoot><tr><th colspan="3" style="text-align:right;">Total da compra</th><th>${formatarPreco(totalCompra || registro.valor)}</th></tr></tfoot></table>`;
+  } else if (Array.isArray(registro.produtos) && registro.produtos.length > 0) {
+    htmlProdutos += '<h4>Produtos</h4><table class="tabela"><thead><tr><th>Produto</th><th>Quantidade</th><th>Preço unitário</th><th>Total</th></tr></thead><tbody>';
+    registro.produtos.forEach(p => {
+      const preco = Number(p.preco) || 0;
+      const qtd = Number(p.quantidade) || 0;
+      const total = qtd * preco;
+      totalCompra += total;
+      htmlProdutos += `<tr><td>${p.nome}</td><td>${qtd}</td><td>${formatarPreco(preco)}</td><td>${formatarPreco(total)}</td></tr>`;
+    });
+    htmlProdutos += `</tbody><tfoot><tr><th colspan="3" style="text-align:right;">Total da compra</th><th>${formatarPreco(totalCompra || registro.valor)}</th></tr></tfoot></table>`;
+  } else {
+    htmlProdutos += `<p>Produtos não localizados para esta compra. Total registrado: ${formatarPreco(registro.valor)}</p>`;
   }
 
   contParcelas.innerHTML = htmlParcelas;
