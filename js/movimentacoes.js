@@ -58,6 +58,7 @@ async function carregarMovimentacoes() {
 }
 
 carregarMovimentacoes();
+window.carregarMovimentacoes = carregarMovimentacoes;
 
 document.addEventListener("DOMContentLoaded", () => {
   const hoje = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0];
@@ -110,6 +111,28 @@ async function carregarProdutos() {
       .join("");
   }
 }
+
+function atualizarListaFornecedores() {
+  const listaFor = document.getElementById("lista-fornecedores-mov");
+  if (listaFor) {
+    listaFor.innerHTML = [...fornecedoresSet]
+      .sort()
+      .map(f => `<option value="${f}">`)
+      .join("");
+  }
+}
+
+function adicionarFornecedor(fornecedor) {
+  if (!fornecedor) return;
+  const trim = fornecedor.trim();
+  if (!trim) return;
+  if (!fornecedoresSet.has(trim)) {
+    fornecedoresSet.add(trim);
+    atualizarListaFornecedores();
+  }
+}
+
+window.adicionarFornecedor = adicionarFornecedor;
 
 // ==========================
 // 🔥 Carregar Fornecedores das Movimentações
@@ -167,6 +190,32 @@ async function obterPrecoDaValidade(nome, validadeStr) {
     }
   }
   return null;
+}
+
+async function obterFornecedorDaValidade(nome, validadeStr) {
+  const nomeNormalizado = normalizarTexto(nome);
+  const dataVal = new Date(validadeStr);
+  if (isNaN(dataVal.getTime())) return null;
+  const validadeTs = Timestamp.fromDate(dataVal);
+
+  try {
+    const empresaId = await getEmpresaIdDoUsuario();
+    const q = query(
+      collection(db, "empresas", empresaId, "movimentacoes"),
+      where("nomeBusca", "==", nomeNormalizado),
+      where("tipo", "==", "entrada"),
+      where("validade", "==", validadeTs)
+    );
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      const d = snap.docs[0].data();
+      return d.fornecedor || null;
+    }
+  } catch (e) {
+    console.error("Erro ao buscar fornecedor da validade:", e);
+  }
+  const prod = produtosCache.find(p => normalizarTexto(p.nome) === nomeNormalizado);
+  return prod ? prod.fornecedor || null : null;
 }
 
 // =========================
@@ -314,6 +363,7 @@ function atualizarCamposPorTipo() {
     campoLote.style.display = "none";
     grupoValidadeSaida.style.display = "block";
     if (grupoFornecedor) grupoFornecedor.style.display = "none";
+    if (inputFornecedor) inputFornecedor.value = "";
 
     // ✅ Preenche validades disponíveis e preços ao selecionar produto
     if (nome.length > 0) preencherValidadesDisponiveis();
@@ -503,12 +553,16 @@ document.getElementById("form-movimentacao").addEventListener("submit", async (e
 
         const dataTimestamp = Timestamp.fromDate(dataMov);
 
+        const fornecedorSaida =
+          (await obterFornecedorDaValidade(produto.nome, validadeStr)) ||
+          produto.fornecedor;
+
         await addDoc(collection(db, "empresas", empresaId, "movimentacoes"), {
           produtoId: produtoEncontrado.id,
           nomeProduto: produto.nome,
           nomeBusca: normalizarTexto(produto.nome),
           categoria: produto.categoria,
-          fornecedor: produto.fornecedor,
+          fornecedor: fornecedorSaida,
           unidadeMedida: produto.unidadeMedida || "unidade",
           tipo: "saida",
           quantidade,
@@ -639,7 +693,14 @@ window.editarMovimentacao = async function (id) {
     const validadeStr = document.getElementById("validade").value;
     const validade = validadeStr ? parseDataLocal(validadeStr) : new Date(NaN);
     const lote = document.getElementById("lote").value.trim();
-    const fornecedor = document.getElementById("fornecedor-mov").value.trim();
+    let fornecedor;
+    if (tipo === "entrada") {
+      fornecedor = document.getElementById("fornecedor-mov").value.trim();
+      if (window.adicionarFornecedor) window.adicionarFornecedor(fornecedor);
+    } else {
+      fornecedor =
+        (await obterFornecedorDaValidade(nomeProduto, validadeStr)) || "";
+    }
 
     const atualizados = {
       nomeProduto,
