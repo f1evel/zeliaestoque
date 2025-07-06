@@ -111,11 +111,56 @@
         <div class="card"><strong>Valor total em estoque:</strong> <span id="card-valor-total">-</span></div>
       </div>
 
+      <!-- Botão para rolar até os gráficos -->
+      <button id="botao-scroll-graficos" style="margin:10px 0;">📊 Ver gráficos</button>
+
       <!-- Tabela -->
       <div id="tabela-estoque-geral"></div>
 
-      <!-- Gráficos -->
-      <canvas id="grafico-categoria" style="max-height:300px; margin:20px 0;"></canvas>
+      <!-- Seção de Gráficos Avançados -->
+      <section id="secao-graficos" style="margin-top:20px;">
+        <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:end; margin-bottom:10px;">
+          <div>
+            <label for="agrupamento-graficos">Agrupar por:</label>
+            <select id="agrupamento-graficos">
+              <option value="categoria">Categoria</option>
+              <option value="fornecedor">Fornecedor</option>
+            </select>
+          </div>
+          <div>
+            <label for="graficos-inicio">De:</label>
+            <input type="date" id="graficos-inicio">
+          </div>
+          <div>
+            <label for="graficos-fim">Até:</label>
+            <input type="date" id="graficos-fim">
+          </div>
+        </div>
+
+        <div id="container-graficos" style="display:flex; flex-wrap:wrap; gap:20px; justify-content:center;">
+          <div class="grafico-item" style="flex:1 1 280px;">
+            <h3 id="titulo-grafico-gasto" class="grafico-titulo"></h3>
+            <canvas id="grafico-valor-gasto" style="max-height:300px;"></canvas>
+            <p id="subtitulo-grafico-gasto" class="grafico-subtitulo"></p>
+          </div>
+          <div class="grafico-item" style="flex:1 1 280px;">
+            <h3 id="titulo-grafico-investido" class="grafico-titulo"></h3>
+            <canvas id="grafico-valor-investido" style="max-height:300px;"></canvas>
+            <p id="subtitulo-grafico-investido" class="grafico-subtitulo"></p>
+          </div>
+          <div class="grafico-item" style="flex:1 1 280px;">
+            <h3 id="titulo-grafico-atual" class="grafico-titulo"></h3>
+            <canvas id="grafico-valor-atual" style="max-height:300px;"></canvas>
+            <p id="subtitulo-grafico-atual" class="grafico-subtitulo"></p>
+          </div>
+        </div>
+
+        <div id="card-interpretacao" style="margin-top:15px; padding:10px; border:1px solid #e5e7eb; border-radius:6px; background:#f9fafb;">
+          ℹ️
+        </div>
+      </section>
+
+      <!-- Gráfico existente -->
       <canvas id="grafico-meses" style="max-height:300px; margin:20px 0;"></canvas>
     </main>
   </div>
