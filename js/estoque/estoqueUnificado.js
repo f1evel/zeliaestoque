@@ -170,24 +170,12 @@ function calcularConsumoMedio(saidasOrdenadas) {
     totalUnidades += Number(atual.quantidade) || 0;
   }
   if (!totalDias || !totalUnidades) return 0;
-  return (totalUnidades / totalDias) * 30;
+  return totalDias / totalUnidades;
 }
 
 function calculaPrevisao(item) {
-  const saidas = item.saidasDetalhes || [];
-  if (saidas.length < 2) return Infinity;
-  let totalDias = 0;
-  let totalUnidades = 0;
-  for (let i = 0; i < saidas.length - 1; i++) {
-    const atual = saidas[i];
-    const proxima = saidas[i + 1];
-    const intervalo = (proxima.data - atual.data) / (1000 * 60 * 60 * 24);
-    totalDias += intervalo;
-    totalUnidades += Number(atual.quantidade) || 0;
-  }
-  const mediaDiasPorUnidade = totalDias / totalUnidades;
-  if (!isFinite(mediaDiasPorUnidade) || mediaDiasPorUnidade <= 0) return Infinity;
-  return Math.floor(mediaDiasPorUnidade * item.quantidade);
+  if (!item.consumoMedio || item.consumoMedio === 0) return Infinity;
+  return Math.floor(item.consumoMedio * item.quantidade);
 }
 
 function renderizarTabela() {
