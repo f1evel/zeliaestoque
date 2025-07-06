@@ -99,6 +99,9 @@ async function carregarProdutos() {
     if (prod.fornecedor) fornecedoresSet.add(prod.fornecedor.trim());
   });
 
+  // 🔄 Também carrega fornecedores existentes nas movimentações
+  await carregarFornecedoresDasMovimentacoes(empresaId);
+
   const listaFor = document.getElementById("lista-fornecedores-mov");
   if (listaFor) {
     listaFor.innerHTML = [...fornecedoresSet]
@@ -106,6 +109,17 @@ async function carregarProdutos() {
       .map(f => `<option value="${f}">`)
       .join("");
   }
+}
+
+// ==========================
+// 🔥 Carregar Fornecedores das Movimentações
+// ==========================
+async function carregarFornecedoresDasMovimentacoes(empresaId) {
+  const snap = await getDocs(collection(db, "empresas", empresaId, "movimentacoes"));
+  snap.forEach(docu => {
+    const mov = docu.data();
+    if (mov.fornecedor) fornecedoresSet.add(mov.fornecedor.trim());
+  });
 }
 
 carregarProdutos();
