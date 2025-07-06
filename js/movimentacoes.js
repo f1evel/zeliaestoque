@@ -595,6 +595,12 @@ window.editarMovimentacao = async function (id) {
     m.validade?.toDate()?.toISOString().split("T")[0] || "";
   document.getElementById("lote").value = m.lote || "";
   document.getElementById("observacoes").value = m.observacao || "";
+  const inputFornecedor = document.getElementById("fornecedor-mov");
+  if (inputFornecedor) {
+    inputFornecedor.value = m.fornecedor || "";
+  }
+
+  atualizarCamposPorTipo();
 
   const btn = document.querySelector("#form-movimentacao button[type='submit']");
   btn.textContent = "💾 Salvar Alterações";
@@ -619,6 +625,7 @@ window.editarMovimentacao = async function (id) {
     const validadeStr = document.getElementById("validade").value;
     const validade = validadeStr ? parseDataLocal(validadeStr) : new Date(NaN);
     const lote = document.getElementById("lote").value.trim();
+    const fornecedor = document.getElementById("fornecedor-mov").value.trim();
 
     const atualizados = {
       nomeProduto,
@@ -630,7 +637,8 @@ window.editarMovimentacao = async function (id) {
       dataMovimentacao: Timestamp.fromDate(dataMov),
       observacao: observacoes,
       validade: isNaN(validade.getTime()) ? null : Timestamp.fromDate(validade),
-      lote
+      lote,
+      fornecedor
     };
 
     await updateDoc(docRef, atualizados);
