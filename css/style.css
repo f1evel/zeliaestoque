@@ -681,3 +681,18 @@ button.btn-icon.btn-xl { font-size: 16px; padding: 8px; }
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* Linhas da tabela financeira por status */
+tr.status-pago { background-color: #eafaf1; }
+tr.status-pendente { background-color: #fff8e6; }
+tr.status-vencido { background-color: #fdecea; }
+
+/* Destaque temporário de linha */
+tr.destacar {
+  animation: brilho-destacado 2s ease;
+}
+
+@keyframes brilho-destacado {
+  0% { box-shadow: 0 0 0 3px #f39c12 inset; }
+  100% { box-shadow: none; }
+}
