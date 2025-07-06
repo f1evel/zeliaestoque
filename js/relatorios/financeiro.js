@@ -1,7 +1,7 @@
 // financeiro.js — Controlador geral do módulo financeiro
 
 import { carregarDadosFinanceiro } from './financeiroDados.js';
-import { setDadosFinanceiro, gerarFiltrosFinanceiro, gerarTabelaFinanceiro, dadosFiltradosFinanceiro } from './financeiroTabela.js';
+import { setDadosFinanceiro, gerarFiltrosFinanceiro, gerarTabelaFinanceiro, dadosFiltradosFinanceiro, rolarParaPrimeiraVencida } from './financeiroTabela.js';
 import { carregarEntradasFinanceiro } from './financeiroCategorias.js';
 import { carregarOperacoes } from './financeiroOperacoes.js';
 import { exportarFinanceiroCSV, exportarFinanceiroExcel, exportarFinanceiroPDF } from './financeiroExportar.js';
@@ -39,6 +39,7 @@ function exibirAlertaVencidas() {
       e.preventDefault();
       document.getElementById('fin-status').value = 'vencido';
       gerarTabelaFinanceiro();
+      rolarParaPrimeiraVencida();
       aviso.style.display = 'none';
     }, { once: true });
   } else {

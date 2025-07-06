@@ -251,8 +251,9 @@ export function gerarTabelaFinanceiro() {
       ? nomeFornecedor.slice(0, 20) + '...'
       : nomeFornecedor;
     const compraEscapado = (d.compraId || '').replace(/"/g, '&quot;');
+    const classeStatus = d.statusParcelas ? `status-${d.statusParcelas}` : '';
     html += `
-      <tr>
+      <tr class="${classeStatus}">
         <td class="compra-id-cell" title="${compraEscapado}">${formatarCompraIdCurto(d.compraId)}</td>
         <td class="fornecedor-cell" title="${fornecedorEscapado}">${fornecedorCurto}</td>
         <td>${lanc}</td>
@@ -276,4 +277,16 @@ export function gerarTabelaFinanceiro() {
   atualizarDescricaoFiltrosFinanceiro();
   atualizarOperacoesPeriodo();
   atualizarProjecao(filtrados);
+}
+
+// 👉 Rolar e destacar a primeira linha vencida na tabela
+export function rolarParaPrimeiraVencida() {
+  const linha = document.querySelector('#tabela-financeiro tr.status-vencido');
+  if (linha) {
+    linha.classList.add('destacar');
+    linha.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => linha.classList.remove('destacar'), 2000);
+  } else {
+    document.getElementById('tabela-financeiro')?.scrollIntoView({ behavior: 'smooth' });
+  }
 }
