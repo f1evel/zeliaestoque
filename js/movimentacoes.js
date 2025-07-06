@@ -33,6 +33,7 @@ let produtosPorNome = {}; // Novo: agrupamento por nome normalizado
 let mapaValidades = {}; // Novo: quantidades por validade
 let listenerFormulario = null; // usado ao editar uma movimentacao
 let fornecedoresSet = new Set();
+let fornecedorOriginalEdicao = null; // armazena fornecedor original durante edição
 
 // =========================
 // 🔥 Carregar Movimentações
@@ -372,13 +373,17 @@ function atualizarCamposPorTipo() {
     campoLote.style.display = "block";
     grupoValidadeSaida.style.display = "none";
     if (grupoFornecedor) grupoFornecedor.style.display = "block";
-  }
-
-  if (inputFornecedor && nome) {
-    const prodSel = produtosCache.find(p => normalizarTexto(p.nome) === normalizarTexto(nome));
-    if (prodSel) {
-      inputFornecedor.value = inputFornecedor.value || prodSel.fornecedor || "";
+    if (inputFornecedor && !inputFornecedor.value) {
+      if (fornecedorOriginalEdicao !== null) {
+        inputFornecedor.value = fornecedorOriginalEdicao;
+      } else if (nome) {
+        const prodSel = produtosCache.find(p => normalizarTexto(p.nome) === normalizarTexto(nome));
+        if (prodSel) {
+          inputFornecedor.value = prodSel.fornecedor || "";
+        }
+      }
     }
+  }
   }
 }
 
@@ -577,6 +582,7 @@ document.getElementById("form-movimentacao").addEventListener("submit", async (e
 
         mostrarMensagem("✅ Movimentação registrada com sucesso.");
         document.getElementById("form-movimentacao").reset();
+        fornecedorOriginalEdicao = null;
         const hoje = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0];
         document.getElementById("data-movimentacao").value = hoje;
         carregarMovimentacoes();
@@ -666,6 +672,7 @@ window.editarMovimentacao = async function (id) {
   const inputFornecedor = document.getElementById("fornecedor-mov");
   if (inputFornecedor) {
     inputFornecedor.value = m.fornecedor || "";
+    fornecedorOriginalEdicao = m.fornecedor || "";
   }
 
   atualizarCamposPorTipo();
@@ -720,6 +727,7 @@ window.editarMovimentacao = async function (id) {
 
     mostrarMensagem("✅ Movimentação atualizada com sucesso!");
     form.reset();
+    fornecedorOriginalEdicao = null;
     btn.textContent = "Salvar Movimentação";
     carregarMovimentacoes();
     form.removeEventListener("submit", listenerFormulario);
