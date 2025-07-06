@@ -352,8 +352,13 @@ window.confirmarEntradaEstoque = async function () {
     }
 
     alert("✅ Entrada no estoque registrada e financeiro atualizado com sucesso!");
+    if (window.adicionarFornecedor) {
+      window.adicionarFornecedor(produtoCadastroAtual.fornecedor || produto.fornecedor);
+    }
+    if (window.carregarMovimentacoes) {
+      window.carregarMovimentacoes();
+    }
     fecharModalEntrada();
-    window.location.reload();
 
   } catch (err) {
     console.error("❌ Erro ao registrar entrada:", err?.message || err);
