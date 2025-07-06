@@ -507,8 +507,11 @@ document.getElementById("form-movimentacao").addEventListener("submit", async (e
   const fornecedorMov = document.getElementById("fornecedor-mov").value.trim();
 
   if (tipo === "saida") {
-    const validadeKey = validade.toISOString().split("T")[0];
-    const disponivel = mapaValidades[validadeKey] || 0;
+    if (!validadeStr) {
+      alert("❌ Selecione a validade da saída.");
+      return;
+    }
+    const disponivel = mapaValidades[validadeStr] || 0;
 
     if (quantidade > disponivel) {
       alert(`❌ Estoque insuficiente. Só há ${disponivel} unidade(s) disponíveis para essa validade.`);
@@ -571,7 +574,7 @@ document.getElementById("form-movimentacao").addEventListener("submit", async (e
 
         const fornecedorSaida =
           (await obterFornecedorDaValidade(produto.nome, validadeStr)) ||
-          produto.fornecedor;
+          produto.fornecedor || "";
 
         await addDoc(collection(db, "empresas", empresaId, "movimentacoes"), {
           produtoId: produtoEncontrado.id,
@@ -719,7 +722,8 @@ window.editarMovimentacao = async function (id) {
       if (window.adicionarFornecedor) window.adicionarFornecedor(fornecedor);
     } else {
       fornecedor =
-        (await obterFornecedorDaValidade(nomeProduto, validadeStr)) || "";
+        (await obterFornecedorDaValidade(nomeProduto, validadeStr)) ||
+        (produtosCache.find(p => normalizarTexto(p.nome) === normalizarTexto(nomeProduto))?.fornecedor || "");
     }
 
     const atualizados = {
