@@ -68,6 +68,12 @@
             <input type="date" id="validade" required>
           </div>
 
+          <div id="grupo-fornecedor">
+            <label>Fornecedor:</label>
+            <input list="lista-fornecedores-mov" id="fornecedor-mov" placeholder="Fornecedor" />
+            <datalist id="lista-fornecedores-mov"></datalist>
+          </div>
+
           <!-- Select de Validades (exibido apenas em Saída com múltiplas validades) -->
           <div id="grupo-validade-saida" style="display: none;">
             <label>Escolha a Validade para Saída:</label>

@@ -78,8 +78,11 @@ export async function abrirModalEntrada(produto) {
   } catch (erro) {
     console.error("Erro ao carregar IDs de compra:", erro);
   }
-  document.getElementById("nome-produto-modal").textContent =
-    `Produto: ${produto.nome}`;
+  const nomeModal = document.getElementById("nome-produto-modal");
+  if (nomeModal) {
+    const forn = produto.fornecedor ? ` — Fornecedor: ${produto.fornecedor}` : "";
+    nomeModal.textContent = `Produto: ${produto.nome}${forn}`;
+  }
   document.getElementById("entrada-forma-pagamento").value = "pix";
   document.getElementById("entrada-observacoes").value = "";
   const dataEntrada = new Date(produtoCadastroAtual.dataEntrada);
@@ -289,7 +292,7 @@ window.confirmarEntradaEstoque = async function () {
       nomeProduto: produto.nome,
       nomeBusca: normalizarTexto(produto.nome),
       categoria: produto.categoria,
-      fornecedor: produto.fornecedor,
+      fornecedor: produtoCadastroAtual.fornecedor || produto.fornecedor,
       unidadeMedida: produto.unidadeMedida || "-",
       tipo: "entrada",
       quantidade,
@@ -331,7 +334,7 @@ window.confirmarEntradaEstoque = async function () {
     } else {
       await addDoc(collection(db, "empresas", empresaId, "financeiro"), {
         tipo: "pagar",
-        fornecedorOuCliente: produto.fornecedor || "Fornecedor não informado",
+        fornecedorOuCliente: produtoCadastroAtual.fornecedor || "Fornecedor não informado",
         descricao: `Compra de ${quantidade} ${produto.unidadeMedida || "unidade(s)"} de ${produto.nome}`,
         categoria: "compra",
         formaPagamento,
