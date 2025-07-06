@@ -126,10 +126,24 @@ window.abrirModalParcelas = async function (compraId) {
   document.getElementById('modal-compra-id').textContent = formatarCompraIdCurto(compraId);
   const contParcelas = document.getElementById('parcelas-detalhes');
   const contProdutos = document.getElementById('produtos-compra-detalhes');
+  const contInfo = document.getElementById('info-compra');
 
   let htmlParcelas = '';
   let htmlProdutos = '';
+  let htmlInfo = '';
   let totalCompra = 0;
+
+  // Informações básicas da compra
+  const venc = registro.dataVencimento ? registro.dataVencimento.toLocaleDateString('pt-BR') : '-';
+  const status = registro.statusParcelas || registro.status || '-';
+  htmlInfo = `
+    <table class="tabela" style="margin-bottom:10px;">
+      <tbody>
+        <tr><th>Valor total</th><td>${formatarPreco(registro.valor)}</td></tr>
+        <tr><th>Status</th><td>${status}</td></tr>
+        <tr><th>Vencimento</th><td>${venc}</td></tr>
+      </tbody>
+    </table>`;
 
   // Parcelas
   if (!registro.parcelas || registro.parcelas.length === 0) {
@@ -205,6 +219,7 @@ window.abrirModalParcelas = async function (compraId) {
     htmlProdutos += `<p>Produtos não localizados para esta compra. Total registrado: ${formatarPreco(registro.valor)}</p>`;
   }
 
+  contInfo.innerHTML = htmlInfo;
   contParcelas.innerHTML = htmlParcelas;
   contProdutos.innerHTML = htmlProdutos;
 
