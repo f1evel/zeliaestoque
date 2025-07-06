@@ -345,6 +345,12 @@ async function atualizarPrecoPorValidade() {
   if (preco !== null) {
     document.getElementById("preco-unitario").value = preco;
   }
+
+  const fornecedor = await obterFornecedorDaValidade(nome, validadeSelecionada);
+  const inputFornecedor = document.getElementById("fornecedor-mov");
+  if (inputFornecedor) {
+    inputFornecedor.value = fornecedor || "";
+  }
 }
 
 document.getElementById("tipo-movimentacao").addEventListener("change", atualizarCamposPorTipo);
@@ -364,7 +370,10 @@ function atualizarCamposPorTipo() {
     campoLote.style.display = "none";
     grupoValidadeSaida.style.display = "block";
     if (grupoFornecedor) grupoFornecedor.style.display = "none";
-    if (inputFornecedor) inputFornecedor.value = "";
+    if (inputFornecedor) {
+      inputFornecedor.value = "";
+      inputFornecedor.required = false;
+    }
 
     // ✅ Preenche validades disponíveis e preços ao selecionar produto
     if (nome.length > 0) preencherValidadesDisponiveis();
@@ -373,6 +382,9 @@ function atualizarCamposPorTipo() {
     campoLote.style.display = "block";
     grupoValidadeSaida.style.display = "none";
     if (grupoFornecedor) grupoFornecedor.style.display = "block";
+    if (inputFornecedor) {
+      inputFornecedor.required = true;
+    }
     if (inputFornecedor && !inputFornecedor.value) {
       if (fornecedorOriginalEdicao !== null) {
         inputFornecedor.value = fornecedorOriginalEdicao;
@@ -383,7 +395,6 @@ function atualizarCamposPorTipo() {
         }
       }
     }
-  }
   }
 }
 
