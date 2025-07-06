@@ -32,6 +32,7 @@ let produtosCache = [];
 let produtosPorNome = {}; // Novo: agrupamento por nome normalizado
 let mapaValidades = {}; // Novo: quantidades por validade
 let listenerFormulario = null; // usado ao editar uma movimentacao
+let fornecedoresSet = new Set();
 
 // =========================
 // 🔥 Carregar Movimentações
@@ -88,13 +89,23 @@ async function carregarProdutos() {
 
   // Agrupa os produtos por nome normalizado
   produtosPorNome = {};
+  fornecedoresSet = new Set();
   produtosCache.forEach(prod => {
     const nomeNormalizado = normalizarTexto(prod.nome);
     if (!produtosPorNome[nomeNormalizado]) {
       produtosPorNome[nomeNormalizado] = [];
     }
     produtosPorNome[nomeNormalizado].push(prod);
+    if (prod.fornecedor) fornecedoresSet.add(prod.fornecedor.trim());
   });
+
+  const listaFor = document.getElementById("lista-fornecedores-mov");
+  if (listaFor) {
+    listaFor.innerHTML = [...fornecedoresSet]
+      .sort()
+      .map(f => `<option value="${f}">`)
+      .join("");
+  }
 }
 
 carregarProdutos();
@@ -281,11 +292,14 @@ function atualizarCamposPorTipo() {
   const campoValidade = document.getElementById("validade").parentElement;
   const campoLote = document.getElementById("lote").parentElement;
   const grupoValidadeSaida = document.getElementById("grupo-validade-saida");
+  const grupoFornecedor = document.getElementById("grupo-fornecedor");
+  const inputFornecedor = document.getElementById("fornecedor-mov");
 
   if (tipo === "saida") {
     campoValidade.style.display = "none";
     campoLote.style.display = "none";
     grupoValidadeSaida.style.display = "block";
+    if (grupoFornecedor) grupoFornecedor.style.display = "none";
 
     // ✅ Preenche validades disponíveis e preços ao selecionar produto
     if (nome.length > 0) preencherValidadesDisponiveis();
@@ -293,6 +307,14 @@ function atualizarCamposPorTipo() {
     campoValidade.style.display = "block";
     campoLote.style.display = "block";
     grupoValidadeSaida.style.display = "none";
+    if (grupoFornecedor) grupoFornecedor.style.display = "block";
+  }
+
+  if (inputFornecedor && nome) {
+    const prodSel = produtosCache.find(p => normalizarTexto(p.nome) === normalizarTexto(nome));
+    if (prodSel) {
+      inputFornecedor.value = inputFornecedor.value || prodSel.fornecedor || "";
+    }
   }
 }
 
@@ -402,6 +424,7 @@ document.getElementById("form-movimentacao").addEventListener("submit", async (e
   const observacoes = document.getElementById("observacoes").value.trim();
   const validadeStr = document.getElementById("validade").value;
   const validade = validadeStr ? parseDataLocal(validadeStr) : new Date(NaN);
+  const fornecedorMov = document.getElementById("fornecedor-mov").value.trim();
 
   if (tipo === "saida") {
     const validadeKey = validade.toISOString().split("T")[0];
@@ -446,7 +469,7 @@ document.getElementById("form-movimentacao").addEventListener("submit", async (e
       id: produtoEncontrado.id,
       nome: produto.nome,
       categoria: produto.categoria,
-      fornecedor: produto.fornecedor,
+      fornecedor: fornecedorMov || produto.fornecedor,
       unidadeMedida: produto.unidadeMedida || "unidade",
       quantidade,
       precoCompra: precoUnitario,
