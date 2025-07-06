@@ -30,7 +30,9 @@ function exibirAlertaVencidas() {
   });
 
   if (totalVencidas > 0) {
-    aviso.innerHTML = `⚠️ Atenção: Você possui ${totalVencidas} parcelas vencidas. <a href="#" id="btn-ver-vencidas">Clique aqui</a> para visualizá-las.`;
+    const textoSingular = `⚠️ Atenção: Você possui 1 parcela vencida. <a href="#" id="btn-ver-vencidas">Clique aqui</a> para visualizá-la.`;
+    const textoPlural = `⚠️ Atenção: Você possui ${totalVencidas} parcelas vencidas. <a href="#" id="btn-ver-vencidas">Clique aqui</a> para visualizá-las.`;
+    aviso.innerHTML = totalVencidas === 1 ? textoSingular : textoPlural;
     aviso.style.display = 'block';
     const btn = document.getElementById('btn-ver-vencidas');
     btn?.addEventListener('click', e => {
