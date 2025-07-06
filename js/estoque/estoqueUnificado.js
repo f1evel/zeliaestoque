@@ -71,7 +71,7 @@ async function carregarDados() {
       })();
 
       const saidasOrdenadas = (mov.saidasDetalhes || []).slice().sort((a,b) => a.data - b.data);
-      const consumoMedio = calcularConsumoMedio(saidasOrdenadas);
+      const consumoMedio = calcularConsumoMedio(saidasOrdenadas, inicioConsumo);
 
       return {
         nome: d.nome || '-',
@@ -170,19 +170,25 @@ function aplicaFiltros() {
   gerarGraficos();
 }
 
-function calcularConsumoMedio(saidasOrdenadas) {
-  if (!saidasOrdenadas || saidasOrdenadas.length < 2) return 0;
-  let totalDias = 0;
-  let totalUnidades = 0;
-  for (let i = 0; i < saidasOrdenadas.length - 1; i++) {
-    const atual = saidasOrdenadas[i];
-    const proxima = saidasOrdenadas[i + 1];
-    const intervalo = (proxima.data - atual.data) / (1000 * 60 * 60 * 24);
-    totalDias += intervalo;
-    totalUnidades += Number(atual.quantidade) || 0;
-  }
-  if (!totalDias || !totalUnidades) return 0;
-  return totalDias / totalUnidades;
+function calcularConsumoMedio(saidasOrdenadas, inicioPeriodo) {
+  if (!saidasOrdenadas || saidasOrdenadas.length === 0) return 0;
+
+  const consumoTotal = saidasOrdenadas.reduce(
+    (acc, s) => acc + (Number(s.quantidade) || 0),
+    0
+  );
+  if (!consumoTotal) return 0;
+
+  const hoje = new Date();
+  const primeiro = saidasOrdenadas[0].data;
+  const ultimo = saidasOrdenadas[saidasOrdenadas.length - 1].data;
+
+  const inicio = primeiro < inicioPeriodo ? inicioPeriodo : primeiro;
+  const fim = saidasOrdenadas.length === 1 ? hoje : ultimo;
+  const dias = (fim - inicio) / (1000 * 60 * 60 * 24);
+  if (dias <= 0) return 0;
+
+  return dias / consumoTotal;
 }
 
 function calculaPrevisao(item) {
