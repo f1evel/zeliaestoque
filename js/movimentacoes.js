@@ -605,11 +605,6 @@ function renderizarTabela(movimentacoes, termo = "") {
     return nomeNormalizado.includes(normalizarTexto(termo));
   });
 
-  if (filtradas.length === 0) {
-    lista.innerHTML = "<p>❌ Nenhuma movimentação encontrada.</p>";
-    return;
-  }
-
   let html = `
     <table border="1" cellpadding="8">
       <tr>
@@ -623,6 +618,13 @@ function renderizarTabela(movimentacoes, termo = "") {
         <th>Lote</th>
         <th>Ações</th>
       </tr>`;
+
+  if (filtradas.length === 0) {
+    html += `<tr><td colspan="9" style="text-align:center;">❌ Nenhuma movimentação encontrada.</td></tr>`;
+    html += "</table>";
+    lista.innerHTML = html;
+    return;
+  }
 
   filtradas.forEach(m => {
     const dataMov = m.dataMovimentacao?.toDate()?.toLocaleDateString("pt-BR") || "-";
