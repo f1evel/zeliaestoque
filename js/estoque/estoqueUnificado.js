@@ -34,20 +34,22 @@ async function carregarDados() {
     movSnap.forEach(doc => {
       const m = doc.data();
       const nome = m.nomeBusca || normalizarTexto(m.nomeProduto || '');
-      if (!movimentos[nome]) movimentos[nome] = { entradas: 0, saidas: 0, consumo: 0 };
+      if (!movimentos[nome]) movimentos[nome] = { entradas: 0, saidas: 0, saidasDetalhes: [] };
       const qtd = Number(m.quantidade) || 0;
+      const dataMov = m.dataMovimentacao?.toDate?.() || new Date(m.dataMovimentacao);
       if (m.tipo === 'entrada') movimentos[nome].entradas += qtd;
       if (m.tipo === 'saida') {
         movimentos[nome].saidas += qtd;
-        const dataMov = m.dataMovimentacao?.toDate?.() || new Date(m.dataMovimentacao);
-        if (dataMov && dataMov >= inicioConsumo) movimentos[nome].consumo += qtd;
+        if (dataMov && dataMov >= inicioConsumo) {
+          movimentos[nome].saidasDetalhes.push({ data: dataMov, quantidade: qtd });
+        }
       }
     });
 
     dadosOriginais = prodSnap.docs.map(doc => {
       const d = doc.data();
       const nomeBusca = d.nomeBusca || normalizarTexto(d.nome || '');
-      const mov = movimentos[nomeBusca] || { entradas: 0, saidas: 0, consumo: 0 };
+      const mov = movimentos[nomeBusca] || { entradas: 0, saidas: 0, saidasDetalhes: [] };
 
       const validadeStr = (() => {
         if (d.validade?.toDate) return d.validade.toDate().toISOString().split('T')[0];
@@ -56,9 +58,8 @@ async function carregarDados() {
         return '';
       })();
 
-      const diasPeriodo = Math.max(1, Math.round((Date.now() - inicioConsumo.getTime()) / 86400000));
-      const mesesPeriodo = diasPeriodo / 30;
-      const consumoMedio = mov.consumo / mesesPeriodo;
+      const saidasOrdenadas = (mov.saidasDetalhes || []).slice().sort((a,b) => a.data - b.data);
+      const consumoMedio = calcularConsumoMedio(saidasOrdenadas);
 
       return {
         nome: d.nome || '-',
@@ -70,6 +71,7 @@ async function carregarDados() {
         saidas: mov.saidas,
         preco: Number(d.precoCompra) || 0,
         consumoMedio,
+        saidasDetalhes: saidasOrdenadas,
         validade: validadeStr
       };
     });
@@ -156,9 +158,36 @@ function aplicaFiltros() {
   gerarGraficos();
 }
 
+function calcularConsumoMedio(saidasOrdenadas) {
+  if (!saidasOrdenadas || saidasOrdenadas.length < 2) return 0;
+  let totalDias = 0;
+  let totalUnidades = 0;
+  for (let i = 0; i < saidasOrdenadas.length - 1; i++) {
+    const atual = saidasOrdenadas[i];
+    const proxima = saidasOrdenadas[i + 1];
+    const intervalo = (proxima.data - atual.data) / (1000 * 60 * 60 * 24);
+    totalDias += intervalo;
+    totalUnidades += Number(atual.quantidade) || 0;
+  }
+  if (!totalDias || !totalUnidades) return 0;
+  return (totalUnidades / totalDias) * 30;
+}
+
 function calculaPrevisao(item) {
-  if (!item.consumoMedio || item.consumoMedio === 0) return Infinity;
-  return Math.floor((item.quantidade / item.consumoMedio) * 30);
+  const saidas = item.saidasDetalhes || [];
+  if (saidas.length < 2) return Infinity;
+  let totalDias = 0;
+  let totalUnidades = 0;
+  for (let i = 0; i < saidas.length - 1; i++) {
+    const atual = saidas[i];
+    const proxima = saidas[i + 1];
+    const intervalo = (proxima.data - atual.data) / (1000 * 60 * 60 * 24);
+    totalDias += intervalo;
+    totalUnidades += Number(atual.quantidade) || 0;
+  }
+  const mediaDiasPorUnidade = totalDias / totalUnidades;
+  if (!isFinite(mediaDiasPorUnidade) || mediaDiasPorUnidade <= 0) return Infinity;
+  return Math.floor(mediaDiasPorUnidade * item.quantidade);
 }
 
 function renderizarTabela() {
@@ -183,6 +212,7 @@ function renderizarTabela() {
 
   dadosFiltrados.forEach(d => {
     const dias = calculaPrevisao(d);
+    const diasTxt = dias === Infinity ? 'Sem dados' : dias;
     const classe = d.quantidade < d.quantidadeMinima ?
       (document.getElementById('filtro-critico').checked ? 'critico' : 'critico-suave') : '';
     const fornTxt = d.fornecedor || '-';
@@ -196,7 +226,7 @@ function renderizarTabela() {
       <td>${d.saidas}</td>
       <td>${formatarPreco(d.preco)}</td>
       <td>${d.consumoMedio.toFixed(1)}</td>
-      <td>${dias}</td>
+      <td>${diasTxt}</td>
       <td>${formatarDataBrasileira(d.validade)}</td>
       <td>${d.categoria}</td>
       <td class="fornecedor-cell" title="${fornEsc}">${fornCurto}</td>
@@ -287,7 +317,7 @@ async function exportarCSV(dados) {
       d.saidas,
       d.preco,
       d.consumoMedio.toFixed(1),
-      calculaPrevisao(d),
+      (function(){ const p = calculaPrevisao(d); return p === Infinity ? 'Sem dados' : p; })(),
       d.validade ? new Date(d.validade).toLocaleDateString('pt-BR') : '-',
       d.categoria,
       d.fornecedor
@@ -327,7 +357,7 @@ async function exportarPDF(dados) {
     d.saidas,
     d.preco,
     d.consumoMedio.toFixed(1),
-    calculaPrevisao(d),
+    (function(){ const p = calculaPrevisao(d); return p === Infinity ? 'Sem dados' : p; })(),
     d.validade ? new Date(d.validade).toLocaleDateString('pt-BR') : '-',
     d.categoria,
     d.fornecedor
