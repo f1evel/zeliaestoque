@@ -9,8 +9,11 @@ import { normalizarTexto, parseDataLocal, formatarPreco, formatarDataBrasileira 
 let dadosOriginais = [];
 
 let dadosFiltrados = [];
-let graficoCategoria = null;
 let graficoMeses = null;
+let graficoGasto = null;
+let graficoInvestido = null;
+let graficoAtual = null;
+let movimentacoesLista = [];
 let periodoConsumoMeses = 3;
 
 // Carrega produtos e movimentações do Firestore
@@ -31,12 +34,21 @@ async function carregarDados() {
       inicioConsumo.setTime(0); // desde o início
     }
 
+    movimentacoesLista = [];
     movSnap.forEach(doc => {
       const m = doc.data();
       const nome = m.nomeBusca || normalizarTexto(m.nomeProduto || '');
       if (!movimentos[nome]) movimentos[nome] = { entradas: 0, saidas: 0, saidasDetalhes: [] };
       const qtd = Number(m.quantidade) || 0;
       const dataMov = m.dataMovimentacao?.toDate?.() || new Date(m.dataMovimentacao);
+      movimentacoesLista.push({
+        tipo: m.tipo || '-',
+        categoria: m.categoria || '-',
+        fornecedor: m.fornecedor || '-',
+        quantidade: qtd,
+        preco: Number(m.precoUnitario) || 0,
+        data: dataMov
+      });
       if (m.tipo === 'entrada') movimentos[nome].entradas += qtd;
       if (m.tipo === 'saida') {
         movimentos[nome].saidas += qtd;
@@ -238,24 +250,65 @@ function atualizarCards() {
 }
 
 function gerarGraficos() {
-  const ctxCat = document.getElementById('grafico-categoria');
   const ctxMes = document.getElementById('grafico-meses');
+  const inicio = parseDataLocal(document.getElementById('graficos-inicio').value);
+  const fim = parseDataLocal(document.getElementById('graficos-fim').value);
+  const agrup = document.getElementById('agrupamento-graficos').value || 'categoria';
 
-  const porCategoria = {};
-  dadosFiltrados.forEach(d => {
-    porCategoria[d.categoria] = (porCategoria[d.categoria] || 0) + d.saidas;
+  const agrField = agrup === 'categoria' ? 'categoria' : 'fornecedor';
+
+  const dadosGasto = {};
+  const dadosInvest = {};
+
+  movimentacoesLista.forEach(m => {
+    if (m.data && !isNaN(inicio) && m.data < inicio) return;
+    if (m.data && !isNaN(fim) && m.data > fim) return;
+    const chave = m[agrField] || '-';
+    const valor = (m.quantidade || 0) * (m.preco || 0);
+    if (m.tipo === 'saida') dadosGasto[chave] = (dadosGasto[chave] || 0) + valor;
+    if (m.tipo === 'entrada') dadosInvest[chave] = (dadosInvest[chave] || 0) + valor;
   });
 
-  const catLabels = Object.keys(porCategoria);
-  const catDados = Object.values(porCategoria);
+  const dadosAtual = {};
+  dadosOriginais.forEach(p => {
+    if (p.quantidade <= 0) return;
+    const chave = p[agrField] || '-';
+    dadosAtual[chave] = (dadosAtual[chave] || 0) + p.quantidade * p.preco;
+  });
 
-  if (graficoCategoria) graficoCategoria.destroy();
-  graficoCategoria = new Chart(ctxCat, {
+  const cores = labels => labels.map((_,i)=>`hsl(${(i*360/labels.length)},70%,60%)`);
+
+  // ---- Grafico Valor Gasto ----
+  const labelsGasto = Object.keys(dadosGasto);
+  const valoresGasto = Object.values(dadosGasto);
+  const ctxGasto = document.getElementById('grafico-valor-gasto');
+  if (graficoGasto) graficoGasto.destroy();
+  graficoGasto = new Chart(ctxGasto, {
     type: 'pie',
-    data: {
-      labels: catLabels,
-      datasets: [{ data: catDados, backgroundColor: ['#009688', '#4caf50', '#ffc107'] }]
-    }
+    data: { labels: labelsGasto, datasets:[{ data: valoresGasto, backgroundColor: cores(labelsGasto) }] },
+    options: { plugins:{ legend:{ position:'bottom' } } }
+  });
+
+  // ---- Grafico Valor Investido ----
+  const labelsInvest = Object.keys(dadosInvest);
+  const valoresInvest = Object.values(dadosInvest);
+  const ctxInvest = document.getElementById('grafico-valor-investido');
+  if (graficoInvestido) graficoInvestido.destroy();
+  graficoInvestido = new Chart(ctxInvest, {
+    type: 'pie',
+    data: { labels: labelsInvest, datasets:[{ data: valoresInvest, backgroundColor: cores(labelsInvest) }] },
+    options: { plugins:{ legend:{ position:'bottom' } } }
+  });
+
+  // ---- Grafico Valor Atual ----
+  const labelsAtual = Object.keys(dadosAtual);
+  const valoresAtual = Object.values(dadosAtual);
+  const ctxAtual = document.getElementById('grafico-valor-atual');
+  if (graficoAtual) graficoAtual.destroy();
+  graficoAtual = new Chart(ctxAtual, {
+    type: 'pie',
+    data: { labels: labelsAtual, datasets:[{ data: valoresAtual, backgroundColor: cores(labelsAtual) }] },
+    options: { plugins:{ legend:{ position:'bottom' } } }
   });
 
   const meses = ['Entradas', 'Saídas'];
@@ -267,11 +320,52 @@ function gerarGraficos() {
   if (graficoMeses) graficoMeses.destroy();
   graficoMeses = new Chart(ctxMes, {
     type: 'bar',
-    data: {
-      labels: meses,
-      datasets: [{ label: 'Movimentações', data: dadosLinha, backgroundColor: '#009688' }]
-    }
+    data: { labels: meses, datasets:[{ label: 'Movimentações', data: dadosLinha, backgroundColor: '#009688' }] }
   });
+
+  atualizarTextosGraficos(agrup, dadosGasto, dadosInvest, dadosAtual);
+}
+
+function atualizarTextosGraficos(agrup, dadosGasto, dadosInvest, dadosAtual) {
+  const tituloGasto = document.getElementById('titulo-grafico-gasto');
+  const subGasto = document.getElementById('subtitulo-grafico-gasto');
+  const tituloInvest = document.getElementById('titulo-grafico-investido');
+  const subInvest = document.getElementById('subtitulo-grafico-investido');
+  const tituloAtual = document.getElementById('titulo-grafico-atual');
+  const subAtual = document.getElementById('subtitulo-grafico-atual');
+  const card = document.getElementById('card-interpretacao');
+
+  const campo = agrup === 'categoria' ? 'categoria' : 'fornecedor';
+
+  tituloGasto.textContent = `Valor gasto por ${campo} (saídas de estoque)`;
+  subGasto.textContent = `Mostra quanto foi consumido por ${campo} no período selecionado.`;
+
+  tituloInvest.textContent = `Valor investido por ${campo} (entradas de estoque)`;
+  subInvest.textContent = `Mostra quanto foi investido por ${campo} no período selecionado.`;
+
+  tituloAtual.textContent = `Valor total atual por ${campo} (estoque disponível)`;
+  subAtual.textContent = `Mostra o valor em estoque agrupado por ${campo}.`;
+
+  const dataset = agrup === 'categoria' ? dadosGasto : dadosInvest;
+  const total = Object.values(dataset).reduce((a,v)=>a+v,0);
+  const entradasOrdenadas = Object.entries(dataset).sort((a,b)=>b[1]-a[1]);
+  if (total === 0 || entradasOrdenadas.length === 0) {
+    card.textContent = 'ℹ️ Sem dados para o período selecionado.';
+    return;
+  }
+  const [primeiro, segundo] = entradasOrdenadas;
+  const pct1 = ((primeiro[1]/total)*100).toFixed(0);
+  let texto = '';
+  if (agrup === 'categoria') {
+    texto = `ℹ️ Neste período, a categoria que mais consumiu recursos foi ${primeiro[0]}, com ${formatarPreco(primeiro[1])} (${pct1}%) do total gasto em saídas.`;
+  } else {
+    texto = `ℹ️ Neste período, o fornecedor que mais recebeu investimentos foi ${primeiro[0]}, com ${formatarPreco(primeiro[1])} (${pct1}%) do total de entradas.`;
+  }
+  if (segundo) {
+    const pct2 = ((segundo[1]/total)*100).toFixed(0);
+    texto += ` Em seguida, ${segundo[0]} teve ${formatarPreco(segundo[1])} (${pct2}%).`;
+  }
+  card.textContent = texto;
 }
 
 // 🧹 Limpar todos os filtros
@@ -388,10 +482,24 @@ function registrarEventos() {
   document.getElementById('botao-limpar-estoque-geral')?.addEventListener('click', limparFiltros);
   document.getElementById('botao-exportar-csv-estoque-geral')?.addEventListener('click', () => exportarCSV(dadosFiltrados));
   document.getElementById('botao-exportar-pdf-estoque-geral')?.addEventListener('click', () => exportarPDF(dadosFiltrados));
+
+  ['agrupamento-graficos','graficos-inicio','graficos-fim'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', gerarGraficos);
+  });
+
+  document.getElementById('botao-scroll-graficos')?.addEventListener('click', () => {
+    document.getElementById('secao-graficos')?.scrollIntoView({ behavior: 'smooth' });
+  });
 }
 
 // Inicialização
 window.addEventListener('DOMContentLoaded', () => {
+  const hoje = new Date();
+  const inicioPadrao = new Date();
+  inicioPadrao.setDate(hoje.getDate() - 30);
+  document.getElementById('graficos-fim').value = hoje.toISOString().split('T')[0];
+  document.getElementById('graficos-inicio').value = inicioPadrao.toISOString().split('T')[0];
+
   registrarEventos();
   carregarDados();
 });

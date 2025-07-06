@@ -696,3 +696,18 @@ tr.destacar {
   0% { box-shadow: 0 0 0 3px #f39c12 inset; }
   100% { box-shadow: none; }
 }
+
+/* Seção de gráficos do estoque */
+.grafico-item {
+  text-align: center;
+}
+.grafico-titulo {
+  margin-bottom: 5px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.grafico-subtitulo {
+  font-size: 14px;
+  color: #6b7280;
+  margin-top: 5px;
+}
