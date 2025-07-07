@@ -235,6 +235,22 @@ window.confirmarEntradaEstoque = async function () {
     }
 
     const empresaId = await getEmpresaIdDoUsuario();
+
+    // Verifica se o compraId já existe no financeiro antes de qualquer escrita
+    const verificaQuery = query(
+      collection(db, "empresas", empresaId, "financeiro"),
+      where("compraId", "==", compraId)
+    );
+    const verificaSnap = await getDocs(verificaQuery);
+    if (!verificaSnap.empty) {
+      const continuar = confirm(
+        "⚠️ Uma compra com esse ID já existe. Deseja adicionar este novo produto a essa compra?"
+      );
+      if (!continuar) {
+        return;
+      }
+    }
+
     const produtoRef = doc(db, "empresas", empresaId, "produtos", produtoCadastroAtual.id);
     const produtoSnap = await getDoc(produtoRef);
 
