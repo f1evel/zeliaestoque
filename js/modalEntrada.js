@@ -303,6 +303,7 @@ window.confirmarEntradaEstoque = async function () {
       validade: validadeEntrada ? Timestamp.fromDate(validadeEntrada) : null,
       lote,
       parcelas: parcelas,
+      compraId,
       usuario: "admin@zelia.com"
     });
     
