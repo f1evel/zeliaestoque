@@ -300,7 +300,15 @@ window.confirmarEntradaEstoque = async function () {
       quantidade: novaQuantidade,
       dataEntrada: dataTimestamp
     });
-    await registrarHistorico(produtoCadastroAtual.id, 'quantidade', produto.quantidade || 0, novaQuantidade);
+    await registrarHistorico(
+      produtoCadastroAtual.id,
+      'quantidade',
+      produto.quantidade || 0,
+      novaQuantidade
+    );
+    if (window.carregarProdutos) {
+      window.carregarProdutos();
+    }
 
     // 🔸 Registra a movimentação
     await addDoc(collection(db, "empresas", empresaId, "movimentacoes"), {
