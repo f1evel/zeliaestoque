@@ -13,7 +13,7 @@ import {
   Timestamp
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-import { mostrarErro, normalizarTexto, parseDataLocal, formatarCompraIdBR, formatarPreco } from './utils.js';
+import { mostrarErro, normalizarTexto, parseDataLocal, formatarCompraIdBR, formatarPreco, formatarDataBrasileira } from './utils.js';
 import { registrarHistorico } from './historico.js';
 
 let produtoCadastroAtual = null;
@@ -242,12 +242,50 @@ window.confirmarEntradaEstoque = async function () {
       where("compraId", "==", compraId)
     );
     const verificaSnap = await getDocs(verificaQuery);
+
+    let finDocExistente = null;
+    let parcelasAlteradas = false;
+    let novoNumParcelas = numParcelas;
+    let novoPrimeiroVenc = document.getElementById("entrada-primeiro-vencimento").value;
+    let novaForma = formaPagamento;
+
     if (!verificaSnap.empty) {
+      finDocExistente = verificaSnap.docs[0];
       const continuar = confirm(
         "⚠️ Uma compra com esse ID já existe. Deseja adicionar este novo produto a essa compra?"
       );
       if (!continuar) {
         return;
+      }
+
+      const finAntigo = finDocExistente.data();
+      const numAntigo = finAntigo["entrada-numero-parcelas"] || (Array.isArray(finAntigo.parcelas) ? finAntigo.parcelas.length : 1);
+      const vencAntigo = finAntigo["entrada-primeiro-vencimento"] || (Array.isArray(finAntigo.parcelas) && finAntigo.parcelas.length > 0 ? finAntigo.parcelas[0].vencimento : "");
+
+      if (finAntigo.formaPagamento !== formaPagamento) {
+        const ok = confirm(`⚠️ Você está atualizando a forma de pagamento para: ${formaPagamento.toUpperCase()}. Deseja continuar?`);
+        if (!ok) return;
+        novaForma = formaPagamento;
+      } else {
+        novaForma = finAntigo.formaPagamento;
+      }
+
+      if (numAntigo !== numParcelas) {
+        const ok = confirm(`⚠️ Você alterou o número de parcelas para: ${numParcelas}. Deseja aplicar essa alteração?`);
+        if (!ok) return;
+        parcelasAlteradas = true;
+        novoNumParcelas = numParcelas;
+      } else {
+        novoNumParcelas = numAntigo;
+      }
+
+      if (vencAntigo !== novoPrimeiroVenc) {
+        const ok = confirm(`⚠️ A nova data do primeiro vencimento será: ${formatarDataBrasileira(novoPrimeiroVenc)}. Deseja confirmar?`);
+        if (!ok) return;
+        parcelasAlteradas = true;
+        novoPrimeiroVenc = novoPrimeiroVenc;
+      } else {
+        novoPrimeiroVenc = vencAntigo;
       }
     }
 
@@ -336,25 +374,34 @@ window.confirmarEntradaEstoque = async function () {
     const finSnap = await getDocs(finQuery);
 
     if (!finSnap.empty) {
-      const existing = finSnap.docs[0];
+      const existing = finDocExistente || finSnap.docs[0];
       const finRef = doc(db, "empresas", empresaId, "financeiro", existing.id);
       const finData = existing.data();
       const parcelasExistentes = Array.isArray(finData.parcelas) ? finData.parcelas : [];
 
       const novoValorTotal = (finData.valorTotal || 0) + custoTotal;
-      const numParcelasTotais = parcelasExistentes.length || parcelas.length;
-      const novosValores = dividirValorEmParcelas(novoValorTotal, numParcelasTotais);
-      const parcelasAtualizadas = parcelasExistentes.map((p, idx) => ({
-        ...p,
-        numero: idx + 1,
-        valor: novosValores[idx]
-      }));
+
+      let parcelasAtualizadas = [];
+      if (parcelasAlteradas) {
+        parcelasAtualizadas = gerarParcelasAutomaticamente(novoValorTotal, novoNumParcelas, novoPrimeiroVenc);
+      } else {
+        const numParcelasTotais = parcelasExistentes.length || parcelas.length;
+        const novosValores = dividirValorEmParcelas(novoValorTotal, numParcelasTotais);
+        parcelasAtualizadas = parcelasExistentes.map((p, idx) => ({
+          ...p,
+          numero: idx + 1,
+          valor: novosValores[idx]
+        }));
+      }
 
       await updateDoc(finRef, {
         valorTotal: novoValorTotal,
         compraId,
         identificadorPagamento,
-        parcelas: parcelasAtualizadas
+        formaPagamento: novaForma,
+        parcelas: parcelasAtualizadas,
+        "entrada-numero-parcelas": novoNumParcelas,
+        "entrada-primeiro-vencimento": novoPrimeiroVenc
       });
     } else {
       await addDoc(collection(db, "empresas", empresaId, "financeiro"), {
@@ -372,7 +419,9 @@ window.confirmarEntradaEstoque = async function () {
         usuario: "admin@zelia.com",
         compraId,
         identificadorPagamento,
-        parcelas
+        parcelas,
+        "entrada-numero-parcelas": numParcelas,
+        "entrada-primeiro-vencimento": parcelas[0]?.vencimento || null
       });
     }
 
