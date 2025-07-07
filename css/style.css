@@ -686,6 +686,8 @@ button.btn-icon.btn-xl { font-size: 16px; padding: 8px; }
 tr.status-pago { background-color: #eafaf1; }
 tr.status-pendente { background-color: #fff8e6; }
 tr.status-vencido { background-color: #fdecea; }
+tr.mov-entrada { background-color: #e8f5e9; }
+tr.mov-saida { background-color: #ffebee; }
 
 /* Destaque temporário de linha */
 tr.destacar {

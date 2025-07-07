@@ -642,7 +642,8 @@ function renderizarTabela(movimentacoes, termo = "") {
 
   filtradas.forEach(m => {
     const dataMov = m.dataMovimentacao?.toDate()?.toLocaleDateString("pt-BR") || "-";
-    html += `<tr>
+    const classeTipo = m.tipo === "entrada" ? "mov-entrada" : m.tipo === "saida" ? "mov-saida" : "";
+    html += `<tr class="${classeTipo}">
       <td>${m.nomeProduto}</td>
       <td>${m.tipo}</td>
       <td>${m.quantidade}</td>
