@@ -134,16 +134,8 @@ window.abrirModalParcelas = async function (compraId) {
   let totalCompra = 0;
 
   // Informações básicas da compra
-  const venc = registro.dataVencimento ? registro.dataVencimento.toLocaleDateString('pt-BR') : '-';
-  const status = registro.statusParcelas || registro.status || '-';
-  htmlInfo = `
-    <table class="tabela" style="margin-bottom:10px;">
-      <tbody>
-        <tr><th>Valor total</th><td>${formatarPreco(registro.valor)}</td></tr>
-        <tr><th>Status</th><td>${status}</td></tr>
-        <tr><th>Vencimento</th><td>${venc}</td></tr>
-      </tbody>
-    </table>`;
+  // Informações resumidas removidas por serem redundantes com a tabela de parcelas
+  htmlInfo = '';
 
   // Parcelas
   if (!registro.parcelas || registro.parcelas.length === 0) {
