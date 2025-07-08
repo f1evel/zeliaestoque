@@ -33,6 +33,7 @@ let produtosPorNome = {}; // Novo: agrupamento por nome normalizado
 let mapaValidades = {}; // Novo: quantidades por validade
 let listenerFormulario = null; // usado ao editar uma movimentacao
 let fornecedoresSet = new Set();
+let compraIdSet = new Set();
 let fornecedorOriginalEdicao = null; // armazena fornecedor original durante edição
 
 // =========================
@@ -49,7 +50,15 @@ async function carregarMovimentacoes() {
     const snapshot = await getDocs(q);
     movimentacoesCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-    renderizarTabela(movimentacoesCache);
+    compraIdSet = new Set();
+    movimentacoesCache.forEach(m => {
+      if (m.compraId) compraIdSet.add(m.compraId);
+      if (m.fornecedor) fornecedoresSet.add(m.fornecedor.trim());
+    });
+
+    atualizarListaFornecedores();
+    atualizarDatalistsFiltros();
+    aplicarFiltros();
   } catch (error) {
     console.error("❌ Erro ao carregar movimentações:", error);
     mostrarErro("Erro ao carregar movimentações.", error);
@@ -111,16 +120,20 @@ async function carregarProdutos() {
       .map(f => `<option value="${f}">`)
       .join("");
   }
+
+  atualizarListaFornecedores();
+  atualizarDatalistsFiltros();
 }
 
 function atualizarListaFornecedores() {
   const listaFor = document.getElementById("lista-fornecedores-mov");
-  if (listaFor) {
-    listaFor.innerHTML = [...fornecedoresSet]
-      .sort()
-      .map(f => `<option value="${f}">`)
-      .join("");
-  }
+  const listaFiltro = document.getElementById("lista-fornecedores-filtro");
+  const html = [...fornecedoresSet]
+    .sort()
+    .map(f => `<option value="${f}">`)
+    .join("");
+  if (listaFor) listaFor.innerHTML = html;
+  if (listaFiltro) listaFiltro.innerHTML = html;
 }
 
 function adicionarFornecedor(fornecedor) {
@@ -144,6 +157,22 @@ async function carregarFornecedoresDasMovimentacoes(empresaId) {
     const mov = docu.data();
     if (mov.fornecedor) fornecedoresSet.add(mov.fornecedor.trim());
   });
+}
+
+function atualizarDatalistsFiltros() {
+  const listaProdutos = document.getElementById("lista-produtos-filtro");
+  if (listaProdutos) {
+    const nomes = [...new Set(produtosCache.map(p => p.nome))].sort();
+    listaProdutos.innerHTML = nomes.map(n => `<option value="${n}">`).join("");
+  }
+
+  const listaCompra = document.getElementById("lista-compra-id-filtro");
+  if (listaCompra) {
+    listaCompra.innerHTML = [...compraIdSet]
+      .sort()
+      .map(id => `<option value="${id}">`)
+      .join("");
+  }
 }
 
 carregarProdutos();
@@ -483,11 +512,55 @@ grupoValidadeSaida.style.display = "block";
 }
 
 // =========================
-// 🔥 Filtro da Tabela
+// 🔥 Filtros Dinâmicos
 // =========================
-document.getElementById("filtro-movimentacao").addEventListener("input", function () {
-  const termo = normalizarTexto(this.value.trim());
-  renderizarTabela(movimentacoesCache, termo);
+function aplicarFiltros() {
+  const tipo = document.getElementById("filtro-tipo-mov").value;
+  const nome = normalizarTexto(document.getElementById("filtro-produto-mov").value.trim());
+  const fornecedor = document.getElementById("filtro-fornecedor-mov").value.trim();
+  const compraId = document.getElementById("filtro-compra-mov").value.trim();
+  const dataInicio = document.getElementById("filtro-data-inicio-mov").value;
+  const dataFim = document.getElementById("filtro-data-fim-mov").value;
+
+  const filtradas = movimentacoesCache.filter(m => {
+    if (tipo && m.tipo !== tipo) return false;
+    if (nome && !normalizarTexto(m.nomeProduto || "").includes(nome)) return false;
+    if (fornecedor && (m.fornecedor || "") !== fornecedor) return false;
+    if (compraId && (m.compraId || "") !== compraId) return false;
+
+    let dataMov = m.dataMovimentacao?.toDate();
+    if (dataInicio && (!dataMov || dataMov < parseDataLocal(dataInicio))) return false;
+    if (dataFim && (!dataMov || dataMov > parseDataLocal(dataFim))) return false;
+    return true;
+  });
+
+  renderizarTabela(filtradas);
+  const contador = document.getElementById("contador-movimentacoes");
+  if (contador) contador.textContent = `Exibindo ${filtradas.length} movimentações`;
+}
+
+function limparFiltrosMovimentacoes() {
+  document.getElementById("filtro-tipo-mov").value = "";
+  document.getElementById("filtro-produto-mov").value = "";
+  document.getElementById("filtro-fornecedor-mov").value = "";
+  document.getElementById("filtro-compra-mov").value = "";
+  document.getElementById("filtro-data-inicio-mov").value = "";
+  document.getElementById("filtro-data-fim-mov").value = "";
+  aplicarFiltros();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  [
+    "filtro-tipo-mov",
+    "filtro-produto-mov",
+    "filtro-fornecedor-mov",
+    "filtro-compra-mov",
+    "filtro-data-inicio-mov",
+    "filtro-data-fim-mov",
+  ].forEach(id => {
+    document.getElementById(id)?.addEventListener("input", aplicarFiltros);
+  });
+  document.getElementById("botao-limpar-filtros")?.addEventListener("click", limparFiltrosMovimentacoes);
 });
 
 // =========================
@@ -611,13 +684,9 @@ document.getElementById("form-movimentacao").addEventListener("submit", async (e
 // =========================
 // 🔥 Renderizar Tabela
 // =========================
-function renderizarTabela(movimentacoes, termo = "") {
+function renderizarTabela(movimentacoes) {
   const lista = document.getElementById("lista-movimentacoes");
-
-  const filtradas = movimentacoes.filter(m => {
-    const nomeNormalizado = normalizarTexto(m.nomeProduto || "");
-    return nomeNormalizado.includes(normalizarTexto(termo));
-  });
+  const filtradas = movimentacoes;
 
   let html = `
     <table border="1" cellpadding="8">

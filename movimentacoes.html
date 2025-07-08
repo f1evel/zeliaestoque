@@ -100,7 +100,49 @@
 
       <!-- Lista de Movimentações -->
       <h2>Histórico de Movimentações</h2>
-      <input type="text" id="filtro-movimentacao" placeholder="🔍 Buscar por produto..." style="padding:6px; width: 250px; margin-bottom: 20px;">
+      <div class="filtros">
+        <div class="campo-filtro">
+          <label for="filtro-tipo-mov">Tipo:</label>
+          <select id="filtro-tipo-mov">
+            <option value="">Todos</option>
+            <option value="entrada">Entrada</option>
+            <option value="saida">Saída</option>
+          </select>
+        </div>
+
+        <div class="campo-filtro">
+          <label for="filtro-produto-mov">Produto:</label>
+          <input type="text" id="filtro-produto-mov" list="lista-produtos-filtro" placeholder="Produto...">
+          <datalist id="lista-produtos-filtro"></datalist>
+        </div>
+
+        <div class="campo-filtro">
+          <label for="filtro-data-inicio-mov">Data de:</label>
+          <input type="date" id="filtro-data-inicio-mov">
+        </div>
+
+        <div class="campo-filtro">
+          <label for="filtro-data-fim-mov">Data até:</label>
+          <input type="date" id="filtro-data-fim-mov">
+        </div>
+
+        <div class="campo-filtro">
+          <label for="filtro-fornecedor-mov">Fornecedor:</label>
+          <input type="text" id="filtro-fornecedor-mov" list="lista-fornecedores-filtro">
+          <datalist id="lista-fornecedores-filtro"></datalist>
+        </div>
+
+        <div class="campo-filtro">
+          <label for="filtro-compra-mov">Compra ID:</label>
+          <input type="text" id="filtro-compra-mov" list="lista-compra-id-filtro">
+          <datalist id="lista-compra-id-filtro"></datalist>
+        </div>
+
+        <div class="campo-filtro" style="display:flex;align-items:end;">
+          <button type="button" id="botao-limpar-filtros">Limpar filtros</button>
+        </div>
+      </div>
+      <p id="contador-movimentacoes"></p>
       <div id="lista-movimentacoes"></div>
     </main>
   </div>
