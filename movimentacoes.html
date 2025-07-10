@@ -33,16 +33,16 @@
       <form id="form-movimentacao">
         <h2>Registrar Movimentação</h2>
 
-        <div class="form-grid compact-grid" style="grid-template-columns: repeat(6, 1fr);">
+        <div class="form-grid compact-grid" style="grid-template-columns: repeat(6, auto);">
           <div class="form-group" style="grid-column: span 2; position: relative;">
             <label>Produto:</label>
-            <input type="text" id="nome-produto" placeholder="Nome do Produto" required>
+            <input type="text" id="nome-produto" class="campo-md" placeholder="Nome do Produto" required>
             <ul id="sugestoes-produto" class="autocomplete-list"></ul>
           </div>
 
           <div class="form-group" style="grid-column: span 1;">
             <label>Tipo:</label>
-            <select id="tipo-movimentacao" required>
+            <select id="tipo-movimentacao" class="campo-xs" required>
               <option value="entrada">Entrada</option>
               <option value="saida">Saída</option>
             </select>
@@ -50,26 +50,26 @@
 
           <div class="form-group" style="grid-column: span 1;">
             <label>Quantidade:</label>
-            <input type="number" id="quantidade" min="1" required>
+            <input type="number" id="quantidade" class="campo-xs" min="1" required>
           </div>
           <div class="form-group" style="grid-column: span 1;">
             <label>Preço Unitário:</label>
-            <input type="number" id="preco-unitario" min="0" step="0.01">
+            <input type="number" id="preco-unitario" class="campo-sm" min="0" step="0.01">
           </div>
 
           <div class="form-group" style="grid-column: span 1;">
             <label>Data:</label>
-            <input type="date" id="data-movimentacao" required>
+            <input type="date" id="data-movimentacao" class="campo-sm" required>
           </div>
 
           <div class="form-group" style="grid-column: span 1;">
             <label>Validade:</label>
-            <input type="date" id="validade" required>
+            <input type="date" id="validade" class="campo-sm" required>
           </div>
 
           <div id="grupo-fornecedor" class="form-group" style="grid-column: span 2;">
             <label>Fornecedor:</label>
-            <input list="lista-fornecedores-mov" id="fornecedor-mov" placeholder="Fornecedor" />
+            <input list="lista-fornecedores-mov" id="fornecedor-mov" class="campo-md" placeholder="Fornecedor" />
             <datalist id="lista-fornecedores-mov"></datalist>
           </div>
 
@@ -88,7 +88,7 @@
 
           <div class="form-group" style="grid-column: span 2;">
             <label>Observações:</label>
-            <textarea id="observacoes" rows="1"></textarea>
+            <textarea id="observacoes" class="campo-md" rows="1"></textarea>
           </div>
 
           <div class="form-group" style="grid-column: 1 / -1; text-align: right;">
