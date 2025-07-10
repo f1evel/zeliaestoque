@@ -453,6 +453,23 @@ table tbody tr:hover {
   box-sizing: border-box;
 }
 
+/* Versão compacta para formulários mais enxutos */
+.compact-grid {
+  gap: 8px;
+}
+
+.compact-grid label {
+  margin-bottom: 2px;
+  font-size: 13px;
+}
+
+.compact-grid input,
+.compact-grid select,
+.compact-grid textarea {
+  padding: 4px 6px;
+  font-size: 13px;
+}
+
 /* 🔍 Filtros de páginas de relatório */
 .filtros {
   display: grid;
