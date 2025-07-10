@@ -40,7 +40,7 @@
             <ul id="sugestoes-produto" class="autocomplete-list"></ul>
           </div>
 
-          <div class="form-group">
+          <div class="form-group" style="grid-column: span 1;">
             <label>Tipo:</label>
             <select id="tipo-movimentacao" required>
               <option value="entrada">Entrada</option>
@@ -48,22 +48,21 @@
             </select>
           </div>
 
-          <div class="form-group">
+          <div class="form-group" style="grid-column: span 1;">
             <label>Quantidade:</label>
             <input type="number" id="quantidade" min="1" required>
           </div>
-
-          <div class="form-group">
+          <div class="form-group" style="grid-column: span 1;">
             <label>Preço Unitário:</label>
             <input type="number" id="preco-unitario" min="0" step="0.01">
           </div>
 
-          <div class="form-group">
+          <div class="form-group" style="grid-column: span 1;">
             <label>Data:</label>
             <input type="date" id="data-movimentacao" required>
           </div>
 
-          <div class="form-group">
+          <div class="form-group" style="grid-column: span 1;">
             <label>Validade:</label>
             <input type="date" id="validade" required>
           </div>
@@ -75,6 +74,7 @@
           </div>
 
           <!-- Select de Validades (exibido apenas em Saída com múltiplas validades) -->
+          <div id="grupo-validade-saida" class="form-group" style="grid-column: span 2; display: none;">
           <div id="grupo-validade-saida" class="form-group" style="display: none;">
             <label>Escolha a Validade para Saída:</label>
             <select id="select-validade-saida">
@@ -82,12 +82,12 @@
             </select>
           </div>
 
-          <div class="form-group">
+          <div class="form-group" style="grid-column: span 1;">
             <label>Lote:</label>
             <input type="text" id="lote">
           </div>
 
-          <div class="form-group" style="grid-column: span 3;">
+          <div class="form-group" style="grid-column: span 2;">
             <label>Observações:</label>
             <textarea id="observacoes" rows="1"></textarea>
           </div>
