@@ -453,21 +453,19 @@ table tbody tr:hover {
   box-sizing: border-box;
 }
 
-/* Versão compacta para formulários mais enxutos */
-.compact-grid {
-  gap: 8px;
+
+/* Tamanhos reduzidos para campos de formulários */
+.campo-xs {
+  width: 80px;
 }
 
-.compact-grid label {
-  margin-bottom: 2px;
-  font-size: 13px;
+.campo-sm {
+  width: 110px;
 }
 
-.compact-grid input,
-.compact-grid select,
-.compact-grid textarea {
-  padding: 4px 6px;
-  font-size: 13px;
+.campo-md {
+  width: 150px;
+
 }
 
 /* 🔍 Filtros de páginas de relatório */
