@@ -453,6 +453,7 @@ table tbody tr:hover {
   box-sizing: border-box;
 }
 
+
 /* Tamanhos reduzidos para campos de formulários */
 .campo-xs {
   width: 80px;
@@ -464,6 +465,7 @@ table tbody tr:hover {
 
 .campo-md {
   width: 150px;
+
 }
 
 /* 🔍 Filtros de páginas de relatório */
