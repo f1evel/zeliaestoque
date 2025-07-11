@@ -213,11 +213,6 @@ button {
   transition: background-color 0.3s;
 }
 
-.btn-form {
-  padding: 6px 16px;
-  height: 32px;
-}
-
 button:focus {
   outline: 2px solid #00796b;
   outline-offset: 2px;
@@ -451,37 +446,11 @@ table tbody tr:hover {
 .form-grid select,
 .form-grid textarea {
   width: 100%;
-  padding: 6px 8px;
+  padding: 8px;
   font-size: 14px;
   border-radius: 6px;
   border: 1px solid #ccc;
   box-sizing: border-box;
-  height: 32px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-
-/* Tamanhos reduzidos para campos de formulários */
-.campo-xs {
-  width: 60px;
-}
-
-.campo-sm {
-  width: 90px;
-}
-
-.campo-md {
-  width: 130px;
-}
-
-.campo-lg {
-  width: 160px;
-}
-
-.campo-xl {
-  width: 220px;
 }
 
 /* 🔍 Filtros de páginas de relatório */
