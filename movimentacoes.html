@@ -37,7 +37,7 @@
 
           <div class="form-group" style="grid-column: span 2; position: relative;">
             <label>Produto:</label>
-            <input type="text" id="nome-produto" class="campo-md" placeholder="Nome do Produto" required>
+            <input type="text" id="nome-produto" class="campo-lg" placeholder="Nome do Produto" required>
             <ul id="sugestoes-produto" class="autocomplete-list"></ul>
           </div>
 
@@ -70,7 +70,7 @@
 
           <div id="grupo-fornecedor" class="form-group" style="grid-column: span 2;">
             <label>Fornecedor:</label>
-            <input list="lista-fornecedores-mov" id="fornecedor-mov" class="campo-md" placeholder="Fornecedor" />
+            <input list="lista-fornecedores-mov" id="fornecedor-mov" class="campo-lg" placeholder="Fornecedor" />
             <datalist id="lista-fornecedores-mov"></datalist>
           </div>
 
@@ -84,16 +84,16 @@
 
           <div class="form-group" style="grid-column: span 1;">
             <label>Lote:</label>
-            <input type="text" id="lote">
+            <input type="text" id="lote" class="campo-sm">
           </div>
 
           <div class="form-group" style="grid-column: span 2;">
             <label>Observações:</label>
-            <textarea id="observacoes" class="campo-md" rows="1"></textarea>
+            <textarea id="observacoes" class="campo-xl" rows="1"></textarea>
           </div>
 
           <div class="form-group" style="grid-column: 1 / -1; text-align: right;">
-            <button type="submit">Salvar Movimentação</button>
+            <button type="submit" class="btn-form">Salvar Movimentação</button>
           </div>
         </div>
       </form>
