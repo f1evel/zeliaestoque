@@ -445,11 +445,9 @@ table tbody tr:hover {
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 }
 
-.form-grid-compacto .campo-xs { width: 40px; }
-.form-grid-compacto .campo-sm { width: 80px; }
+.form-grid-compacto .campo-xs { width: 50px; }
+.form-grid-compacto .campo-sm { width: 85px; }
 .form-grid-compacto .campo-md { width: 120px; }
-.form-grid-compacto .campo-lg { width: 150px; }
-.form-grid-compacto .campo-xl { width: 200px; }
 
 .form-grid label {
   display: block;
