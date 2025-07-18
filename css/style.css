@@ -748,3 +748,38 @@ tr.destacar {
   color: #6b7280;
   margin-top: 5px;
 }
+
+/* Accordion utilizado em Despesas Gerais */
+.accordion-header {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  padding: 8px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-top: 10px;
+}
+.accordion-content {
+  border: 1px solid #e5e7eb;
+  border-top: none;
+  padding: 10px;
+  display: none;
+}
+.accordion-aberto .accordion-content {
+  display: block;
+}
+
+/* Barra de progresso para despesas */
+.progresso {
+  width: 100%;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.progresso > div {
+  height: 100%;
+  width: 0;
+  background: #10b981;
+}
+.progresso.amarelo > div { background: #f59e0b; }
+.progresso.vermelho > div { background: #ef4444; }
