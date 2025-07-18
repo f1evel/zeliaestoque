@@ -394,6 +394,30 @@ table tbody tr:hover {
   background: rgba(0, 0, 0, 0.4);
   z-index: 500;
 }
+.modal-lateral {
+  display: none;
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 360px;
+  max-width: 90%;
+  height: 100%;
+  background: #fff;
+  box-shadow: -2px 0 6px rgba(0,0,0,0.2);
+  overflow-y: auto;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-lateral-conteudo {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.modal-lateral-conteudo h3 {
+  margin-top: 0;
+}
+
 
 #sugestoes-nome li {
   padding: 8px 12px;

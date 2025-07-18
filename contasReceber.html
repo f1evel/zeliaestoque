@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Zélia - Contas a Receber</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <aside class="sidebar">
+      <div class="logo">
+        <img src="img/logo-zelia.png" alt="Logo Zélia" />
+      </div>
+      <nav>
+        <ul>
+          <li><a href="dashboard.html">🏠 Dashboard</a></li>
+          <li><a href="produtos.html">📦 Produtos</a></li>
+          <li><a href="movimentacoes.html">🔁 Movimentações</a></li>
+          <li><a href="estoque.html">📊 Estoque</a></li>
+          <li><a href="financeiro.html">💰 Financeiro</a></li>
+          <li><a href="relatorios.html">📊 Relatórios</a></li>
+          <li><a href="usuarios.html">👥 Usuários</a></li>
+          <li><a class="ativo" href="contasReceber.html">📥 Contas a Receber</a></li>
+        </ul>
+      </nav>
+      <button onclick="logout()">Sair</button>
+    </aside>
+
+    <main class="main-content">
+      <h1>📥 Contas a Receber</h1>
+
+      <div id="cards-resumo" class="cards">
+        <div class="resumo-card" id="card-total-receber">
+          <div class="icone">💰</div>
+          <div class="texto">
+            <div class="titulo">Total a receber no mês</div>
+            <div class="valor" id="valor-total-receber">-</div>
+          </div>
+        </div>
+        <div class="resumo-card pago" id="card-total-recebido">
+          <div class="icone">✅</div>
+          <div class="texto">
+            <div class="titulo">Total já recebido</div>
+            <div class="valor" id="valor-total-recebido">-</div>
+          </div>
+        </div>
+        <div class="resumo-card vencido" id="card-total-inadimplente">
+          <div class="icone">🟥</div>
+          <div class="texto">
+            <div class="titulo">Total inadimplente</div>
+            <div class="valor" id="valor-total-inadimplente">-</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="filtros filtros-financeiro">
+        <div class="campo-filtro estreito">
+          <label for="filtro-mes">Mês</label>
+          <select id="filtro-mes"></select>
+        </div>
+        <div class="campo-filtro estreito">
+          <label for="filtro-ano">Ano</label>
+          <select id="filtro-ano"></select>
+        </div>
+        <div class="campo-filtro estreito">
+          <label for="filtro-status">Status</label>
+          <select id="filtro-status">
+            <option value="">Todos</option>
+            <option value="pago">Pago</option>
+            <option value="parcial">Parcial</option>
+            <option value="aberto">Em aberto</option>
+            <option value="inadimplente">Inadimplente</option>
+          </select>
+        </div>
+        <div class="campo-filtro">
+          <label for="busca-cliente">Cliente</label>
+          <input type="text" id="busca-cliente" placeholder="Buscar...">
+        </div>
+      </div>
+
+      <div id="tabela-contas"></div>
+
+      <div id="modal-detalhes" class="modal-lateral">
+        <div class="modal-lateral-conteudo">
+          <h3 id="modal-nome-cliente"></h3>
+          <p><strong>Valor total do mês:</strong> <span id="modal-valor"></span></p>
+          <p><strong>Data de vencimento:</strong> <span id="modal-vencimento"></span></p>
+          <div id="modal-pagamentos"></div>
+          <div class="form-group">
+            <label for="modal-observacoes">Observações</label>
+            <textarea id="modal-observacoes" rows="3"></textarea>
+          </div>
+          <div style="text-align:right; margin-top:10px;">
+            <button id="btn-salvar">Salvar alterações</button>
+            <button id="btn-quitar">Marcar como quitado</button>
+            <button onclick="fecharModal()">Fechar</button>
+          </div>
+        </div>
+      </div>
+      <div id="fundo-modal-detalhes" class="fundo-modal" onclick="fecharModal()"></div>
+    </main>
+  </div>
+
+  <div id="spinner" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.2); align-items:center; justify-content:center; z-index:2000;">
+    <div style="border:6px solid #ccc; border-top:6px solid #009688; border-radius:50%; width:40px; height:40px; animation:girar 1s linear infinite;"></div>
+  </div>
+
+  <script type="module" src="js/firebaseConfig.js"></script>
+  <script type="module" src="js/utils.js"></script>
+  <script type="module" src="js/contasReceber.js"></script>
+</body>
+</html>
