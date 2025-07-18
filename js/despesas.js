@@ -294,27 +294,37 @@ async function copiarMesAnteriorAutomatico(empresaId) {
 
 async function carregarInsumos() {
   const empresaId = await getEmpresaIdDoUsuario();
-  const movRef = query(collection(db, 'empresas', empresaId, 'movimentacoes'), where('tipo', '==', 'entrada'));
+  const movRef = query(
+    collection(db, 'empresas', empresaId, 'movimentacoes'),
+    where('tipo', '==', 'entrada')
+  );
   const snap = await getDocs(movRef);
   const itens = [];
+
   snap.forEach(docu => {
     const d = docu.data();
-    if (String(d.categoria || '').toLowerCase().includes('insum')) {
-      const data = d.dataMovimentacao?.toDate ? d.dataMovimentacao.toDate() : new Date();
-      itens.push({
-        nome: d.nomeProduto,
-        quantidade: d.quantidade,
-        vencimentos: [data.toISOString().slice(0,10)],
-        valorPrevisto: '',
-        pagamentos: [],
-        valorRealizado: Number(d.custoTotal) || Number(d.precoUnitario || 0) * Number(d.quantidade || 0),
-        observacoes: d.observacao || '',
-        insumo: true
-      });
-    }
+    if (!String(d.categoria || '').toLowerCase().includes('insum')) return;
+
+    const parcelas = Array.isArray(d.parcelas) ? d.parcelas : [];
+    parcelas.forEach(p => {
+      const venc = p.vencimento || '';
+      const [ano, mes] = venc.split('-');
+      if (ano === anoAtual && mes === mesAtual) {
+        itens.push({
+          nome: d.nomeProduto,
+          quantidade: d.quantidade,
+          vencimentos: [venc],
+          valorPrevisto: '',
+          pagamentos: [],
+          valorRealizado: Number(p.valor) || 0,
+          observacoes: d.observacao || '',
+          insumo: true
+        });
+      }
+    });
   });
-  if (!categorias['INSUMOS']) categorias['INSUMOS'] = [];
-  categorias['INSUMOS'] = categorias['INSUMOS'].concat(itens);
+
+  categorias['INSUMOS'] = itens;
 }
 
 async function carregarDados() {
