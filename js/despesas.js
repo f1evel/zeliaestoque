@@ -265,6 +265,33 @@ async function copiarMesAnterior() {
   await carregarDados();
 }
 
+async function copiarMesAnteriorAutomatico(empresaId) {
+  const mes = Number(mesAtual);
+  const ano = Number(anoAtual);
+  let mesAnt = mes - 1;
+  let anoAnt = ano;
+  if (mesAnt <= 0) { mesAnt = 12; anoAnt -= 1; }
+  const refAnt = doc(db, 'empresas', empresaId, 'despesasGerais', `${anoAnt}-${String(mesAnt).padStart(2, '0')}`);
+  const snapAnt = await getDoc(refAnt);
+  if (!snapAnt.exists()) {
+    console.warn('Mês anterior sem dados para cópia automática');
+    return false;
+  }
+  const dadosAnt = snapAnt.data().categorias || {};
+  const novasCategorias = {};
+  Object.keys(dadosAnt).forEach(cat => {
+    novasCategorias[cat] = dadosAnt[cat].map(item => {
+      const novoItem = { ...item, pagamentos: [] };
+      return novoItem;
+    });
+  });
+  const refAtual = doc(db, 'empresas', empresaId, 'despesasGerais', `${anoAtual}-${mesAtual}`);
+  await setDoc(refAtual, { categorias: novasCategorias, copiadoAutomaticamente: true });
+  categorias = novasCategorias;
+  console.log('Cópia automática do mês anterior realizada');
+  return true;
+}
+
 async function carregarInsumos() {
   const empresaId = await getEmpresaIdDoUsuario();
   const movRef = query(collection(db, 'empresas', empresaId, 'movimentacoes'), where('tipo', '==', 'entrada'));
@@ -301,8 +328,13 @@ async function carregarDados() {
     const snap = await getDoc(ref);
     if (!snap.exists()) {
       console.warn('Documento do mês não encontrado');
+      const copiado = await copiarMesAnteriorAutomatico(empresaId);
+      if (!copiado) {
+        categorias = {};
+      }
+    } else {
+      categorias = snap.data().categorias || {};
     }
-    categorias = snap.exists() ? (snap.data().categorias || {}) : {};
     console.log('Categorias carregadas', categorias);
     await carregarInsumos();
     renderizarCategorias();
