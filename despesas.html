@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Zélia - Despesas Gerais</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <aside class="sidebar">
+      <div class="logo">
+        <img src="img/logo-zelia.png" alt="Logo Zélia" />
+      </div>
+      <nav>
+        <ul>
+          <li><a href="dashboard.html">🏠 Dashboard</a></li>
+          <li><a href="produtos.html">📦 Produtos</a></li>
+          <li><a href="movimentacoes.html">🔁 Movimentações</a></li>
+          <li><a href="estoque.html">📊 Estoque</a></li>
+          <li><a href="financeiro.html">💰 Financeiro</a></li>
+          <li><a href="contasReceber.html">📥 Contas a Receber</a></li>
+          <li><a href="relatorios.html">📊 Relatórios</a></li>
+          <li><a href="usuarios.html">👥 Usuários</a></li>
+          <li><a class="ativo" href="despesas.html">📋 Despesas Gerais</a></li>
+        </ul>
+      </nav>
+      <button onclick="logout()">Sair</button>
+    </aside>
+
+    <main class="main-content">
+      <h1>📋 Despesas Gerais</h1>
+      <div class="filtros" style="margin-bottom:10px; display:flex; gap:10px;">
+        <div class="campo-filtro estreito">
+          <label for="mes">Mês</label>
+          <select id="mes"></select>
+        </div>
+        <div class="campo-filtro estreito">
+          <label for="ano">Ano</label>
+          <select id="ano"></select>
+        </div>
+        <div class="campo-filtro" style="align-self:flex-end;">
+          <button id="btn-copiar">Copiar dados do mês anterior</button>
+        </div>
+      </div>
+
+      <div id="cards-despesas" class="cards"></div>
+
+      <div id="categorias-container"></div>
+      <div style="margin-top:10px;">
+        <button id="btn-adicionar-categoria">+ Adicionar categoria</button>
+      </div>
+    </main>
+  </div>
+
+  <div id="spinner" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.2); align-items:center; justify-content:center; z-index:2000;">
+    <div style="border:6px solid #ccc; border-top:6px solid #009688; border-radius:50%; width:40px; height:40px; animation:girar 1s linear infinite;"></div>
+  </div>
+  <style>
+  @keyframes girar {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  </style>
+
+  <script type="module" src="js/firebaseConfig.js"></script>
+  <script type="module" src="js/utils.js"></script>
+  <script type="module" src="js/despesas.js"></script>
+</body>
+</html>
