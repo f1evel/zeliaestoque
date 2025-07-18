@@ -43,14 +43,69 @@
         </div>
       </div>
 
-      <div id="cards-despesas" class="cards"></div>
+        <div id="cards-despesas" class="cards"></div>
+        <div style="margin:5px 0 15px 0;">
+          <label for="dias-faturamento">Dias para cálculo:</label>
+          <input type="number" id="dias-faturamento" value="25" style="width:60px;">
+        </div>
 
-      <div id="categorias-container"></div>
-      <div style="margin-top:10px;">
-        <button id="btn-adicionar-categoria">+ Adicionar categoria</button>
+        <div id="categorias-container"></div>
+        <div style="margin-top:10px;">
+          <button id="btn-adicionar-categoria">+ Adicionar categoria</button>
+        </div>
+      </main>
+    </div>
+
+    <div id="modal-despesa" class="modal">
+      <h3 id="titulo-modal-despesa">Despesa</h3>
+      <div class="form-grid form-grid-compacto">
+        <div class="form-group" style="grid-column: span 2;">
+          <label for="despesa-nome">Nome</label>
+          <input type="text" id="despesa-nome" />
+        </div>
+        <div class="form-group">
+          <label for="despesa-quantidade">Quantidade</label>
+          <input type="number" id="despesa-quantidade" />
+        </div>
+        <div class="form-group">
+          <label for="despesa-previsto">Valor previsto</label>
+          <input type="number" step="0.01" id="despesa-previsto" />
+        </div>
       </div>
-    </main>
-  </div>
+      <div class="form-group">
+        <label>Vencimentos</label>
+        <div id="despesa-vencimentos" style="display:flex;gap:5px;flex-wrap:wrap;">
+          <input type="date" />
+          <input type="date" />
+          <input type="date" />
+          <input type="date" />
+          <input type="date" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Pagamentos</label>
+        <div id="despesa-pagamentos" style="display:flex;gap:5px;flex-wrap:wrap;">
+          <input type="number" step="0.01" />
+          <input type="number" step="0.01" />
+          <input type="number" step="0.01" />
+          <input type="number" step="0.01" />
+          <input type="number" step="0.01" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="despesa-observacoes">Observações</label>
+        <textarea id="despesa-observacoes" rows="2"></textarea>
+      </div>
+      <div class="form-group" style="display:flex;gap:20px;">
+        <label><input type="checkbox" id="despesa-recorrente" /> Recorrente</label>
+        <label><input type="checkbox" id="despesa-arquivado" /> Arquivado</label>
+      </div>
+      <div style="text-align:right; margin-top:10px;">
+        <button id="btn-salvar-despesa">Salvar</button>
+        <button onclick="fecharModalDespesa()">Cancelar</button>
+      </div>
+    </div>
+    <div id="fundo-modal-despesa" class="fundo-modal" onclick="fecharModalDespesa()"></div>
 
   <div id="spinner" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.2); align-items:center; justify-content:center; z-index:2000;">
     <div style="border:6px solid #ccc; border-top:6px solid #009688; border-radius:50%; width:40px; height:40px; animation:girar 1s linear infinite;"></div>
