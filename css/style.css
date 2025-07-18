@@ -757,6 +757,17 @@ tr.destacar {
   cursor: pointer;
   border-radius: 4px;
   margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.accordion-header .totais {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+.accordion-header .totais span {
+  font-weight: 600;
 }
 .accordion-content {
   border: 1px solid #e5e7eb;
@@ -783,3 +794,4 @@ tr.destacar {
 }
 .progresso.amarelo > div { background: #f59e0b; }
 .progresso.vermelho > div { background: #ef4444; }
+.barra-progresso { flex:1; margin-left:10px; }
