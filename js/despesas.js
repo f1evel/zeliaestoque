@@ -2,6 +2,8 @@ import { db, getEmpresaIdDoUsuario } from './firebaseConfig.js';
 import { collection, doc, getDoc, setDoc, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js';
 import { formatarPreco, mostrarSpinner, esconderSpinner } from './utils.js';
 
+console.log('despesas.js carregado');
+
 let categorias = {};
 let mesAtual = '';
 let anoAtual = '';
@@ -77,8 +79,13 @@ function gerarLinha(cat, idx, item) {
 }
 
 function renderizarCategorias() {
+  console.log('renderizarCategorias iniciado');
   const cont = document.getElementById('categorias-container');
   cont.innerHTML = '';
+  if (Object.keys(categorias).length === 0) {
+    cont.innerHTML = '<div class="alert-aviso">Nenhum dado encontrado para este mês</div>';
+    return;
+  }
   Object.keys(categorias).forEach(cat => {
     const itens = categorias[cat];
     const { previsto, pago } = totaisCategoria(itens);
@@ -230,6 +237,7 @@ async function salvarDespesa() {
 }
 
 async function adicionarCategoria() {
+  console.log('Executando adicionarCategoria');
   const nome = prompt('Nome da categoria');
   if (!nome) return;
   if (!categorias[nome]) categorias[nome] = [];
@@ -238,6 +246,7 @@ async function adicionarCategoria() {
 }
 
 async function copiarMesAnterior() {
+  console.log('copiarMesAnterior clicado');
   const mes = Number(mesAtual);
   const ano = Number(anoAtual);
   let mesAnt = mes - 1;
@@ -251,6 +260,7 @@ async function copiarMesAnterior() {
     return;
   }
   categorias = JSON.parse(JSON.stringify(snapAnt.data().categorias || {}));
+  console.log('Dados do mês anterior copiados');
   await salvarDados();
   await carregarDados();
 }
@@ -281,6 +291,7 @@ async function carregarInsumos() {
 }
 
 async function carregarDados() {
+  console.log('carregarDados iniciado');
   mostrarSpinner();
   try {
     mesAtual = document.getElementById('mes').value;
@@ -288,9 +299,14 @@ async function carregarDados() {
     const empresaId = await getEmpresaIdDoUsuario();
     const ref = doc(db, 'empresas', empresaId, 'despesasGerais', `${anoAtual}-${mesAtual}`);
     const snap = await getDoc(ref);
+    if (!snap.exists()) {
+      console.warn('Documento do mês não encontrado');
+    }
     categorias = snap.exists() ? (snap.data().categorias || {}) : {};
+    console.log('Categorias carregadas', categorias);
     await carregarInsumos();
     renderizarCategorias();
+    console.log('renderizarCategorias executado');
     atualizarCards();
   } catch (e) {
     console.error('Erro ao carregar dados', e);
@@ -306,6 +322,7 @@ document.getElementById('dias-faturamento').addEventListener('input', atualizarC
 document.getElementById('btn-adicionar-categoria').addEventListener('click', adicionarCategoria);
 document.getElementById('btn-copiar').addEventListener('click', copiarMesAnterior);
 document.getElementById('btn-salvar-despesa').addEventListener('click', salvarDespesa);
+console.log('Listeners registrados');
 
 carregarDados();
 
@@ -313,4 +330,3 @@ window.toggleCategoria = toggleCategoria;
 window.abrirModalNovaDespesa = abrirModalNovaDespesa;
 window.abrirModalEditarDespesa = abrirModalEditarDespesa;
 window.fecharModalDespesa = fecharModalDespesa;
-*
