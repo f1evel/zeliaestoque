@@ -1,6 +1,6 @@
 import { db, getEmpresaIdDoUsuario } from './firebaseConfig.js';
-import { collection, doc, getDoc, setDoc, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js';
-import { formatarPreco, mostrarSpinner, esconderSpinner } from './utils.js';
+import { collection, doc, getDoc, setDoc, getDocs, query, where, updateDoc } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js';
+import { formatarPreco, mostrarSpinner, esconderSpinner, formatarCompraIdCurto, mostrarMensagem, parseDataBR } from './utils.js';
 
 console.log('despesas.js carregado');
 
@@ -62,9 +62,11 @@ function gerarLinha(cat, idx, item) {
   const perc = porcentagem(item);
   const barras = `<div class="progresso ${classeProgresso(perc)}"><div style="width:${perc}%"></div></div>`;
   const campoPagamentos = item.insumo
-    ? formatarPreco(item.valorRealizado)
+    ? (item.parcelaStatus === 'pago' ? formatarPreco(item.valorPrevisto) : '-')
     : pagamentos.map(v => formatarPreco(v)).join('<br>');
-  const btnEditar = item.insumo ? '' : `<button onclick="abrirModalEditarDespesa('${cat}',${idx})">Editar</button>`;
+  const btnEditar = item.insumo
+    ? `<button onclick="abrirModalParcelas('${item.compraId}')">Ver detalhes</button>`
+    : `<button onclick="abrirModalEditarDespesa('${cat}',${idx})">Editar</button>`;
   const venc = (item.vencimentos || []).join('<br>');
   return `<tr>
     <td>${item.nome || '-'}</td>
@@ -294,16 +296,15 @@ async function copiarMesAnteriorAutomatico(empresaId) {
 
 async function carregarInsumos() {
   const empresaId = await getEmpresaIdDoUsuario();
-  const movRef = query(
-    collection(db, 'empresas', empresaId, 'movimentacoes'),
-    where('tipo', '==', 'entrada')
-  );
-  const snap = await getDocs(movRef);
+  const finRef = collection(db, 'empresas', empresaId, 'financeiro');
+  const snap = await getDocs(finRef);
   const itens = [];
 
   snap.forEach(docu => {
     const d = docu.data();
-    if (!String(d.categoria || '').toLowerCase().includes('insum')) return;
+    const isInsumo = String(d.categoria || '').toLowerCase().includes('insum') ||
+      (Array.isArray(d.categoriasProdutos) && d.categoriasProdutos.some(c => String(c).toLowerCase().includes('insum')));
+    if (!isInsumo) return;
 
     const parcelas = Array.isArray(d.parcelas) ? d.parcelas : [];
     parcelas.forEach(p => {
@@ -311,13 +312,16 @@ async function carregarInsumos() {
       const [ano, mes] = venc.split('-');
       if (ano === anoAtual && mes === mesAtual) {
         itens.push({
-          nome: d.nomeProduto,
-          quantidade: d.quantidade,
+          nome: d.descricao || d.fornecedorOuCliente || 'Compra',
+          quantidade: '',
           vencimentos: [venc],
-          valorPrevisto: '',
-          pagamentos: [],
-          valorRealizado: Number(p.valor) || 0,
-          observacoes: d.observacao || '',
+          valorPrevisto: Number(p.valor) || 0,
+          pagamentos: p.status === 'pago' ? [p.valor] : [],
+          valorRealizado: p.status === 'pago' ? Number(p.valor) || 0 : 0,
+          observacoes: d.observacoes || '',
+          compraId: d.compraId,
+          parcelaNumero: p.numero,
+          parcelaStatus: p.status,
           insumo: true
         });
       }
@@ -372,3 +376,176 @@ window.toggleCategoria = toggleCategoria;
 window.abrirModalNovaDespesa = abrirModalNovaDespesa;
 window.abrirModalEditarDespesa = abrirModalEditarDespesa;
 window.fecharModalDespesa = fecharModalDespesa;
+
+window.abrirModalParcelas = async function (compraId) {
+  try {
+    mostrarSpinner();
+    const empresaId = await getEmpresaIdDoUsuario();
+    const q = query(
+      collection(db, 'empresas', empresaId, 'financeiro'),
+      where('compraId', '==', compraId)
+    );
+    const snap = await getDocs(q);
+    if (snap.empty) return;
+    const registro = snap.docs[0].data();
+
+    document.getElementById('modal-compra-id').textContent = formatarCompraIdCurto(compraId);
+    const contParcelas = document.getElementById('parcelas-detalhes');
+    const contProdutos = document.getElementById('produtos-compra-detalhes');
+    const contInfo = document.getElementById('info-compra');
+
+    let htmlParcelas = '';
+    let htmlProdutos = '';
+    let htmlInfo = '';
+    let totalCompra = 0;
+
+    if (!registro.parcelas || registro.parcelas.length === 0) {
+      htmlParcelas += '<p>Sem parcelas cadastradas.</p>';
+    } else {
+      const total = registro.parcelas.length;
+      htmlParcelas += `<h4>Parcelas</h4><table class="tabela"><thead><tr><th>#</th><th>Valor</th><th>Vencimento</th><th>Status</th><th>Ações</th></tr></thead><tbody>`;
+      registro.parcelas.forEach(p => {
+        const vencDate = p.vencimento ? new Date(p.vencimento) : null;
+        const venc = vencDate ? vencDate.toLocaleDateString('pt-BR') : '-';
+        const pago = p.status === 'pago';
+        let statusTexto = '❌ Pendente';
+        if (pago) {
+          statusTexto = '✅ Pago';
+        } else if (vencDate && vencDate < new Date()) {
+          statusTexto = '⚠️ Vencido';
+        }
+        const btn = pago
+          ? `<button onclick="marcarParcelaComoNaoPaga('${compraId}', ${p.numero})">Marcar como não pago</button>`
+          : `<button onclick="marcarParcelaComoPaga('${compraId}', ${p.numero})">Marcar como pago</button>`;
+        htmlParcelas += `<tr><td>${p.numero}/${total}</td><td>${formatarPreco(p.valor || 0)}</td><td>${venc}</td><td>${statusTexto}</td><td>${btn}</td></tr>`;
+      });
+      htmlParcelas += '</tbody></table>';
+    }
+
+    let movSnap = null;
+    try {
+      const qMov = query(
+        collection(db, 'empresas', empresaId, 'movimentacoes'),
+        where('compraId', '==', compraId),
+        where('tipo', '==', 'entrada')
+      );
+      movSnap = await getDocs(qMov);
+    } catch (e) {
+      console.error('Erro ao buscar produtos da compra', e);
+    }
+
+    if (movSnap && !movSnap.empty) {
+      const agrupados = {};
+      movSnap.docs.forEach(doc => {
+        const d = doc.data();
+        const key = `${d.produtoId || d.nomeProduto}|${d.precoUnitario || 0}`;
+        if (!agrupados[key]) {
+          agrupados[key] = {
+            nome: d.nomeProduto,
+            quantidade: 0,
+            preco: Number(d.precoUnitario) || 0
+          };
+        }
+        agrupados[key].quantidade += Number(d.quantidade) || 0;
+      });
+
+      htmlProdutos += '<h4>Produtos</h4><table class="tabela"><thead><tr><th>Produto</th><th>Quantidade</th><th>Preço unitário</th><th>Total</th></tr></thead><tbody>';
+      Object.values(agrupados).forEach(p => {
+        const total = p.quantidade * p.preco;
+        totalCompra += total;
+        htmlProdutos += `<tr><td>${p.nome}</td><td>${p.quantidade}</td><td>${formatarPreco(p.preco)}</td><td>${formatarPreco(total)}</td></tr>`;
+      });
+      htmlProdutos += `</tbody><tfoot><tr><th colspan="3" style="text-align:right;">Total da compra</th><th>${formatarPreco(totalCompra || registro.valor)}</th></tr></tfoot></table>`;
+    } else if (Array.isArray(registro.produtos) && registro.produtos.length > 0) {
+      htmlProdutos += '<h4>Produtos</h4><table class="tabela"><thead><tr><th>Produto</th><th>Quantidade</th><th>Preço unitário</th><th>Total</th></tr></thead><tbody>';
+      registro.produtos.forEach(p => {
+        const preco = Number(p.preco) || 0;
+        const qtd = Number(p.quantidade) || 0;
+        const total = qtd * preco;
+        totalCompra += total;
+        htmlProdutos += `<tr><td>${p.nome}</td><td>${qtd}</td><td>${formatarPreco(preco)}</td><td>${formatarPreco(total)}</td></tr>`;
+      });
+      htmlProdutos += `</tbody><tfoot><tr><th colspan="3" style="text-align:right;">Total da compra</th><th>${formatarPreco(totalCompra || registro.valor)}</th></tr></tfoot></table>`;
+    } else {
+      htmlProdutos += `<p>Produtos não localizados para esta compra. Total registrado: ${formatarPreco(registro.valor)}</p>`;
+    }
+
+    contInfo.innerHTML = htmlInfo;
+    contParcelas.innerHTML = htmlParcelas;
+    contProdutos.innerHTML = htmlProdutos;
+
+    document.getElementById('modal-parcelas').style.display = 'block';
+    document.getElementById('fundo-modal-parcelas').style.display = 'block';
+  } finally {
+    esconderSpinner();
+  }
+};
+
+window.fecharModalParcelas = function () {
+  document.getElementById('modal-parcelas').style.display = 'none';
+  document.getElementById('fundo-modal-parcelas').style.display = 'none';
+};
+
+window.marcarParcelaComoPaga = async function (compraId, numero) {
+  const hojeStr = new Date().toLocaleDateString('pt-BR');
+  const entrada = prompt('Digite a data (DD/MM/AAAA):', hojeStr);
+  if (!entrada) return;
+
+  const dataObj = parseDataBR(entrada);
+  if (isNaN(dataObj.getTime())) {
+    alert('Data inválida. Utilize o formato DD/MM/AAAA.');
+    return;
+  }
+
+  const data = dataObj.toISOString().split('T')[0];
+
+  try {
+    mostrarSpinner();
+    const empresaId = await getEmpresaIdDoUsuario();
+    const q = query(collection(db, 'empresas', empresaId, 'financeiro'), where('compraId', '==', compraId));
+    const snap = await getDocs(q);
+    if (snap.empty) throw new Error('Registro não encontrado');
+    const ref = snap.docs[0].ref;
+    const finData = snap.docs[0].data();
+    const parcelas = Array.isArray(finData.parcelas) ? finData.parcelas.slice() : [];
+    const idx = parcelas.findIndex(p => p.numero === numero);
+    if (idx === -1) throw new Error('Parcela não encontrada');
+    parcelas[idx] = { ...parcelas[idx], status: 'pago', dataPagamento: data };
+    await updateDoc(ref, { parcelas });
+
+    mostrarMensagem('✅ Parcela marcada como paga!');
+    abrirModalParcelas(compraId);
+  } catch (e) {
+    console.error('Erro ao atualizar parcela', e);
+    alert('❌ Erro ao marcar parcela como paga.');
+  } finally {
+    esconderSpinner();
+  }
+};
+
+window.marcarParcelaComoNaoPaga = async function (compraId, numero) {
+  if (!confirm('Marcar esta parcela como não paga?')) return;
+
+  try {
+    mostrarSpinner();
+    const empresaId = await getEmpresaIdDoUsuario();
+    const q = query(collection(db, 'empresas', empresaId, 'financeiro'), where('compraId', '==', compraId));
+    const snap = await getDocs(q);
+    if (snap.empty) throw new Error('Registro não encontrado');
+    const ref = snap.docs[0].ref;
+    const finData = snap.docs[0].data();
+    const parcelas = Array.isArray(finData.parcelas) ? finData.parcelas.slice() : [];
+    const idx = parcelas.findIndex(p => p.numero === numero);
+    if (idx === -1) throw new Error('Parcela não encontrada');
+    parcelas[idx] = { ...parcelas[idx], status: 'pendente', dataPagamento: null };
+    await updateDoc(ref, { parcelas });
+
+    mostrarMensagem('❌ Parcela marcada como não paga!');
+    abrirModalParcelas(compraId);
+  } catch (e) {
+    console.error('Erro ao atualizar parcela', e);
+    alert('❌ Erro ao marcar parcela como não paga.');
+  } finally {
+    esconderSpinner();
+  }
+};
