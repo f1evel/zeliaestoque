@@ -1,5 +1,5 @@
 import { db, getEmpresaIdDoUsuario } from './firebaseConfig.js';
-import { collection, doc, getDocs, updateDoc } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js';
+import { collection, doc, getDocs, updateDoc, addDoc, Timestamp, query, where } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js';
 import { formatarPreco, formatarDataBrasileira, mostrarSpinner, esconderSpinner, normalizarTexto } from './utils.js';
 
 let dados = [];
@@ -120,6 +120,18 @@ function atualizarCards() {
   document.getElementById('valor-total-inadimplente').textContent = formatarPreco(inad);
 }
 
+async function arquivarTodosMeses(nome) {
+  const empresaId = await getEmpresaIdDoUsuario();
+  const mesesSnap = await getDocs(collection(db, 'empresas', empresaId, 'contasReceber'));
+  for (const mesDoc of mesesSnap.docs) {
+    const q = query(collection(db, 'empresas', empresaId, 'contasReceber', mesDoc.id, 'clientes'), where('cliente', '==', nome));
+    const snap = await getDocs(q);
+    for (const docu of snap.docs) {
+      await updateDoc(docu.ref, { arquivado: true });
+    }
+  }
+}
+
 window.abrirDetalhes = function(id) {
   const item = dados.find(d => d.id === id);
   if (!item) return;
@@ -135,6 +147,7 @@ window.abrirDetalhes = function(id) {
     cont.innerHTML += `<div class="form-group"><label>Pagamento ${i + 1}</label><input type="number" step="0.01" id="pag${i}" value="${val}"></div>`;
   }
   document.getElementById('modal-observacoes').value = item.observacoes || '';
+  document.getElementById('chk-arquivado').checked = !!item.arquivado;
   document.getElementById('modal-detalhes').style.display = 'block';
   document.getElementById('fundo-modal-detalhes').style.display = 'block';
 };
@@ -155,14 +168,19 @@ window.salvarDetalhes = async function() {
   }
   const totalPago = pagamentos.reduce((a, b) => a + (b || 0), 0);
   const obs = document.getElementById('modal-observacoes').value;
+  const arquivado = document.getElementById('chk-arquivado').checked;
   const empresaId = await getEmpresaIdDoUsuario();
   const mes = document.getElementById('filtro-mes').value;
   const ano = document.getElementById('filtro-ano').value;
   const ref = doc(db, 'empresas', empresaId, 'contasReceber', `${ano}-${mes}`, 'clientes', idAtual);
-  await updateDoc(ref, { pagamentos, totalPago, observacoes: obs });
+  await updateDoc(ref, { pagamentos, totalPago, observacoes: obs, arquivado });
+  if (arquivado && !item.arquivado) {
+    await arquivarTodosMeses(item.cliente);
+  }
   item.pagamentos = pagamentos;
   item.totalPago = totalPago;
   item.observacoes = obs;
+  item.arquivado = arquivado;
   gerarTabela();
   atualizarCards();
   fecharModal();
@@ -183,12 +201,110 @@ window.marcarQuitado = async function() {
   fecharModal();
 };
 
+async function listarClientesAnterioresUnicos() {
+  const empresaId = await getEmpresaIdDoUsuario();
+  const mesesSnap = await getDocs(collection(db, 'empresas', empresaId, 'contasReceber'));
+  const nomes = new Set();
+  for (const mesDoc of mesesSnap.docs) {
+    const clientesSnap = await getDocs(collection(db, 'empresas', empresaId, 'contasReceber', mesDoc.id, 'clientes'));
+    clientesSnap.forEach(c => {
+      const d = c.data();
+      if (!d.arquivado && d.cliente) nomes.add(d.cliente);
+    });
+  }
+  return Array.from(nomes).sort();
+}
+
+window.abrirModalAdicionarCliente = function() {
+  document.getElementById('novo-cliente-nome').value = '';
+  document.getElementById('novo-cliente-valor').value = '';
+  document.getElementById('novo-cliente-vencimento').valueAsDate = new Date();
+  document.getElementById('novo-cliente-observacoes').value = '';
+  document.getElementById('modal-adicionar-cliente').style.display = 'block';
+  document.getElementById('fundo-modal-adicionar-cliente').style.display = 'block';
+};
+
+window.fecharModalAdicionarCliente = function() {
+  document.getElementById('modal-adicionar-cliente').style.display = 'none';
+  document.getElementById('fundo-modal-adicionar-cliente').style.display = 'none';
+};
+
+window.salvarNovoCliente = async function() {
+  const nome = document.getElementById('novo-cliente-nome').value.trim();
+  if (!nome) return;
+  const valor = parseFloat(document.getElementById('novo-cliente-valor').value) || 0;
+  const venc = document.getElementById('novo-cliente-vencimento').value;
+  const obs = document.getElementById('novo-cliente-observacoes').value || '';
+  const empresaId = await getEmpresaIdDoUsuario();
+  const mes = document.getElementById('filtro-mes').value;
+  const ano = document.getElementById('filtro-ano').value;
+  const ref = collection(db, 'empresas', empresaId, 'contasReceber', `${ano}-${mes}`, 'clientes');
+  await addDoc(ref, {
+    cliente: nome,
+    valorTotal: valor,
+    vencimento: venc ? Timestamp.fromDate(new Date(venc)) : Timestamp.fromDate(new Date()),
+    pagamentos: [0, 0, 0, 0],
+    totalPago: 0,
+    observacoes: obs,
+    status: 'Em aberto',
+    arquivado: false
+  });
+  fecharModalAdicionarCliente();
+  await carregarDados();
+};
+
+window.abrirModalImportarClientes = async function() {
+  document.getElementById('modal-importar-clientes').style.display = 'block';
+  document.getElementById('fundo-modal-importar-clientes').style.display = 'block';
+  const lista = document.getElementById('lista-clientes-importar');
+  lista.textContent = 'Carregando...';
+  const nomes = await listarClientesAnterioresUnicos();
+  if (!nomes.length) {
+    lista.textContent = 'Nenhum cliente encontrado.';
+    return;
+  }
+  lista.innerHTML = nomes.map(n => `<label style="display:block;margin-bottom:4px;"><input type="checkbox" value="${n}"> ${n}</label>`).join('');
+};
+
+window.fecharModalImportarClientes = function() {
+  document.getElementById('modal-importar-clientes').style.display = 'none';
+  document.getElementById('fundo-modal-importar-clientes').style.display = 'none';
+};
+
+window.confirmarImportarClientes = async function() {
+  const selecionados = Array.from(document.querySelectorAll('#lista-clientes-importar input[type=checkbox]:checked')).map(el => el.value);
+  const empresaId = await getEmpresaIdDoUsuario();
+  const mes = document.getElementById('filtro-mes').value;
+  const ano = document.getElementById('filtro-ano').value;
+  const ref = collection(db, 'empresas', empresaId, 'contasReceber', `${ano}-${mes}`, 'clientes');
+  const existentes = new Set(dados.map(d => d.cliente));
+  for (const nome of selecionados) {
+    if (existentes.has(nome)) continue;
+    await addDoc(ref, {
+      cliente: nome,
+      valorTotal: 0,
+      vencimento: Timestamp.fromDate(new Date()),
+      pagamentos: [0, 0, 0, 0],
+      totalPago: 0,
+      status: 'Em aberto',
+      arquivado: false,
+      observacoes: ''
+    });
+  }
+  fecharModalImportarClientes();
+  await carregarDados();
+};
+
 document.getElementById('filtro-mes').addEventListener('change', carregarDados);
 document.getElementById('filtro-ano').addEventListener('change', carregarDados);
 document.getElementById('filtro-status').addEventListener('change', gerarTabela);
 document.getElementById('busca-cliente').addEventListener('input', gerarTabela);
 document.getElementById('btn-salvar').addEventListener('click', salvarDetalhes);
 document.getElementById('btn-quitar').addEventListener('click', marcarQuitado);
+document.getElementById('btn-adicionar-cliente').addEventListener('click', abrirModalAdicionarCliente);
+document.getElementById('btn-salvar-novo-cliente').addEventListener('click', salvarNovoCliente);
+document.getElementById('btn-importar-clientes').addEventListener('click', abrirModalImportarClientes);
+document.getElementById('btn-importar-clientes-confirmar').addEventListener('click', confirmarImportarClientes);
 
 preencherFiltros();
 carregarDados();
