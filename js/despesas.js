@@ -57,16 +57,27 @@ function totaisCategoria(itens) {
 }
 
 function gerarLinha(cat, idx, item) {
+  if (cat === 'INSUMOS' || item.insumo) {
+    const venc = item.vencimento || (item.vencimentos || [])[0] || '-';
+    const btn = `<button onclick="abrirModalParcelas('${item.compraId}')">Ver detalhes</button>`;
+    return `<tr>
+      <td>${item.descricao || item.nome || '-'}</td>
+      <td>${formatarPreco(item.valor)}</td>
+      <td>${venc}</td>
+      <td>${item.parcelaStatus || item.status || '-'}</td>
+      <td>${item.formaPagamento || '-'}</td>
+      <td>${item.fornecedorOuCliente || '-'}</td>
+      <td>${formatarCompraIdCurto(item.compraId)}</td>
+      <td>${btn}</td>
+    </tr>`;
+  }
+
   const pagamentos = item.pagamentos || [];
   const totalPago = calcularTotalPago(item);
   const perc = porcentagem(item);
   const barras = `<div class="progresso ${classeProgresso(perc)}"><div style="width:${perc}%"></div></div>`;
-  const campoPagamentos = item.insumo
-    ? (item.parcelaStatus === 'pago' ? formatarPreco(item.valorPrevisto) : '-')
-    : pagamentos.map(v => formatarPreco(v)).join('<br>');
-  const btnEditar = item.insumo
-    ? `<button onclick="abrirModalParcelas('${item.compraId}')">Ver detalhes</button>`
-    : `<button onclick="abrirModalEditarDespesa('${cat}',${idx})">Editar</button>`;
+  const campoPagamentos = pagamentos.map(v => formatarPreco(v)).join('<br>');
+  const btnEditar = `<button onclick="abrirModalEditarDespesa('${cat}',${idx})">Editar</button>`;
   const venc = (item.vencimentos || []).join('<br>');
   return `<tr>
     <td>${item.nome || '-'}</td>
@@ -105,7 +116,28 @@ function renderizarCategorias() {
           </div>
         </div>
       </div>`;
-    const conteudo = `
+    let conteudo = '';
+    if (cat === 'INSUMOS') {
+      conteudo = `
+      <div class="accordion-content" id="${catId}">
+        <table class="tabela">
+          <thead>
+            <tr>
+              <th>Descrição</th>
+              <th>Valor</th>
+              <th>Vencimento</th>
+              <th>Status</th>
+              <th>Forma</th>
+              <th>Fornecedor</th>
+              <th>CompraID</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>${linhas || '<tr><td colspan="8">Nenhum dado</td></tr>'}</tbody>
+        </table>
+      </div>`;
+    } else {
+      conteudo = `
       <div class="accordion-content" id="${catId}">
         <table class="tabela">
           <thead>
@@ -122,8 +154,9 @@ function renderizarCategorias() {
           </thead>
           <tbody>${linhas || '<tr><td colspan="8">Nenhum dado</td></tr>'}</tbody>
         </table>
-        ${cat !== 'INSUMOS' ? `<button onclick="abrirModalNovaDespesa('${cat}')">+ Adicionar despesa</button>` : ''}
+        <button onclick="abrirModalNovaDespesa('${cat}')">+ Adicionar despesa</button>
       </div>`;
+    }
     const div = document.createElement('div');
     div.className = 'categoria';
     div.innerHTML = header + conteudo;
@@ -297,31 +330,44 @@ async function copiarMesAnteriorAutomatico(empresaId) {
 async function carregarInsumos() {
   const empresaId = await getEmpresaIdDoUsuario();
   const finRef = collection(db, 'empresas', empresaId, 'financeiro');
-  const snap = await getDocs(finRef);
+  const finSnap = await getDocs(finRef);
+
+  const movSnap = await getDocs(
+    query(collection(db, 'empresas', empresaId, 'movimentacoes'), where('tipo', '==', 'entrada'))
+  );
+  const comprasValidas = new Set();
+  movSnap.forEach(m => { const d = m.data(); if (d.compraId) comprasValidas.add(d.compraId); });
+
   const itens = [];
 
-  snap.forEach(docu => {
+  finSnap.forEach(docu => {
     const d = docu.data();
-    const isInsumo = String(d.categoria || '').toLowerCase().includes('insum') ||
-      (Array.isArray(d.categoriasProdutos) && d.categoriasProdutos.some(c => String(c).toLowerCase().includes('insum')));
-    if (!isInsumo) return;
+    if (!d.compraId) return;
+    if (comprasValidas.size > 0 && !comprasValidas.has(d.compraId)) return;
 
     const parcelas = Array.isArray(d.parcelas) ? d.parcelas : [];
     parcelas.forEach(p => {
       const venc = p.vencimento || '';
       const [ano, mes] = venc.split('-');
       if (ano === anoAtual && mes === mesAtual) {
+        const valor = Number(p.valor) || 0;
         itens.push({
-          nome: d.descricao || d.fornecedorOuCliente || 'Compra',
-          quantidade: '',
-          vencimentos: [venc],
-          valorPrevisto: Number(p.valor) || 0,
-          pagamentos: p.status === 'pago' ? [p.valor] : [],
-          valorRealizado: p.status === 'pago' ? Number(p.valor) || 0 : 0,
-          observacoes: d.observacoes || '',
+          descricao: d.descricao || '-',
+          valor,
+          vencimento: venc,
+          status: p.status || d.status,
+          formaPagamento: d.formaPagamento || '-',
+          fornecedorOuCliente: d.fornecedorOuCliente || '-',
           compraId: d.compraId,
           parcelaNumero: p.numero,
           parcelaStatus: p.status,
+          nome: d.descricao || d.fornecedorOuCliente || 'Compra',
+          quantidade: '',
+          vencimentos: [venc],
+          valorPrevisto: valor,
+          pagamentos: p.status === 'pago' ? [valor] : [],
+          valorRealizado: p.status === 'pago' ? valor : 0,
+          observacoes: d.observacoes || '',
           insumo: true
         });
       }
