@@ -769,6 +769,11 @@ tr.destacar {
 .accordion-header .totais span {
   font-weight: 600;
 }
+.accordion-header .acoes {
+  display: flex;
+  gap: 5px;
+  margin-left: 10px;
+}
 .accordion-content {
   border: 1px solid #e5e7eb;
   border-top: none;

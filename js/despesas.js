@@ -9,6 +9,8 @@ let mesAtual = '';
 let anoAtual = '';
 let categoriaModal = '';
 let indiceModal = null;
+let modoCategoria = 'nova';
+let categoriaOriginal = '';
 
 function preencherFiltros() {
   const selMes = document.getElementById('mes');
@@ -116,6 +118,10 @@ function renderizarCategorias() {
           <div class="barra-progresso">
             <div class="progresso ${classeProgresso(perc)}"><div style="width:${perc}%"></div></div>
           </div>
+        </div>
+        <div class="acoes">
+          <button class="btn-icon btn-xs" onclick="editarCategoria('${cat}', event)">✏️</button>
+          <button class="btn-icon btn-xs" onclick="excluirCategoria('${cat}', event)">🗑️</button>
         </div>
       </div>`;
     let conteudo = '';
@@ -299,12 +305,128 @@ async function adicionarParcelasFuturas(categoria, item, totalParcelas) {
 }
 
 async function adicionarCategoria() {
-  console.log('Executando adicionarCategoria');
-  const nome = prompt('Nome da categoria');
+  abrirModalNovaCategoria();
+}
+
+async function carregarListaTodasCategorias() {
+  const empresaId = await getEmpresaIdDoUsuario();
+  const snap = await getDocs(collection(db, 'empresas', empresaId, 'despesasGerais'));
+  const setCat = new Set();
+  snap.forEach(docu => {
+    const dados = docu.data().categorias || {};
+    Object.keys(dados).forEach(c => setCat.add(c));
+  });
+  const lista = document.getElementById('lista-categorias-gerais');
+  if (lista) {
+    lista.innerHTML = [...setCat].sort().map(c => `<option value="${c}">`).join('');
+  }
+}
+
+function abrirModalNovaCategoria() {
+  modoCategoria = 'nova';
+  categoriaOriginal = '';
+  document.getElementById('titulo-modal-categoria').textContent = 'Nova Categoria';
+  document.getElementById('campo-categoria').value = '';
+  carregarListaTodasCategorias();
+  document.getElementById('modal-categoria').style.display = 'block';
+  document.getElementById('fundo-modal-categoria').style.display = 'block';
+}
+
+function abrirModalEditarCategoria(nome) {
+  modoCategoria = 'editar';
+  categoriaOriginal = nome;
+  document.getElementById('titulo-modal-categoria').textContent = 'Editar Categoria';
+  document.getElementById('campo-categoria').value = nome;
+  carregarListaTodasCategorias();
+  document.getElementById('modal-categoria').style.display = 'block';
+  document.getElementById('fundo-modal-categoria').style.display = 'block';
+}
+
+function fecharModalCategoria() {
+  document.getElementById('modal-categoria').style.display = 'none';
+  document.getElementById('fundo-modal-categoria').style.display = 'none';
+}
+
+async function buscarUltimosDadosCategoria(nome) {
+  const empresaId = await getEmpresaIdDoUsuario();
+  const snap = await getDocs(collection(db, 'empresas', empresaId, 'despesasGerais'));
+  const docs = [];
+  snap.forEach(docu => docs.push({ id: docu.id, data: docu.data() }));
+  docs.sort((a,b) => a.id.localeCompare(b.id));
+  for (let i = docs.length - 1; i >= 0; i--) {
+    const cats = docs[i].data.categorias || {};
+    if (cats[nome]) {
+      return JSON.parse(JSON.stringify(cats[nome]));
+    }
+  }
+  return null;
+}
+
+async function atualizarNomeCategoriaNosMeses(antigo, novo) {
+  const empresaId = await getEmpresaIdDoUsuario();
+  const snap = await getDocs(collection(db, 'empresas', empresaId, 'despesasGerais'));
+  for (const docu of snap.docs) {
+    const dados = docu.data().categorias || {};
+    if (dados[antigo]) {
+      dados[novo] = dados[antigo];
+      delete dados[antigo];
+      await updateDoc(docu.ref, { categorias: dados });
+    }
+  }
+}
+
+async function salvarCategoriaModal() {
+  const nome = document.getElementById('campo-categoria').value.trim();
   if (!nome) return;
-  if (!categorias[nome]) categorias[nome] = [];
+  if (modoCategoria === 'nova') {
+    if (categorias[nome]) { alert('Categoria já existe.'); return; }
+    categorias[nome] = [];
+    const dadosAnt = await buscarUltimosDadosCategoria(nome);
+    if (dadosAnt && confirm('Deseja carregar despesas da última vez que esta categoria foi utilizada?')) {
+      categorias[nome] = dadosAnt;
+    }
+  } else {
+    if (nome === categoriaOriginal) { fecharModalCategoria(); return; }
+    if (categorias[nome]) { alert('Já existe uma categoria com este nome.'); return; }
+    categorias[nome] = categorias[categoriaOriginal];
+    delete categorias[categoriaOriginal];
+    await atualizarNomeCategoriaNosMeses(categoriaOriginal, nome);
+  }
   renderizarCategorias();
   await salvarDados();
+  fecharModalCategoria();
+}
+
+function editarCategoria(nome, evt) {
+  if (evt) evt.stopPropagation();
+  abrirModalEditarCategoria(nome);
+}
+
+async function removerCategoriaMesesFuturos(nome, incluiFut) {
+  const empresaId = await getEmpresaIdDoUsuario();
+  const snap = await getDocs(collection(db, 'empresas', empresaId, 'despesasGerais'));
+  for (const docu of snap.docs) {
+    const id = docu.id;
+    if (id === `${anoAtual}-${mesAtual}` || (incluiFut && id > `${anoAtual}-${mesAtual}`)) {
+      const dados = docu.data().categorias || {};
+      if (dados[nome]) {
+        delete dados[nome];
+        await updateDoc(docu.ref, { categorias: dados });
+      }
+    }
+  }
+}
+
+async function excluirCategoria(nome, evt) {
+  if (evt) evt.stopPropagation();
+  if (!confirm(`Excluir categoria "${nome}"?`)) return;
+  const fut = confirm('Excluir esta categoria dos meses futuros também?');
+  await removerCategoriaMesesFuturos(nome, fut);
+  delete categorias[nome];
+  renderizarCategorias();
+  atualizarCards();
+  await salvarDados();
+  fecharModalCategoria();
 }
 
 async function copiarMesAnterior() {
@@ -442,6 +564,7 @@ document.getElementById('dias-faturamento').addEventListener('input', atualizarC
 document.getElementById('btn-adicionar-categoria').addEventListener('click', adicionarCategoria);
 document.getElementById('btn-copiar').addEventListener('click', copiarMesAnterior);
 document.getElementById('btn-salvar-despesa').addEventListener('click', salvarDespesa);
+document.getElementById('btn-salvar-categoria').addEventListener('click', salvarCategoriaModal);
 console.log('Listeners registrados');
 
 carregarDados();
@@ -450,6 +573,9 @@ window.toggleCategoria = toggleCategoria;
 window.abrirModalNovaDespesa = abrirModalNovaDespesa;
 window.abrirModalEditarDespesa = abrirModalEditarDespesa;
 window.fecharModalDespesa = fecharModalDespesa;
+window.editarCategoria = editarCategoria;
+window.excluirCategoria = excluirCategoria;
+window.fecharModalCategoria = fecharModalCategoria;
 
 window.abrirModalParcelas = async function (compraId) {
   try {
