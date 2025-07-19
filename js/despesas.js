@@ -237,7 +237,6 @@ function preencherModal(item) {
   const pagInputs = document.querySelectorAll('#despesa-pagamentos input');
   pagInputs.forEach((el, i) => { el.value = (item.pagamentos && item.pagamentos[i]) !== undefined ? item.pagamentos[i] : ''; });
   document.getElementById('despesa-observacoes').value = item.observacoes || '';
-  document.getElementById('despesa-recorrente').checked = !!item.recorrente;
   document.getElementById('despesa-arquivado').checked = !!item.arquivado;
 
   if (item.insumo) {
@@ -256,12 +255,11 @@ async function salvarDespesa() {
   const vencimentos = Array.from(document.querySelectorAll('#despesa-vencimentos input')).map(el => el.value).filter(v => v);
   const pagamentos = Array.from(document.querySelectorAll('#despesa-pagamentos input')).map(el => el.value).filter(v => v !== '');
   const observacoes = document.getElementById('despesa-observacoes').value;
-  const recorrente = document.getElementById('despesa-recorrente').checked;
   const arquivado = document.getElementById('despesa-arquivado').checked;
 
   const parcelasNum = Number(numeroParcelas) || 1;
   const valorReal = (Number(valorPrevisto) || 0) / parcelasNum;
-  const item = { nome, numeroParcelas: parcelasNum, valorPrevisto, valorReal, vencimentos, pagamentos, observacoes, recorrente, arquivado };
+  const item = { nome, numeroParcelas: parcelasNum, valorPrevisto, valorReal, vencimentos, pagamentos, observacoes, arquivado };
 
   if (indiceModal === null) {
     if (!categorias[categoriaModal]) categorias[categoriaModal] = [];
@@ -307,25 +305,6 @@ async function adicionarCategoria() {
   await salvarDados();
 }
 
-async function copiarMesAnterior() {
-  console.log('copiarMesAnterior clicado');
-  const mes = Number(mesAtual);
-  const ano = Number(anoAtual);
-  let mesAnt = mes - 1;
-  let anoAnt = ano;
-  if (mesAnt <= 0) { mesAnt = 12; anoAnt -= 1; }
-  const empresaId = await getEmpresaIdDoUsuario();
-  const refAnt = doc(db, 'empresas', empresaId, 'despesasGerais', `${anoAnt}-${String(mesAnt).padStart(2, '0')}`);
-  const snapAnt = await getDoc(refAnt);
-  if (!snapAnt.exists()) {
-    alert('Mês anterior sem dados');
-    return;
-  }
-  categorias = JSON.parse(JSON.stringify(snapAnt.data().categorias || {}));
-  console.log('Dados do mês anterior copiados');
-  await salvarDados();
-  await carregarDados();
-}
 
 async function copiarMesAnteriorAutomatico(empresaId) {
   const mes = Number(mesAtual);
@@ -440,7 +419,6 @@ document.getElementById('mes').addEventListener('change', carregarDados);
 document.getElementById('ano').addEventListener('change', carregarDados);
 document.getElementById('dias-faturamento').addEventListener('input', atualizarCards);
 document.getElementById('btn-adicionar-categoria').addEventListener('click', adicionarCategoria);
-document.getElementById('btn-copiar').addEventListener('click', copiarMesAnterior);
 document.getElementById('btn-salvar-despesa').addEventListener('click', salvarDespesa);
 console.log('Listeners registrados');
 
