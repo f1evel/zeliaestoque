@@ -51,6 +51,16 @@
         <div style="margin-top:10px;">
           <button id="btn-adicionar-categoria">+ Adicionar categoria</button>
         </div>
+        <div id="modal-categoria" class="modal">
+          <h3 id="titulo-modal-categoria">Categoria</h3>
+          <input type="text" id="campo-categoria" list="lista-categorias-gerais" style="width:100%;" />
+          <datalist id="lista-categorias-gerais"></datalist>
+          <div style="text-align:right; margin-top:10px;">
+            <button id="btn-salvar-categoria">Salvar</button>
+            <button onclick="fecharModalCategoria()">Cancelar</button>
+          </div>
+        </div>
+        <div id="fundo-modal-categoria" class="fundo-modal" onclick="fecharModalCategoria()"></div>
       </main>
     </div>
 
