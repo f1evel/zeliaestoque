@@ -109,19 +109,21 @@ function renderizarCategorias() {
     const perc = previsto ? Math.min(100, Math.round((pago / previsto) * 100)) : 0;
     const catId = 'cat_' + cat.replace(/\s+/g, '_');
     const linhas = itens.map((it, i) => gerarLinha(cat, i, it)).join('');
+    const botoes = cat === 'INSUMOS'
+      ? `<button class="btn-icon btn-xs" onclick="editarCategoria('${cat}', event)">✏️</button>`
+      : `<button class="btn-icon btn-xs" onclick="editarCategoria('${cat}', event)">✏️</button><button class="btn-icon btn-xs" onclick="excluirCategoria('${cat}', event)">🗑️</button>`;
     const header = `
       <div class="accordion-header" onclick="toggleCategoria('${catId}')">
         <span>${cat}</span>
         <div class="totais">
-          <span>${formatarPreco(previsto)}</span>
-          <span>${formatarPreco(pago)}</span>
+          <span>Previsto: ${formatarPreco(previsto)}</span>
+          <span>Pago: ${formatarPreco(pago)}</span>
           <div class="barra-progresso">
             <div class="progresso ${classeProgresso(perc)}"><div style="width:${perc}%"></div></div>
           </div>
         </div>
         <div class="acoes">
-          <button class="btn-icon btn-xs" onclick="editarCategoria('${cat}', event)">✏️</button>
-          <button class="btn-icon btn-xs" onclick="excluirCategoria('${cat}', event)">🗑️</button>
+          ${botoes}
         </div>
       </div>`;
     let conteudo = '';
@@ -238,6 +240,7 @@ function preencherModal(item) {
   document.getElementById('despesa-nome').value = item.nome || '';
   document.getElementById('despesa-num-parcelas').value = item.numeroParcelas || item.quantidade || '';
   document.getElementById('despesa-previsto').value = item.valorPrevisto || '';
+  document.getElementById('despesa-real').value = item.valorReal || '';
   const vencInputs = document.querySelectorAll('#despesa-vencimentos input');
   vencInputs.forEach((el, i) => { el.value = (item.vencimentos && item.vencimentos[i]) || ''; });
   const pagInputs = document.querySelectorAll('#despesa-pagamentos input');
@@ -248,9 +251,11 @@ function preencherModal(item) {
   if (item.insumo) {
     pagInputs.forEach(el => el.disabled = true);
     document.getElementById('despesa-previsto').disabled = true;
+    document.getElementById('despesa-real').disabled = true;
   } else {
     pagInputs.forEach(el => el.disabled = false);
     document.getElementById('despesa-previsto').disabled = false;
+    document.getElementById('despesa-real').disabled = false;
   }
 }
 
@@ -258,13 +263,13 @@ async function salvarDespesa() {
   const nome = document.getElementById('despesa-nome').value;
   const numeroParcelas = document.getElementById('despesa-num-parcelas').value;
   const valorPrevisto = document.getElementById('despesa-previsto').value;
+  const valorReal = document.getElementById('despesa-real').value;
   const vencimentos = Array.from(document.querySelectorAll('#despesa-vencimentos input')).map(el => el.value).filter(v => v);
   const pagamentos = Array.from(document.querySelectorAll('#despesa-pagamentos input')).map(el => el.value).filter(v => v !== '');
   const observacoes = document.getElementById('despesa-observacoes').value;
   const arquivado = document.getElementById('despesa-arquivado').checked;
 
   const parcelasNum = Number(numeroParcelas) || 1;
-  const valorReal = (Number(valorPrevisto) || 0) / parcelasNum;
   const item = { nome, numeroParcelas: parcelasNum, valorPrevisto, valorReal, vencimentos, pagamentos, observacoes, arquivado };
 
   if (indiceModal === null) {
@@ -417,6 +422,7 @@ async function removerCategoriaMesesFuturos(nome, incluiFut) {
 
 async function excluirCategoria(nome, evt) {
   if (evt) evt.stopPropagation();
+  if (nome === 'INSUMOS') { alert('Categoria INSUMOS não pode ser excluída.'); return; }
   if (!confirm(`Excluir categoria "${nome}"?`)) return;
   const fut = confirm('Excluir esta categoria dos meses futuros também?');
   await removerCategoriaMesesFuturos(nome, fut);
