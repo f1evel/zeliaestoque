@@ -1,6 +1,6 @@
 import { db, getEmpresaIdDoUsuario } from './firebaseConfig.js';
 import { collection, doc, getDoc, setDoc, getDocs, query, where, updateDoc } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js';
-import { formatarPreco, mostrarSpinner, esconderSpinner, formatarCompraIdCurto, mostrarMensagem, parseDataBR } from './utils.js';
+import { formatarPreco, mostrarSpinner, esconderSpinner, formatarCompraIdCurto, mostrarMensagem, parseDataBR, formatarDataISOParaBRHifen } from './utils.js';
 
 console.log('despesas.js carregado');
 
@@ -58,7 +58,8 @@ function totaisCategoria(itens) {
 
 function gerarLinha(cat, idx, item) {
   if (cat === 'INSUMOS' || item.insumo) {
-    const venc = item.vencimento || (item.vencimentos || [])[0] || '-';
+    const vencRaw = item.vencimento || (item.vencimentos || [])[0] || '-';
+    const venc = formatarDataISOParaBRHifen(vencRaw);
     const btn = `<button onclick="abrirModalParcelas('${item.compraId}')">Ver detalhes</button>`;
     return `<tr>
       <td>${item.descricao || item.nome || '-'}</td>
@@ -78,12 +79,13 @@ function gerarLinha(cat, idx, item) {
   const barras = `<div class="progresso ${classeProgresso(perc)}"><div style="width:${perc}%"></div></div>`;
   const campoPagamentos = pagamentos.map(v => formatarPreco(v)).join('<br>');
   const btnEditar = `<button onclick="abrirModalEditarDespesa('${cat}',${idx})">Editar</button>`;
-  const venc = (item.vencimentos || []).join('<br>');
+  const venc = (item.vencimentos || []).map(v => formatarDataISOParaBRHifen(v)).join('<br>');
   return `<tr>
     <td>${item.nome || '-'}</td>
-    <td>${item.quantidade || ''}</td>
+    <td>${item.numeroParcelas || item.quantidade || ''}</td>
     <td>${venc}</td>
     <td>${formatarPreco(item.valorPrevisto)}</td>
+    <td>${formatarPreco(item.valorReal || 0)}</td>
     <td>${campoPagamentos}</td>
     <td>${formatarPreco(totalPago)}</td>
     <td>${barras}</td>
@@ -143,16 +145,17 @@ function renderizarCategorias() {
           <thead>
             <tr>
               <th>Despesa</th>
-              <th>Qtd</th>
+              <th>Número de parcelas</th>
               <th>Vencimentos</th>
               <th>Valor previsto</th>
+              <th>Valor real</th>
               <th>Pagamentos</th>
               <th>Total pago</th>
               <th>%</th>
               <th></th>
             </tr>
           </thead>
-          <tbody>${linhas || '<tr><td colspan="8">Nenhum dado</td></tr>'}</tbody>
+          <tbody>${linhas || '<tr><td colspan="9">Nenhum dado</td></tr>'}</tbody>
         </table>
         <button onclick="abrirModalNovaDespesa('${cat}')">+ Adicionar despesa</button>
       </div>`;
@@ -227,7 +230,7 @@ function fecharModalDespesa() {
 
 function preencherModal(item) {
   document.getElementById('despesa-nome').value = item.nome || '';
-  document.getElementById('despesa-quantidade').value = item.quantidade || '';
+  document.getElementById('despesa-num-parcelas').value = item.numeroParcelas || item.quantidade || '';
   document.getElementById('despesa-previsto').value = item.valorPrevisto || '';
   const vencInputs = document.querySelectorAll('#despesa-vencimentos input');
   vencInputs.forEach((el, i) => { el.value = (item.vencimentos && item.vencimentos[i]) || ''; });
@@ -248,7 +251,7 @@ function preencherModal(item) {
 
 async function salvarDespesa() {
   const nome = document.getElementById('despesa-nome').value;
-  const quantidade = document.getElementById('despesa-quantidade').value;
+  const numeroParcelas = document.getElementById('despesa-num-parcelas').value;
   const valorPrevisto = document.getElementById('despesa-previsto').value;
   const vencimentos = Array.from(document.querySelectorAll('#despesa-vencimentos input')).map(el => el.value).filter(v => v);
   const pagamentos = Array.from(document.querySelectorAll('#despesa-pagamentos input')).map(el => el.value).filter(v => v !== '');
@@ -256,7 +259,9 @@ async function salvarDespesa() {
   const recorrente = document.getElementById('despesa-recorrente').checked;
   const arquivado = document.getElementById('despesa-arquivado').checked;
 
-  const item = { nome, quantidade, valorPrevisto, vencimentos, pagamentos, observacoes, recorrente, arquivado };
+  const parcelasNum = Number(numeroParcelas) || 1;
+  const valorReal = (Number(valorPrevisto) || 0) / parcelasNum;
+  const item = { nome, numeroParcelas: parcelasNum, valorPrevisto, valorReal, vencimentos, pagamentos, observacoes, recorrente, arquivado };
 
   if (indiceModal === null) {
     if (!categorias[categoriaModal]) categorias[categoriaModal] = [];
@@ -265,10 +270,32 @@ async function salvarDespesa() {
     Object.assign(categorias[categoriaModal][indiceModal], item);
   }
 
+  if (indiceModal === null && parcelasNum > 1) {
+    await adicionarParcelasFuturas(categoriaModal, item, parcelasNum);
+  }
+
   renderizarCategorias();
   atualizarCards();
   await salvarDados();
   fecharModalDespesa();
+}
+
+async function adicionarParcelasFuturas(categoria, item, totalParcelas) {
+  if (!item.vencimentos || !item.vencimentos[0]) return;
+  let data = new Date(item.vencimentos[0]);
+  const empresaId = await getEmpresaIdDoUsuario();
+  for (let i = 1; i < totalParcelas; i++) {
+    data.setMonth(data.getMonth() + 1);
+    const ano = data.getFullYear();
+    const mes = String(data.getMonth() + 1).padStart(2, '0');
+    const ref = doc(db, 'empresas', empresaId, 'despesasGerais', `${ano}-${mes}`);
+    const snap = await getDoc(ref);
+    const dados = snap.exists() ? snap.data().categorias || {} : {};
+    if (!dados[categoria]) dados[categoria] = [];
+    const novoItem = { ...item, vencimentos: [data.toISOString().split('T')[0]] };
+    dados[categoria].push(novoItem);
+    await setDoc(ref, { categorias: dados }, { merge: true });
+  }
 }
 
 async function adicionarCategoria() {
@@ -365,6 +392,7 @@ async function carregarInsumos() {
           quantidade: '',
           vencimentos: [venc],
           valorPrevisto: valor,
+          valorReal: valor,
           pagamentos: p.status === 'pago' ? [valor] : [],
           valorRealizado: p.status === 'pago' ? valor : 0,
           observacoes: d.observacoes || '',

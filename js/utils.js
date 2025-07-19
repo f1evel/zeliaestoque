@@ -135,6 +135,14 @@ export function formatarDataISOParaBR(iso) {
   return `${dia}/${mes}/${ano}`;
 }
 
+// 👉 Formatar string de data yyyy-mm-dd para DD-MM-AAAA
+export function formatarDataISOParaBRHifen(iso) {
+  if (!iso) return '';
+  const [ano, mes, dia] = iso.split('-');
+  if (!ano || !mes || !dia) return iso;
+  return `${dia}-${mes}-${ano}`;
+}
+
 // 👉 Calcular dias restantes para vencimento
 export function calcularDiasParaVencimento(validade) {
   try {
