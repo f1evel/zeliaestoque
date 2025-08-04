@@ -107,6 +107,8 @@ async function carregarProdutos() {
     renderizarTabela(produtosCache);
   }, "❌ Erro ao carregar produtos.");
 }
+// Torna a função acessível globalmente para atualizações externas
+window.carregarProdutos = carregarProdutos;
 carregarProdutos();
 
 async function carregarMetricasDePreco(empresaId) {
