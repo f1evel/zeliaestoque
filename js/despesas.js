@@ -11,6 +11,7 @@ let categoriaModal = '';
 let indiceModal = null;
 let modoCategoria = 'nova';
 let categoriaOriginal = '';
+let modelosDespesas = {};
 
 function preencherFiltros() {
   const selMes = document.getElementById('mes');
@@ -215,6 +216,7 @@ function abrirModalNovaDespesa(cat) {
   indiceModal = null;
   document.getElementById('titulo-modal-despesa').textContent = 'Adicionar Despesa';
   preencherModal({});
+  carregarListaTodasDespesas();
   abrirModal();
 }
 
@@ -259,6 +261,13 @@ function preencherModal(item) {
   }
 }
 
+function preencherDespesaExistente() {
+  const nome = document.getElementById('despesa-nome').value;
+  if (modelosDespesas[nome]) {
+    preencherModal({ ...modelosDespesas[nome], nome });
+  }
+}
+
 async function salvarDespesa() {
   const nome = document.getElementById('despesa-nome').value;
   const numeroParcelas = document.getElementById('despesa-num-parcelas').value;
@@ -286,6 +295,7 @@ async function salvarDespesa() {
   renderizarCategorias();
   atualizarCards();
   await salvarDados();
+  await carregarListaTodasDespesas();
   fecharModalDespesa();
 }
 
@@ -322,6 +332,28 @@ async function carregarListaTodasCategorias() {
   const lista = document.getElementById('lista-categorias-gerais');
   if (lista) {
     lista.innerHTML = [...setCat].sort().map(c => `<option value="${c}">`).join('');
+  }
+}
+
+async function carregarListaTodasDespesas() {
+  const empresaId = await getEmpresaIdDoUsuario();
+  const snap = await getDocs(collection(db, 'empresas', empresaId, 'despesasGerais'));
+  const setDes = new Set();
+  modelosDespesas = {};
+  snap.forEach(docu => {
+    const dados = docu.data().categorias || {};
+    Object.values(dados).forEach(arr => {
+      arr.forEach(item => {
+        if (item && item.nome) {
+          setDes.add(item.nome);
+          modelosDespesas[item.nome] = { ...item, pagamentos: [], arquivado: false };
+        }
+      });
+    });
+  });
+  const lista = document.getElementById('lista-despesas-nomes');
+  if (lista) {
+    lista.innerHTML = [...setDes].sort().map(n => `<option value="${n}">`).join('');
   }
 }
 
@@ -549,8 +581,10 @@ document.getElementById('dias-faturamento').addEventListener('input', atualizarC
 document.getElementById('btn-adicionar-categoria').addEventListener('click', adicionarCategoria);
 document.getElementById('btn-salvar-despesa').addEventListener('click', salvarDespesa);
 document.getElementById('btn-salvar-categoria').addEventListener('click', salvarCategoriaModal);
+document.getElementById('despesa-nome').addEventListener('input', preencherDespesaExistente);
 console.log('Listeners registrados');
 
+carregarListaTodasDespesas();
 carregarDados();
 
 window.toggleCategoria = toggleCategoria;
