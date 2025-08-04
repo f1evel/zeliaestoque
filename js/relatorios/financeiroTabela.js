@@ -75,6 +75,26 @@ function calcularValorAberto(registro) {
   }, 0);
 }
 
+function obterProximoVencimento(registro) {
+  let datas = [];
+  if (Array.isArray(registro.parcelas) && registro.parcelas.length > 0) {
+    datas = registro.parcelas
+      .filter(p => p.status !== 'pago' && p.vencimento)
+      .map(p => parseDataLocal(p.vencimento))
+      .filter(d => !isNaN(d));
+  } else if (registro.dataVencimento && registro.status !== 'pago') {
+    const d = registro.dataVencimento instanceof Date
+      ? registro.dataVencimento
+      : parseDataLocal(registro.dataVencimento);
+    if (!isNaN(d)) datas = [d];
+  }
+
+  if (datas.length === 0) return '-';
+
+  const proximo = datas.reduce((min, d) => d < min ? d : min, datas[0]);
+  return proximo.toLocaleDateString('pt-BR');
+}
+
 // 🔥 Setar dados
 export function setDadosFinanceiro(novosDados) {
   dados = novosDados;
@@ -230,7 +250,7 @@ export function gerarTabelaFinanceiro() {
         <tr>
           <th>CompraID</th>
           <th>Fornecedor</th>
-          <th>Data da compra</th>
+          <th>Próximo<br>vencimento</th>
           <th>Forma<br>de Pagamento</th>
           <th>Valor total</th>
           <th>Valor pago</th>
@@ -242,7 +262,7 @@ export function gerarTabelaFinanceiro() {
   `;
 
   filtrados.forEach(d => {
-    const lanc = d.dataLancamento?.toLocaleDateString('pt-BR') || '-';
+    const proxVenc = obterProximoVencimento(d);
     const aberto = calcularValorAberto(d);
     const pago = calcularValorPago(d);
     const nomeFornecedor = d.fornecedorOuCliente || '-';
@@ -256,7 +276,7 @@ export function gerarTabelaFinanceiro() {
       <tr class="${classeStatus}">
         <td class="compra-id-cell" title="${compraEscapado}">${formatarCompraIdCurto(d.compraId)}</td>
         <td class="fornecedor-cell" title="${fornecedorEscapado}">${fornecedorCurto}</td>
-        <td>${lanc}</td>
+        <td>${proxVenc}</td>
         <td>${d.formaPagamento}</td>
         <td>${formatarPreco(d.valor)}</td>
         <td>${formatarPreco(pago)}</td>
