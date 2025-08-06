@@ -11,6 +11,7 @@ import {
   getDocs,
   query,
   where,
+  onSnapshot,
   Timestamp,
   deleteField
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
@@ -22,6 +23,7 @@ import { abrirModalConfirmacao } from './modais.js';
 let produtoCadastroAtual = null;
 let dadosFinanceiroAtual = null;
 let handlerTecladoEntrada = null;
+let unsubTotalCompra = null;
 
 // Calcula a média de preços das entradas anteriores de um produto
 async function calcularPrecoMedioEntradas(produtoId) {
@@ -97,8 +99,10 @@ export async function abrirModalEntrada(produto) {
   if (produto.compraId) {
     document.getElementById("entrada-compra-id").value = produto.compraId;
     await preencherDadosFinanceiro(produto.compraId);
+    await atualizarTotalProvisorio(produto.compraId);
   } else {
     atualizarParcelasPreview();
+    await atualizarTotalProvisorio('');
   }
 
   document.getElementById("modal-entrada").style.display = "block";
@@ -140,6 +144,10 @@ export function fecharModalEntrada() {
   if (handlerTecladoEntrada) {
     modal.removeEventListener("keydown", handlerTecladoEntrada);
     handlerTecladoEntrada = null;
+  }
+  if (unsubTotalCompra) {
+    unsubTotalCompra();
+    unsubTotalCompra = null;
   }
 }
 
@@ -238,6 +246,49 @@ async function preencherDadosFinanceiro(compraId) {
     }
   } catch (e) {
     console.error("Erro ao carregar dados financeiros:", e);
+  }
+}
+
+async function atualizarTotalProvisorio(compraId) {
+  if (unsubTotalCompra) {
+    unsubTotalCompra();
+    unsubTotalCompra = null;
+  }
+
+  const card = document.getElementById('total-compra-card');
+  if (!compraId) {
+    if (card) card.style.display = 'none';
+    return;
+  }
+
+  try {
+    const empresaId = await getEmpresaIdDoUsuario();
+    const movQuery = query(
+      collection(db, 'empresas', empresaId, 'movimentacoes'),
+      where('compraId', '==', compraId),
+      where('tipo', '==', 'entrada')
+    );
+    unsubTotalCompra = onSnapshot(movQuery, snap => {
+      let total = 0;
+      snap.forEach(docSnap => {
+        if (produtoCadastroAtual?.movimentacaoId && docSnap.id === produtoCadastroAtual.movimentacaoId) return;
+        const d = docSnap.data();
+        const custo = typeof d.custoTotal === 'number'
+          ? d.custoTotal
+          : (d.quantidade || 0) * (d.precoUnitario || 0);
+        total += custo;
+      });
+      const qtd = produtoCadastroAtual?.quantidade || 0;
+      const preco = produtoCadastroAtual?.precoCompra || 0;
+      total += qtd * preco;
+      const valorEl = document.getElementById('total-compra-valor');
+      if (card && valorEl) {
+        valorEl.textContent = formatarPreco(total);
+        card.style.display = 'flex';
+      }
+    });
+  } catch (e) {
+    console.error('Erro ao calcular total provisório:', e);
   }
 }
 
@@ -625,8 +676,10 @@ function atualizarParcelasPreview() {
 
 document.getElementById("entrada-numero-parcelas").addEventListener("input", atualizarParcelasPreview);
 document.getElementById("entrada-primeiro-vencimento").addEventListener("change", atualizarParcelasPreview);
-document.getElementById("entrada-compra-id").addEventListener("change", (e) => {
-  preencherDadosFinanceiro(e.target.value.trim());
+document.getElementById("entrada-compra-id").addEventListener("change", async (e) => {
+  const cid = e.target.value.trim();
+  await preencherDadosFinanceiro(cid);
+  await atualizarTotalProvisorio(cid);
 });
 
 // Tornar funções acessíveis globalmente para os botões do modal
