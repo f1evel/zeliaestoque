@@ -232,6 +232,9 @@ async function preencherDadosFinanceiro(compraId) {
       } else {
         atualizarParcelasPreview();
       }
+    } else {
+      dadosFinanceiroAtual = null;
+      atualizarParcelasPreview();
     }
   } catch (e) {
     console.error("Erro ao carregar dados financeiros:", e);
@@ -392,15 +395,30 @@ window.confirmarEntradaEstoque = async function () {
 
     const valoresParcelas = dividirValorEmParcelas(custoTotal, numParcelas);
     const parcelas = [];
-    for (let i = 0; i < numParcelas; i++) {
-      const input = document.getElementById(`parcela-venc-${i}`);
-      if (input) {
+    if (finDocExistente && !parcelasAlteradas) {
+      const parcelasExistentes = Array.isArray(finDocExistente.data().parcelas)
+        ? finDocExistente.data().parcelas
+        : [];
+      for (let i = 0; i < numParcelas; i++) {
+        const vencimento = parcelasExistentes[i]?.vencimento || document.getElementById(`parcela-venc-${i}`)?.value;
         parcelas.push({
           numero: i + 1,
           valor: valoresParcelas[i],
-          vencimento: input.value,
+          vencimento,
           status: "pendente"
         });
+      }
+    } else {
+      for (let i = 0; i < numParcelas; i++) {
+        const input = document.getElementById(`parcela-venc-${i}`);
+        if (input) {
+          parcelas.push({
+            numero: i + 1,
+            valor: valoresParcelas[i],
+            vencimento: input.value,
+            status: "pendente"
+          });
+        }
       }
     }
 
