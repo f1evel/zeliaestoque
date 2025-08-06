@@ -144,21 +144,40 @@ export function fecharModalEntrada() {
 }
 
 window.cancelarEntradaFinanceira = function () {
-  if (!produtoCadastroAtual?.novoCadastro) {
+  if (!produtoCadastroAtual?.novoCadastro && !produtoCadastroAtual?.novaEntrada) {
     fecharModalEntrada();
     return;
   }
 
+  const mensagem = produtoCadastroAtual?.novoCadastro
+    ? "⚠️ As informações financeiras não serão registradas.\nDeseja manter o produto no estoque mesmo assim?\nVocê poderá adicionar os dados financeiros depois."
+    : "❗ Nenhuma informação financeira foi registrada. Deseja manter o produto no estoque e adicionar os dados financeiros depois? Ou deseja apagar essa movimentação?";
+
+  const textoManter = produtoCadastroAtual?.novoCadastro
+    ? "✅ Sim, manter o produto (adicionarei depois)"
+    : "Manter entrada";
+
+  const textoApagar = produtoCadastroAtual?.novoCadastro
+    ? "❌ Não, apagar produto"
+    : "Apagar movimentação";
+
   abrirModalConfirmacao(
-    "⚠️ As informações financeiras não serão registradas.\nDeseja manter o produto no estoque mesmo assim?\nVocê poderá adicionar os dados financeiros depois.",
+    mensagem,
     async () => {
       try {
         const empresaId = await getEmpresaIdDoUsuario();
-        const ref = doc(db, "empresas", empresaId, "produtos", produtoCadastroAtual.id);
-        await updateDoc(ref, { entradaFinanceiraPendente: true });
+        if (produtoCadastroAtual?.novoCadastro) {
+          const ref = doc(db, "empresas", empresaId, "produtos", produtoCadastroAtual.id);
+          await updateDoc(ref, { entradaFinanceiraPendente: true });
+          if (window.carregarProdutos) window.carregarProdutos();
+          alert("Produto mantido sem financeiro.");
+        } else {
+          const movRef = doc(db, "empresas", empresaId, "movimentacoes", produtoCadastroAtual.movimentacaoId);
+          await updateDoc(movRef, { entradaFinanceiraPendente: true });
+          if (window.carregarMovimentacoes) window.carregarMovimentacoes();
+          alert("Entrada mantida sem financeiro.");
+        }
         fecharModalEntrada();
-        alert("Produto mantido sem financeiro.");
-        if (window.carregarProdutos) window.carregarProdutos();
       } catch (e) {
         console.error("Erro ao marcar pendência financeira:", e);
       }
@@ -166,16 +185,31 @@ window.cancelarEntradaFinanceira = function () {
     async () => {
       try {
         const empresaId = await getEmpresaIdDoUsuario();
-        await deleteDoc(doc(db, "empresas", empresaId, "produtos", produtoCadastroAtual.id));
+        if (produtoCadastroAtual?.novoCadastro) {
+          await deleteDoc(doc(db, "empresas", empresaId, "produtos", produtoCadastroAtual.id));
+          if (window.carregarProdutos) window.carregarProdutos();
+          alert("Produto removido.");
+        } else {
+          await deleteDoc(doc(db, "empresas", empresaId, "movimentacoes", produtoCadastroAtual.movimentacaoId));
+          const prodRef = doc(db, "empresas", empresaId, "produtos", produtoCadastroAtual.id);
+          const novaQtd = produtoCadastroAtual.quantidadeAnterior || 0;
+          await updateDoc(prodRef, { quantidade: novaQtd });
+          await registrarHistorico(
+            produtoCadastroAtual.id,
+            'quantidade',
+            novaQtd + (produtoCadastroAtual.quantidade || 0),
+            novaQtd
+          );
+          if (window.carregarMovimentacoes) window.carregarMovimentacoes();
+          alert("Movimentação removida.");
+        }
         fecharModalEntrada();
-        alert("Produto removido.");
-        if (window.carregarProdutos) window.carregarProdutos();
       } catch (e) {
-        console.error("Erro ao remover produto:", e);
+        console.error("Erro ao remover registro:", e);
       }
     },
-    "✅ Sim, manter o produto (adicionarei depois)",
-    "❌ Não, apagar produto"
+    textoManter,
+    textoApagar
   );
 };
 
@@ -354,7 +388,7 @@ window.confirmarEntradaEstoque = async function () {
     const validadeEntrada = produtoCadastroAtual.validade ? new Date(produtoCadastroAtual.validade) : null;
     const lote = produtoCadastroAtual.lote || "";
     const custoTotal = quantidade * precoUnitario;
-    const dataTimestamp = Timestamp.now();
+    const dataTimestamp = Timestamp.fromDate(produtoCadastroAtual.dataEntrada || new Date());
 
     const valoresParcelas = dividirValorEmParcelas(custoTotal, numParcelas);
     const parcelas = [];
@@ -370,49 +404,66 @@ window.confirmarEntradaEstoque = async function () {
       }
     }
 
+    if (produtoCadastroAtual.movimentacaoId) {
+      await updateDoc(produtoRef, {
+        dataEntrada: dataTimestamp,
+        precoCompra: produtoCadastroAtual.precoCompra
+      });
 
-    // 🔸 Atualiza o estoque
-    const novaQuantidade = (produto.quantidade || 0) + quantidade;
-    await updateDoc(produtoRef, {
-      quantidade: novaQuantidade,
-      dataEntrada: dataTimestamp,
-      precoCompra: produtoCadastroAtual.precoCompra,
-      entradaFinanceiraPendente: deleteField()
-    });
-    await registrarHistorico(
-      produtoCadastroAtual.id,
-      'quantidade',
-      produto.quantidade || 0,
-      novaQuantidade
-    );
-    if (window.carregarProdutos) {
-      window.carregarProdutos();
+      const movRef = doc(db, "empresas", empresaId, "movimentacoes", produtoCadastroAtual.movimentacaoId);
+      await updateDoc(movRef, {
+        precoUnitario,
+        custoTotal,
+        parcelas,
+        compraId,
+        entradaFinanceiraPendente: deleteField()
+      });
+    } else {
+      // 🔸 Atualiza o estoque
+      const novaQuantidade = (produto.quantidade || 0) + quantidade;
+      await updateDoc(produtoRef, {
+        quantidade: novaQuantidade,
+        dataEntrada: dataTimestamp,
+        precoCompra: produtoCadastroAtual.precoCompra,
+        entradaFinanceiraPendente: deleteField()
+      });
+      await registrarHistorico(
+        produtoCadastroAtual.id,
+        'quantidade',
+        produto.quantidade || 0,
+        novaQuantidade
+      );
+      if (window.carregarProdutos) {
+        window.carregarProdutos();
+      }
+
+      // 🔸 Registra a movimentação
+      await addDoc(collection(db, "empresas", empresaId, "movimentacoes"), {
+        produtoId: produtoCadastroAtual.id,
+        nomeProduto: produto.nome,
+        nomeBusca: normalizarTexto(produto.nome),
+        categoria: produto.categoria,
+        fornecedor: produtoCadastroAtual.fornecedor || produto.fornecedor,
+        unidadeMedida: produto.unidadeMedida || "-",
+        tipo: "entrada",
+        quantidade,
+        precoUnitario,
+        custoTotal,
+        dataMovimentacao: dataTimestamp,
+        observacao: observacoes,
+        validade: validadeEntrada ? Timestamp.fromDate(validadeEntrada) : null,
+        lote,
+        parcelas: parcelas,
+        compraId,
+        usuario: "admin@zelia.com"
+      });
     }
-
-    // 🔸 Registra a movimentação
-    await addDoc(collection(db, "empresas", empresaId, "movimentacoes"), {
-      produtoId: produtoCadastroAtual.id,
-      nomeProduto: produto.nome,
-      nomeBusca: normalizarTexto(produto.nome),
-      categoria: produto.categoria,
-      fornecedor: produtoCadastroAtual.fornecedor || produto.fornecedor,
-      unidadeMedida: produto.unidadeMedida || "-",
-      tipo: "entrada",
-      quantidade,
-      precoUnitario,
-      custoTotal,
-      dataMovimentacao: dataTimestamp,
-      observacao: observacoes,
-      validade: validadeEntrada ? Timestamp.fromDate(validadeEntrada) : null,
-      lote,
-      parcelas: parcelas,
-      compraId,
-      usuario: "admin@zelia.com"
-    });
     
     // 🔸 Registra ou atualiza o financeiro
     const finQuery = query(collection(db, "empresas", empresaId, "financeiro"), where("compraId", "==", compraId));
     const finSnap = await getDocs(finQuery);
+
+    const financeiroJaRegistrado = !!produtoCadastroAtual.compraId;
 
     if (!finSnap.empty) {
       const existing = finDocExistente || finSnap.docs[0];
@@ -420,7 +471,7 @@ window.confirmarEntradaEstoque = async function () {
       const finData = existing.data();
       const parcelasExistentes = Array.isArray(finData.parcelas) ? finData.parcelas : [];
 
-      const novoValorTotal = (finData.valorTotal || 0) + custoTotal;
+      const novoValorTotal = financeiroJaRegistrado ? (finData.valorTotal || 0) : (finData.valorTotal || 0) + custoTotal;
 
       let parcelasAtualizadas = [];
       if (parcelasAlteradas) {
@@ -428,11 +479,17 @@ window.confirmarEntradaEstoque = async function () {
       } else {
         const numParcelasTotais = parcelasExistentes.length || parcelas.length;
         const novosValores = dividirValorEmParcelas(novoValorTotal, numParcelasTotais);
-        parcelasAtualizadas = parcelasExistentes.map((p, idx) => ({
-          ...p,
-          numero: idx + 1,
-          valor: novosValores[idx]
-        }));
+        parcelasExistentes.forEach((p, idx) => {
+          parcelasAtualizadas[idx] = { ...p, numero: idx + 1, valor: novosValores[idx] };
+        });
+        for (let i = parcelasExistentes.length; i < numParcelasTotais; i++) {
+          parcelasAtualizadas[i] = {
+            numero: i + 1,
+            valor: novosValores[i],
+            vencimento: parcelas[i]?.vencimento || novoPrimeiroVenc,
+            status: "pendente"
+          };
+        }
       }
 
       await updateDoc(finRef, {
