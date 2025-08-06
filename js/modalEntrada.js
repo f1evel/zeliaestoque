@@ -5,16 +5,19 @@ import {
   collection,
   addDoc,
   updateDoc,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
   query,
   where,
-  Timestamp
+  Timestamp,
+  deleteField
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
 import { mostrarErro, normalizarTexto, parseDataLocal, formatarCompraIdBR, formatarPreco, formatarDataBrasileira } from './utils.js';
 import { registrarHistorico } from './historico.js';
+import { abrirModalConfirmacao } from './modais.js';
 
 let produtoCadastroAtual = null;
 let dadosFinanceiroAtual = null;
@@ -139,6 +142,42 @@ export function fecharModalEntrada() {
     handlerTecladoEntrada = null;
   }
 }
+
+window.cancelarEntradaFinanceira = function () {
+  if (!produtoCadastroAtual?.novoCadastro) {
+    fecharModalEntrada();
+    return;
+  }
+
+  abrirModalConfirmacao(
+    "⚠️ As informações financeiras não serão registradas.\nDeseja manter o produto no estoque mesmo assim?\nVocê poderá adicionar os dados financeiros depois.",
+    async () => {
+      try {
+        const empresaId = await getEmpresaIdDoUsuario();
+        const ref = doc(db, "empresas", empresaId, "produtos", produtoCadastroAtual.id);
+        await updateDoc(ref, { entradaFinanceiraPendente: true });
+        fecharModalEntrada();
+        alert("Produto mantido sem financeiro.");
+        if (window.carregarProdutos) window.carregarProdutos();
+      } catch (e) {
+        console.error("Erro ao marcar pendência financeira:", e);
+      }
+    },
+    async () => {
+      try {
+        const empresaId = await getEmpresaIdDoUsuario();
+        await deleteDoc(doc(db, "empresas", empresaId, "produtos", produtoCadastroAtual.id));
+        fecharModalEntrada();
+        alert("Produto removido.");
+        if (window.carregarProdutos) window.carregarProdutos();
+      } catch (e) {
+        console.error("Erro ao remover produto:", e);
+      }
+    },
+    "✅ Sim, manter o produto (adicionarei depois)",
+    "❌ Não, apagar produto"
+  );
+};
 
 async function preencherDadosFinanceiro(compraId) {
   if (!compraId) return;
@@ -336,7 +375,9 @@ window.confirmarEntradaEstoque = async function () {
     const novaQuantidade = (produto.quantidade || 0) + quantidade;
     await updateDoc(produtoRef, {
       quantidade: novaQuantidade,
-      dataEntrada: dataTimestamp
+      dataEntrada: dataTimestamp,
+      precoCompra: produtoCadastroAtual.precoCompra,
+      entradaFinanceiraPendente: deleteField()
     });
     await registrarHistorico(
       produtoCadastroAtual.id,

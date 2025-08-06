@@ -56,9 +56,16 @@ export function cadastrarOutroProduto() {
 // ✅ Modal de Confirmação
 
 let acaoConfirmada = null;
+let acaoCancelada = null;
 let handlerTecladoConfirmacao = null;
 
-export function abrirModalConfirmacao(texto, acao) {
+export function abrirModalConfirmacao(
+  texto,
+  acaoConfirmar,
+  acaoCancelar = null,
+  textoConfirmar = '✅ Sim',
+  textoCancelar = '❌ Não'
+) {
   const textoEl = document.getElementById("texto-confirmacao");
   if (textoEl) {
     textoEl.textContent = texto;
@@ -67,11 +74,15 @@ export function abrirModalConfirmacao(texto, acao) {
   }
 
   abrirModal('modal-confirmacao');
-  acaoConfirmada = acao;
+  acaoConfirmada = acaoConfirmar;
+  acaoCancelada = acaoCancelar;
 
   const btnConfirmar = document.getElementById("btn-confirmar-acao");
   const btnCancelar = document.getElementById("btn-cancelar-confirmacao");
   const modal = document.getElementById("modal-confirmacao");
+
+  if (btnConfirmar) btnConfirmar.textContent = textoConfirmar;
+  if (btnCancelar) btnCancelar.textContent = textoCancelar;
 
   btnConfirmar?.focus();
 
@@ -88,6 +99,9 @@ export function abrirModalConfirmacao(texto, acao) {
       if (document.activeElement === btnConfirmar) {
         confirmarAcao();
       } else if (document.activeElement === btnCancelar) {
+        if (typeof acaoCancelada === 'function') {
+          acaoCancelada();
+        }
         cancelarConfirmacao();
       }
     }
@@ -99,6 +113,7 @@ export function abrirModalConfirmacao(texto, acao) {
 export function cancelarConfirmacao() {
   fecharModal('modal-confirmacao');
   acaoConfirmada = null;
+  acaoCancelada = null;
   const modal = document.getElementById('modal-confirmacao');
   if (handlerTecladoConfirmacao) {
     modal.removeEventListener('keydown', handlerTecladoConfirmacao);
@@ -138,7 +153,12 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  btnCancelar.addEventListener("click", cancelarConfirmacao);
+  btnCancelar.addEventListener("click", () => {
+    if (typeof acaoCancelada === 'function') {
+      acaoCancelada();
+    }
+    cancelarConfirmacao();
+  });
   btnConfirmar.addEventListener("click", confirmarAcao);
 });
 

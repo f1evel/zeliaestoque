@@ -356,7 +356,8 @@ async function adicionarProduto() {
             precoCompra,
             dataEntrada,
             validade,
-            lote
+            lote,
+            novoCadastro: true
           });
         } catch (erroModal) {
           console.error("❌ Erro ao abrir modal de entrada:", erroModal);
@@ -416,6 +417,13 @@ window.editarProduto = async function (id) {
     btn.textContent = '💾 Salvar Alterações';
     const cancelar = document.getElementById('cancelar-edicao');
     if (cancelar) cancelar.style.display = 'inline-block';
+
+    const finContainer = document.getElementById('financeiro-pendente-container');
+    const finBtn = document.getElementById('btn-adicionar-financeiro');
+    if (finContainer && finBtn) {
+      finContainer.style.display = 'block';
+      finBtn.textContent = p.entradaFinanceiraPendente ? '📄 Adicionar entrada financeira' : '✏️ Alterar dados financeiros';
+    }
 
     const form = document.getElementById('form-produto');
     form.dataset.editando = 'true';
@@ -500,6 +508,8 @@ async function salvarAlteracoesProduto() {
     if (btnSalvar) btnSalvar.textContent = 'Salvar Produto';
     const cancelar = document.getElementById('cancelar-edicao');
     if (cancelar) cancelar.style.display = 'none';
+    const finContainer = document.getElementById('financeiro-pendente-container');
+    if (finContainer) finContainer.style.display = 'none';
     form.dataset.editando = '';
     carregarProdutos();
     editandoProdutoId = null;
@@ -519,6 +529,8 @@ function cancelarEdicao() {
   if (btnSalvar) btnSalvar.textContent = 'Salvar Produto';
   const cancelar = document.getElementById('cancelar-edicao');
   if (cancelar) cancelar.style.display = 'none';
+  const finContainer = document.getElementById('financeiro-pendente-container');
+  if (finContainer) finContainer.style.display = 'none';
   editandoProdutoId = null;
   docRefEmEdicao = null;
   produtoEmEdicao = null;
@@ -708,6 +720,7 @@ async function gerarESalvarCSV() {
 const form = document.getElementById("form-produto");
 const btn = document.querySelector("#form-produto button[type='submit']");
 const btnCancelar = document.getElementById('cancelar-edicao');
+const btnFinanceiro = document.getElementById('btn-adicionar-financeiro');
 let listenerPadrao = null;
 
 if (form && btn) {
@@ -724,6 +737,32 @@ if (form && btn) {
 
 if (btnCancelar) {
   btnCancelar.addEventListener('click', cancelarEdicao);
+}
+
+if (btnFinanceiro) {
+  btnFinanceiro.addEventListener('click', () => {
+    if (!editandoProdutoId) return;
+    const nome = document.getElementById('nome').value.trim();
+    const categoria = document.getElementById('categoria').value.trim();
+    const fornecedor = document.getElementById('fornecedor').value.trim();
+    const quantidade = parseInt(document.getElementById('quantidade').value) || 0;
+    const precoCompra = parseFloat(document.getElementById('precoCompra').value.replace(',', '.')) || 0;
+    const validade = parseDataLocal(document.getElementById('validade').value);
+    const dataEntrada = parseDataLocal(document.getElementById('dataEntrada').value);
+    const lote = document.getElementById('lote')?.value?.trim() || '';
+    abrirModalEntrada({
+      id: editandoProdutoId,
+      nome,
+      categoria,
+      fornecedor,
+      unidadeMedida: 'unidade',
+      quantidade,
+      precoCompra,
+      dataEntrada,
+      validade,
+      lote
+    });
+  });
 }
 
 // 🔧 Preencher data de entrada com a data atual ao carregar a página

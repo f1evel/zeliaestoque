@@ -102,6 +102,9 @@
             <button id="cancelar-edicao" type="button" style="display:none;margin-right:10px;">❌ Cancelar Alterações</button>
             <button type="submit">Salvar Produto</button>
           </div>
+          <div class="form-group full-width" id="financeiro-pendente-container" style="display:none; text-align:right;">
+            <button type="button" id="btn-adicionar-financeiro">📄 Adicionar entrada financeira</button>
+          </div>
         </form>
       </section>
 
@@ -163,7 +166,7 @@
   </div>
 
   <!-- 🔧 Fundo do Modal de Entrada -->
-  <div id="fundo-modal" class="fundo-modal" onclick="fecharModalEntrada()"></div>
+  <div id="fundo-modal" class="fundo-modal" onclick="cancelarEntradaFinanceira()"></div>
 
   <!-- ✅ Modal de Entrada de Produto -->
   <div id="modal-entrada" class="modal">
@@ -202,7 +205,7 @@
       <textarea id="entrada-observacoes" rows="2"></textarea>
 
       <div style="margin-top: 15px; text-align: right;">
-        <button id="btn-entrada-cancelar" onclick="fecharModalEntrada()">Cancelar</button>
+        <button id="btn-entrada-cancelar" onclick="cancelarEntradaFinanceira()">Cancelar</button>
         <button id="btn-entrada-confirmar" onclick="confirmarEntradaEstoque()">Confirmar Entrada</button>
       </div>
     </div>
