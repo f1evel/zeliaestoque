@@ -477,6 +477,11 @@ async function salvarAlteracoesProduto() {
       await atualizarValidadeMovimentacoes(editandoProdutoId, atualizados.validade);
     }
 
+    // 🔄 Se o preço mudou, atualiza nas movimentações relacionadas
+    if (produtoEmEdicao.precoCompra !== atualizados.precoCompra) {
+      await atualizarPrecoMovimentacoes(editandoProdutoId, atualizados.precoCompra);
+    }
+
     const conv = v => {
       if (v?.toDate) return v.toDate().toISOString();
       return v ?? '';
@@ -834,6 +839,31 @@ document.getElementById('arquivo-csv')?.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (file) importarCSV(file);
 });
+
+// ==========================
+// 🔄 Atualizar preço nas movimentações
+// ==========================
+async function atualizarPrecoMovimentacoes(produtoId, novoPreco) {
+  try {
+    const empresaId = await getEmpresaIdDoUsuario();
+    const q = query(
+      collection(db, 'empresas', empresaId, 'movimentacoes'),
+      where('produtoId', '==', produtoId)
+    );
+    const snap = await getDocs(q);
+    const promises = [];
+    snap.forEach(docSnap => {
+      const dados = docSnap.data();
+      const ref = doc(db, 'empresas', empresaId, 'movimentacoes', docSnap.id);
+      const quantidade = Number(dados.quantidade) || 0;
+      const custoTotal = quantidade * (Number(novoPreco) || 0);
+      promises.push(updateDoc(ref, { precoUnitario: novoPreco, custoTotal }));
+    });
+    await Promise.all(promises);
+  } catch (e) {
+    console.error('Erro ao atualizar preço nas movimentações:', e);
+  }
+}
 
 // ==========================
 // 🔄 Atualizar validade nas movimentações
