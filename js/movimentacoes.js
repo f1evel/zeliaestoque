@@ -621,18 +621,52 @@ document.getElementById("form-movimentacao").addEventListener("submit", async (e
   }
 
   if (tipo === "entrada") {
-    abrirModalEntrada({
-      id: produtoEncontrado.id,
-      nome: produto.nome,
-      categoria: produto.categoria,
-      fornecedor: fornecedorMov || produto.fornecedor,
-      unidadeMedida: produto.unidadeMedida || "unidade",
-      quantidade,
-      precoCompra: precoUnitario,
-      dataEntrada: dataMov,
-      validade,
-      lote
-    });
+    try {
+      const quantidadeAnterior = produto.quantidade || 0;
+      const novaQtd = quantidadeAnterior + quantidade;
+      await updateDoc(produtoRef, { quantidade: novaQtd });
+      await registrarHistorico(produtoEncontrado.id, 'quantidade', quantidadeAnterior, novaQtd);
+
+      const dataTimestamp = Timestamp.fromDate(dataMov);
+      const validadeTs = isNaN(validade.getTime()) ? null : Timestamp.fromDate(validade);
+
+      const movRef = await addDoc(collection(db, "empresas", empresaId, "movimentacoes"), {
+        produtoId: produtoEncontrado.id,
+        nomeProduto: produto.nome,
+        nomeBusca: normalizarTexto(produto.nome),
+        categoria: produto.categoria,
+        fornecedor: fornecedorMov || produto.fornecedor,
+        unidadeMedida: produto.unidadeMedida || "unidade",
+        tipo: "entrada",
+        quantidade,
+        precoUnitario,
+        custoTotal: quantidade * precoUnitario,
+        dataMovimentacao: dataTimestamp,
+        observacao: observacoes,
+        validade: validadeTs,
+        lote,
+        usuario: "admin@zelia.com"
+      });
+
+      abrirModalEntrada({
+        id: produtoEncontrado.id,
+        nome: produto.nome,
+        categoria: produto.categoria,
+        fornecedor: fornecedorMov || produto.fornecedor,
+        unidadeMedida: produto.unidadeMedida || "unidade",
+        quantidade,
+        precoCompra: precoUnitario,
+        dataEntrada: dataMov,
+        validade,
+        lote,
+        movimentacaoId: movRef.id,
+        novaEntrada: true,
+        quantidadeAnterior
+      });
+    } catch (e) {
+      console.error("Erro ao registrar entrada:", e);
+      mostrarErro("Erro ao registrar entrada.", e);
+    }
     return;
   }
 
@@ -721,7 +755,9 @@ function renderizarTabela(movimentacoes) {
       <td>${dataMov}</td>
       <td>${m.validade?.toDate()?.toLocaleDateString("pt-BR") || "-"}</td>
       <td>${m.lote || "-"}</td>
-      <td><button onclick="editarMovimentacao('${m.id}')">✏️ Editar</button></td>
+      <td><button onclick="editarMovimentacao('${m.id}')">✏️ Editar</button>
+        ${m.tipo === 'entrada' ? `<button onclick="editarFinanceiro('${m.id}')">${m.entradaFinanceiraPendente ? '📄 Adicionar dados financeiros' : '✏️ Alterar dados financeiros'}</button>` : ''}
+      </td>
     </tr>`;
   });
 
@@ -822,4 +858,32 @@ window.editarMovimentacao = async function (id) {
   };
 
   form.addEventListener("submit", listenerFormulario);
+};
+
+// Adicionar/alterar dados financeiros de uma movimentação de entrada
+window.editarFinanceiro = async function (id) {
+  const empresaId = await getEmpresaIdDoUsuario();
+  const movRef = doc(db, "empresas", empresaId, "movimentacoes", id);
+  const movSnap = await getDoc(movRef);
+  if (!movSnap.exists()) return;
+
+  const m = movSnap.data();
+  const prodRef = doc(db, "empresas", empresaId, "produtos", m.produtoId);
+  const prodSnap = await getDoc(prodRef);
+  const prod = prodSnap.data() || {};
+
+  abrirModalEntrada({
+    id: m.produtoId,
+    nome: m.nomeProduto,
+    categoria: m.categoria || prod.categoria,
+    fornecedor: m.fornecedor || prod.fornecedor,
+    unidadeMedida: m.unidadeMedida || prod.unidadeMedida || 'unidade',
+    quantidade: m.quantidade,
+    precoCompra: m.precoUnitario,
+    dataEntrada: m.dataMovimentacao?.toDate() || new Date(),
+    validade: m.validade?.toDate() || null,
+    lote: m.lote || '',
+    movimentacaoId: id,
+    compraId: m.compraId || ''
+  });
 };
