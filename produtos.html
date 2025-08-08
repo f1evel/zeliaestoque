@@ -98,6 +98,23 @@
             <input type="text" id="localizacao" />
           </div>
 
+          <div class="form-group">
+            <label>Código de barras:</label>
+            <div style="display:flex;gap:5px;">
+              <input type="text" id="barcode" />
+              <button type="button" id="btn-ler-barcode">Ler código</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>QR interno:</label>
+            <div style="display:flex;gap:5px;">
+              <input type="text" id="qrcode" />
+              <button type="button" id="btn-gerar-qr">Gerar QR interno</button>
+              <button type="button" id="btn-imprimir-etiqueta">Imprimir etiqueta</button>
+            </div>
+          </div>
+
           <div class="form-group full-width" style="text-align: right;">
             <button id="cancelar-edicao" type="button" style="display:none;margin-right:10px;">❌ Cancelar Alterações</button>
             <button type="submit">Salvar Produto</button>
