@@ -25,6 +25,9 @@ import {
   abrirModalEntrada
 } from './modalEntrada.js';
 
+import { abrirScanner } from './scanner.js';
+import { imprimirEtiquetaProduto } from './labels.js';
+
 import {
   normalizarTexto,
   mostrarMensagem,
@@ -77,6 +80,8 @@ let nomesProdutosUnicos = [];
 let timeoutSugestaoNome = null;
 let indiceSugestaoNome = -1;
 let itensSugestaoNome = [];
+
+const barcodeParam = new URLSearchParams(window.location.search).get('barcode');
 
 
 // ==========================
@@ -293,6 +298,8 @@ async function adicionarProduto() {
       const observacoes = document.getElementById("observacoes").value.trim();
       const localizacao = document.getElementById("localizacao").value.trim();
       const lote = document.getElementById("lote")?.value?.trim() || "";
+      const barcode = document.getElementById('barcode').value.trim();
+      const qrcode = document.getElementById('qrcode').value.trim();
 
       // console.log("🔸 Nome:", nome);
       // console.log("🔸 Categoria:", categoria);
@@ -325,6 +332,15 @@ async function adicionarProduto() {
         return;
       }
 
+      if (barcode) {
+        const qBar = query(collection(db, 'empresas', empresaId, 'produtos'), where('barcode', '==', barcode));
+        const snapBar = await getDocs(qBar);
+        if (!snapBar.empty) {
+          alert('❗ Código de barras já cadastrado em outro produto.');
+          return;
+        }
+      }
+
       try {
         const docRef = await addDoc(collection(db, "empresas", empresaId, "produtos"), {
           nome,
@@ -339,13 +355,19 @@ async function adicionarProduto() {
           prazoEntregaDias,
           observacoes,
           localizacao,
-          lote
+          lote,
+          barcode,
+          altBarcodes: [],
+          qrcode
         });
 
         // console.log("✅ Produto adicionado ao Firestore:", docRef.id);
         mostrarMensagem("✅ Produto adicionado com sucesso!");
 
         try {
+          if (!qrcode) {
+            await updateDoc(docRef, { qrcode: docRef.id });
+          }
           abrirModalEntrada({
             id: docRef.id,
             nome,
@@ -412,6 +434,8 @@ window.editarProduto = async function (id) {
     document.getElementById('observacoes').value = p.observacoes || '';
     document.getElementById('localizacao').value = p.localizacao || '';
     document.getElementById('lote').value = p.lote || '';
+    document.getElementById('barcode').value = p.barcode || '';
+    document.getElementById('qrcode').value = p.qrcode || '';
 
     const btn = document.querySelector('#form-produto button[type="submit"]');
     btn.textContent = '💾 Salvar Alterações';
@@ -433,6 +457,19 @@ window.editarProduto = async function (id) {
 async function salvarAlteracoesProduto() {
   const form = document.getElementById('form-produto');
   if (!docRefEmEdicao || !form) return;
+
+  const barcode = document.getElementById('barcode').value.trim();
+  const qrcode = document.getElementById('qrcode').value.trim();
+
+  if (barcode && barcode !== (produtoEmEdicao.barcode || '')) {
+    const empresaId = await getEmpresaIdDoUsuario();
+    const qBar = query(collection(db, 'empresas', empresaId, 'produtos'), where('barcode', '==', barcode));
+    const snapBar = await getDocs(qBar);
+    if (!snapBar.empty) {
+      alert('❗ Código de barras já cadastrado em outro produto.');
+      return;
+    }
+  }
 
   const atualizados = {
     nome: document.getElementById('nome').value.trim(),
@@ -456,7 +493,9 @@ async function salvarAlteracoesProduto() {
     fornecedor: document.getElementById('fornecedor').value.trim(),
     observacoes: document.getElementById('observacoes').value.trim(),
     localizacao: document.getElementById('localizacao').value.trim(),
-    lote: document.getElementById('lote').value.trim()
+    lote: document.getElementById('lote').value.trim(),
+    barcode,
+    qrcode: qrcode || editandoProdutoId
   };
 
   try {
@@ -721,7 +760,15 @@ const form = document.getElementById("form-produto");
 const btn = document.querySelector("#form-produto button[type='submit']");
 const btnCancelar = document.getElementById('cancelar-edicao');
 const btnFinanceiro = document.getElementById('btn-adicionar-financeiro');
+const btnScan = document.getElementById('btn-ler-barcode');
+const btnEtiqueta = document.getElementById('btn-imprimir-etiqueta');
+const btnGerarQr = document.getElementById('btn-gerar-qr');
 let listenerPadrao = null;
+
+if (barcodeParam) {
+  const campoBarcode = document.getElementById('barcode');
+  if (campoBarcode) campoBarcode.value = barcodeParam;
+}
 
 if (form && btn) {
   listenerPadrao = (e) => {
@@ -762,6 +809,44 @@ if (btnFinanceiro) {
       validade,
       lote
     });
+  });
+}
+
+if (btnScan) {
+  btnScan.addEventListener('click', async () => {
+    try {
+      const codigo = await abrirScanner();
+      if (codigo) document.getElementById('barcode').value = codigo.trim();
+    } catch (e) {
+      console.error('scanner', e);
+    }
+  });
+}
+
+if (btnEtiqueta) {
+  btnEtiqueta.addEventListener('click', async () => {
+    const prod = {
+      nome: document.getElementById('nome').value.trim(),
+      lote: document.getElementById('lote').value.trim(),
+      validade: document.getElementById('validade').value,
+      localizacao: document.getElementById('localizacao').value.trim(),
+      barcode: document.getElementById('barcode').value.trim(),
+      qrcode: document.getElementById('qrcode').value.trim() || editandoProdutoId
+    };
+    try {
+      await imprimirEtiquetaProduto(prod);
+    } catch (e) {
+      console.error('imprimir etiqueta', e);
+    }
+  });
+}
+
+if (btnGerarQr) {
+  btnGerarQr.addEventListener('click', () => {
+    const campoQr = document.getElementById('qrcode');
+    if (!campoQr.value && editandoProdutoId) {
+      campoQr.value = editandoProdutoId;
+    }
   });
 }
 
