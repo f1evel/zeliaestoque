@@ -26,7 +26,6 @@ import {
 } from './modalEntrada.js';
 
 import { abrirScanner } from './scanner.js';
-import { imprimirEtiquetaProduto } from './labels.js';
 
 import {
   normalizarTexto,
@@ -299,7 +298,6 @@ async function adicionarProduto() {
       const localizacao = document.getElementById("localizacao").value.trim();
       const lote = document.getElementById("lote")?.value?.trim() || "";
       const barcode = document.getElementById('barcode').value.trim();
-      const qrcode = document.getElementById('qrcode').value.trim();
 
       // console.log("🔸 Nome:", nome);
       // console.log("🔸 Categoria:", categoria);
@@ -357,17 +355,13 @@ async function adicionarProduto() {
           localizacao,
           lote,
           barcode,
-          altBarcodes: [],
-          qrcode
+          altBarcodes: []
         });
 
         // console.log("✅ Produto adicionado ao Firestore:", docRef.id);
         mostrarMensagem("✅ Produto adicionado com sucesso!");
 
         try {
-          if (!qrcode) {
-            await updateDoc(docRef, { qrcode: docRef.id });
-          }
           abrirModalEntrada({
             id: docRef.id,
             nome,
@@ -435,7 +429,6 @@ window.editarProduto = async function (id) {
     document.getElementById('localizacao').value = p.localizacao || '';
     document.getElementById('lote').value = p.lote || '';
     document.getElementById('barcode').value = p.barcode || '';
-    document.getElementById('qrcode').value = p.qrcode || '';
 
     const btn = document.querySelector('#form-produto button[type="submit"]');
     btn.textContent = '💾 Salvar Alterações';
@@ -459,7 +452,6 @@ async function salvarAlteracoesProduto() {
   if (!docRefEmEdicao || !form) return;
 
   const barcode = document.getElementById('barcode').value.trim();
-  const qrcode = document.getElementById('qrcode').value.trim();
 
   if (barcode && barcode !== (produtoEmEdicao.barcode || '')) {
     const empresaId = await getEmpresaIdDoUsuario();
@@ -494,8 +486,7 @@ async function salvarAlteracoesProduto() {
     observacoes: document.getElementById('observacoes').value.trim(),
     localizacao: document.getElementById('localizacao').value.trim(),
     lote: document.getElementById('lote').value.trim(),
-    barcode,
-    qrcode: qrcode || editandoProdutoId
+    barcode
   };
 
   try {
@@ -761,8 +752,6 @@ const btn = document.querySelector("#form-produto button[type='submit']");
 const btnCancelar = document.getElementById('cancelar-edicao');
 const btnFinanceiro = document.getElementById('btn-adicionar-financeiro');
 const btnScan = document.getElementById('btn-ler-barcode');
-const btnEtiqueta = document.getElementById('btn-imprimir-etiqueta');
-const btnGerarQr = document.getElementById('btn-gerar-qr');
 let listenerPadrao = null;
 
 if (barcodeParam) {
@@ -823,32 +812,6 @@ if (btnScan) {
   });
 }
 
-if (btnEtiqueta) {
-  btnEtiqueta.addEventListener('click', async () => {
-    const prod = {
-      nome: document.getElementById('nome').value.trim(),
-      lote: document.getElementById('lote').value.trim(),
-      validade: document.getElementById('validade').value,
-      localizacao: document.getElementById('localizacao').value.trim(),
-      barcode: document.getElementById('barcode').value.trim(),
-      qrcode: document.getElementById('qrcode').value.trim() || editandoProdutoId
-    };
-    try {
-      await imprimirEtiquetaProduto(prod);
-    } catch (e) {
-      console.error('imprimir etiqueta', e);
-    }
-  });
-}
-
-if (btnGerarQr) {
-  btnGerarQr.addEventListener('click', () => {
-    const campoQr = document.getElementById('qrcode');
-    if (!campoQr.value && editandoProdutoId) {
-      campoQr.value = editandoProdutoId;
-    }
-  });
-}
 
 // 🔧 Preencher data de entrada com a data atual ao carregar a página
 const campoDataEntrada = document.getElementById("dataEntrada");
