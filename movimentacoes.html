@@ -38,7 +38,10 @@
         <div class="form-grid" style="grid-template-columns: repeat(6, 1fr);">
           <div class="form-group" style="grid-column: span 2; position: relative;">
             <label>Produto:</label>
-            <input type="text" id="nome-produto" placeholder="Nome do Produto" required>
+            <div style="display:flex;gap:5px;">
+              <input type="text" id="nome-produto" placeholder="Nome do Produto" required>
+              <button type="button" id="btn-ler-barcode-mov">Ler código</button>
+            </div>
             <ul id="sugestoes-produto" class="autocomplete-list"></ul>
           </div>
 

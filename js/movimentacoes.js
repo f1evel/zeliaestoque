@@ -16,6 +16,7 @@ import {
   formatarPreco
 } from './utils.js';
 import { registrarHistorico } from './historico.js';
+import { abrirScanner } from './scanner.js';
 
 import {
   abrirModalConfirmacao,
@@ -87,6 +88,18 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('tipo-movimentacao')?.focus();
       }, 10);
     }
+  }
+
+  const btnScan = document.getElementById('btn-ler-barcode-mov');
+  if (btnScan) {
+    btnScan.addEventListener('click', async () => {
+      try {
+        const codigo = await abrirScanner();
+        if (codigo) preencherProdutoPorCodigo(codigo.trim());
+      } catch (e) {
+        console.error('scanner mov', e);
+      }
+    });
   }
 });
 
@@ -176,6 +189,18 @@ function atualizarDatalistsFiltros() {
 }
 
 carregarProdutos();
+
+async function preencherProdutoPorCodigo(codigo) {
+  const prod = produtosCache.find(p => p.barcode === codigo || (p.altBarcodes || []).includes(codigo));
+  if (prod) {
+    const campo = document.getElementById('nome-produto');
+    if (campo) campo.value = prod.nome;
+    return;
+  }
+  if (confirm('Produto não encontrado. Deseja cadastrá-lo?')) {
+    window.location.href = `produtos.html?barcode=${encodeURIComponent(codigo)}`;
+  }
+}
 
 // ==========================
 // 🔍 Obter preço de uma validade específica
