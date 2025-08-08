@@ -791,12 +791,20 @@ window.verDetalhes = async function(id) {
     document.getElementById('det-nome').textContent = p.nome || '-';
     document.getElementById('det-categoria').textContent = p.categoria || '-';
     document.getElementById('det-quantidade').textContent = p.quantidade ?? '-';
+    document.getElementById('det-quantidadeMinima').textContent = p.quantidadeMinima ?? '-';
     document.getElementById('det-preco').textContent =
       p.precoCompra !== undefined && p.precoCompra !== null
         ? formatarPreco(Number(p.precoCompra) || 0)
         : '-';
+    const valorTotal = (Number(p.quantidade) || 0) * (Number(p.precoCompra) || 0);
+    document.getElementById('det-valorTotal').textContent = formatarPreco(valorTotal);
     document.getElementById('det-fornecedor').textContent = p.fornecedor || '-';
+    document.getElementById('det-prazoEntrega').textContent = p.prazoEntregaDias ?? '-';
+    document.getElementById('det-lote').textContent = p.lote || '-';
+    document.getElementById('det-localizacao').textContent = p.localizacao || '-';
     document.getElementById('det-validade').textContent = formatarData(p.validade);
+    document.getElementById('det-dataEntrada').textContent = formatarData(p.dataEntrada);
+    document.getElementById('det-observacoes').textContent = p.observacoes || '-';
 
     const historico = await carregarHistorico(id);
     const lista = document.getElementById('lista-historico');
