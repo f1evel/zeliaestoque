@@ -23,6 +23,7 @@ export async function abrirScanner () {
     const video = document.createElement('video');
     video.style.maxWidth = '90%';
     video.style.maxHeight = '90%';
+    video.setAttribute('playsinline', true);
     overlay.appendChild(video);
     document.body.appendChild(overlay);
 
@@ -30,6 +31,7 @@ export async function abrirScanner () {
     try {
       stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
       video.srcObject = stream;
+      video.muted = true;
       await video.play();
     } catch (err) {
       cleanup();
@@ -48,7 +50,7 @@ export async function abrirScanner () {
     };
 
     if ('BarcodeDetector' in window) {
-      const detector = new BarcodeDetector({ formats: ['qr_code', 'ean_13', 'code_128'] });
+      const detector = new BarcodeDetector({ formats: ['qr_code', 'ean_13', 'ean_8', 'code_128', 'code_39', 'code_93', 'upc_a', 'upc_e', 'itf', 'codabar', 'data_matrix'] });
       const scan = async () => {
         try {
           const results = await detector.detect(video);
