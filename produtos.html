@@ -102,7 +102,7 @@
             <label>Código (QR ou de barras):</label>
             <div style="display:flex;gap:5px;">
               <input type="text" id="barcode" />
-              <button type="button" id="btn-ler-barcode">Ler código</button>
+              <button type="button" id="btn-ler-barcode" onclick="abrirScanner('barcode')">Ler código</button>
             </div>
           </div>
 
@@ -157,6 +157,7 @@
   <script type="module" src="js/utils.js"></script>
   <script type="module" src="js/modalEntrada.js"></script>
   <script type="module" src="js/modais.js"></script>
+  <script type="module" src="js/scanner.js"></script>
   <script type="module" src="js/produtos.js"></script>
 
   <!-- ✅ Modal: Produto Já Existe -->

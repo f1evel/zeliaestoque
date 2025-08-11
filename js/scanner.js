@@ -1,13 +1,15 @@
 /**
- * scanner.js - Utilitário simples para leitura de códigos de barras e QR codes.
+ * scanner.js - Utilitário para leitura de códigos de barras e QR Codes.
  *
- * Usa a API BarcodeDetector quando disponível e faz fallback para ZXing
- * carregado via CDN. Retorna uma Promise que resolve com o valor lido
- * ou rejeita em caso de erro/fechamento.
+ * Abre a câmera do dispositivo usando a API BarcodeDetector quando
+ * disponível, fazendo fallback para a biblioteca ZXing. O resultado lido
+ * é retornado em uma Promise e pode opcionalmente preencher um campo
+ * informado por id.
  */
 
-export async function abrirScanner () {
+export async function abrirScanner (idCampoDestino) {
   return new Promise(async (resolve, reject) => {
+    // ---------- Overlay ----------
     const overlay = document.createElement('div');
     overlay.style.position = 'fixed';
     overlay.style.top = '0';
@@ -20,13 +22,27 @@ export async function abrirScanner () {
     overlay.style.justifyContent = 'center';
     overlay.style.zIndex = '9999';
 
+    const container = document.createElement('div');
+    container.style.position = 'relative';
+
     const video = document.createElement('video');
-    video.style.maxWidth = '90%';
-    video.style.maxHeight = '90%';
+    video.style.maxWidth = '90vw';
+    video.style.maxHeight = '90vh';
     video.setAttribute('playsinline', true);
-    overlay.appendChild(video);
+    video.addEventListener('click', e => e.stopPropagation());
+    container.appendChild(video);
+
+    const btnCancel = document.createElement('button');
+    btnCancel.textContent = 'Cancelar';
+    btnCancel.style.position = 'absolute';
+    btnCancel.style.top = '10px';
+    btnCancel.style.right = '10px';
+    container.appendChild(btnCancel);
+
+    overlay.appendChild(container);
     document.body.appendChild(overlay);
 
+    // ---------- Acesso à câmera ----------
     let stream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
@@ -45,12 +61,19 @@ export async function abrirScanner () {
     }
 
     const handleResult = code => {
+      if (idCampoDestino) {
+        const input = document.getElementById(idCampoDestino);
+        if (input) input.value = code;
+      }
       cleanup();
       resolve(code);
     };
 
+    const supportedFormats = ['ean_13', 'code_128', 'qr_code'];
+
+    // ---------- Detecção ----------
     if ('BarcodeDetector' in window) {
-      const detector = new BarcodeDetector({ formats: ['qr_code', 'ean_13', 'ean_8', 'code_128', 'code_39', 'code_93', 'upc_a', 'upc_e', 'itf', 'codabar', 'data_matrix'] });
+      const detector = new BarcodeDetector({ formats: supportedFormats });
       const scan = async () => {
         try {
           const results = await detector.detect(video);
@@ -74,9 +97,21 @@ export async function abrirScanner () {
       });
     }
 
-    overlay.addEventListener('click', () => {
+    // ---------- Fechamento ----------
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) {
+        cleanup();
+        reject(new Error('cancelled'));
+      }
+    });
+    btnCancel.addEventListener('click', e => {
+      e.stopPropagation();
       cleanup();
       reject(new Error('cancelled'));
     });
   });
 }
+
+// Torna a função acessível globalmente para chamadas inline
+window.abrirScanner = abrirScanner;
+
