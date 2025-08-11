@@ -25,7 +25,6 @@ import {
   abrirModalEntrada
 } from './modalEntrada.js';
 
-import { abrirScanner } from './scanner.js';
 
 import {
   normalizarTexto,
@@ -751,7 +750,6 @@ const form = document.getElementById("form-produto");
 const btn = document.querySelector("#form-produto button[type='submit']");
 const btnCancelar = document.getElementById('cancelar-edicao');
 const btnFinanceiro = document.getElementById('btn-adicionar-financeiro');
-const btnScan = document.getElementById('btn-ler-barcode');
 let listenerPadrao = null;
 
 if (barcodeParam) {
@@ -801,16 +799,6 @@ if (btnFinanceiro) {
   });
 }
 
-if (btnScan) {
-  btnScan.addEventListener('click', async () => {
-    try {
-      const codigo = await abrirScanner();
-      if (codigo) document.getElementById('barcode').value = codigo.trim();
-    } catch (e) {
-      console.error('scanner', e);
-    }
-  });
-}
 
 
 // 🔧 Preencher data de entrada com a data atual ao carregar a página
