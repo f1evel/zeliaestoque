@@ -530,9 +530,9 @@ async function salvarAlteracoesProduto() {
     }
 
     if (quantidadeMudou || precoMudou) {
-      const compraId = await obterCompraIdAtual(editandoProdutoId);
-      if (compraId) {
-        await reconciliarCompra(compraId);
+      const compraIds = await obterCompraIdsDoProduto(editandoProdutoId);
+      for (const cid of compraIds) {
+        await reconciliarCompra(cid);
       }
     }
 
@@ -767,7 +767,6 @@ const form = document.getElementById("form-produto");
 const btn = document.querySelector("#form-produto button[type='submit']");
 const btnCancelar = document.getElementById('cancelar-edicao');
 const btnFinanceiro = document.getElementById('btn-adicionar-financeiro');
-const btnConciliar = document.getElementById('btn-conciliar-compra');
 let listenerPadrao = null;
 
 if (barcodeParam) {
@@ -834,19 +833,6 @@ if (btnFinanceiro) {
     abrirModalEntrada(dados);
   });
   }
-
-if (btnConciliar) {
-  btnConciliar.addEventListener('click', async () => {
-    if (!editandoProdutoId) return;
-    const compraId = await obterCompraIdAtual(editandoProdutoId);
-    if (!compraId) {
-      alert('Nenhuma compra encontrada para conciliar.');
-      return;
-    }
-    await reconciliarCompra(compraId);
-    mostrarMensagem('Compra conciliada com sucesso!');
-  });
-}
 
 // 🔧 Preencher data de entrada com a data atual ao carregar a página
 const campoDataEntrada = document.getElementById("dataEntrada");
@@ -1060,25 +1046,25 @@ async function obterDadosFinanceiro(compraId) {
   return null;
 }
 
-// Buscar compraId mais recente de um produto
-async function obterCompraIdAtual(produtoId) {
+// Buscar todos os compraId associados às entradas de um produto
+async function obterCompraIdsDoProduto(produtoId) {
+  const ids = new Set();
   try {
     const empresaId = await getEmpresaIdDoUsuario();
     const q = query(
       collection(db, 'empresas', empresaId, 'movimentacoes'),
       where('produtoId', '==', produtoId),
-      where('tipo', '==', 'entrada'),
-      orderBy('dataMovimentacao', 'desc'),
-      limit(1)
+      where('tipo', '==', 'entrada')
     );
     const snap = await getDocs(q);
-    if (!snap.empty) {
-      return snap.docs[0].data().compraId || null;
-    }
+    snap.forEach(docSnap => {
+      const cid = docSnap.data().compraId;
+      if (cid) ids.add(cid);
+    });
   } catch (e) {
-    console.error('Erro ao obter compraId da movimentação:', e);
+    console.error('Erro ao obter compraIds do produto:', e);
   }
-  return null;
+  return Array.from(ids);
 }
 
 // ==========================

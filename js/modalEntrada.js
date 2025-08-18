@@ -16,7 +16,7 @@ import {
   deleteField
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-import { mostrarErro, normalizarTexto, parseDataLocal, formatarCompraIdBR, formatarPreco, formatarDataBrasileira } from './utils.js';
+import { mostrarErro, normalizarTexto, parseDataLocal, formatarCompraIdBR, formatarPreco, formatarDataBrasileira, reconciliarCompra } from './utils.js';
 import { registrarHistorico } from './historico.js';
 import { abrirModalConfirmacao } from './modais.js';
 
@@ -252,6 +252,9 @@ window.cancelarEntradaFinanceira = function () {
             novaQtd + (produtoCadastroAtual.quantidade || 0),
             novaQtd
           );
+          if (produtoCadastroAtual.compraId) {
+            await reconciliarCompra(produtoCadastroAtual.compraId);
+          }
           if (window.carregarMovimentacoes) window.carregarMovimentacoes();
           alert("Movimentação removida.");
         }
@@ -395,6 +398,7 @@ window.gerarNovoCompraId = async function () {
 
 window.confirmarEntradaEstoque = async function () {
   try {
+    const compraIdAntigo = produtoCadastroAtual.compraId;
     const formaPagamento = document.getElementById("entrada-forma-pagamento").value;
     const observacoes = document.getElementById("entrada-observacoes").value.trim() || "";
     const compraId = document.getElementById("entrada-compra-id")?.value?.trim() || "";
@@ -618,6 +622,11 @@ window.confirmarEntradaEstoque = async function () {
         "entrada-numero-parcelas": numParcelas,
         "entrada-primeiro-vencimento": parcelas[0]?.vencimento || null
       });
+    }
+
+    await reconciliarCompra(compraId);
+    if (compraIdAntigo && compraIdAntigo !== compraId) {
+      await reconciliarCompra(compraIdAntigo);
     }
 
     alert("✅ Entrada no estoque registrada e financeiro atualizado com sucesso!");
