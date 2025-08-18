@@ -66,6 +66,7 @@
         <button id="botao-exportar-csv-fin" class="botao-acao" title="Exportar CSV">📄</button>
         <button id="botao-exportar-excel-fin" class="botao-acao" title="Exportar Excel">📊</button>
         <button id="botao-exportar-pdf-fin" class="botao-acao" title="Exportar PDF">🖨️</button>
+        <button id="btn-reconciliar-compra" class="botao-acao" title="Reconciliar compra">♻️</button>
       </div>
     </div>
     <p id="descricao-filtros-fin" class="descricao-filtros"></p>
@@ -146,6 +147,21 @@
       </div>
     </div>
     <div id="fundo-modal-parcelas" class="fundo-modal" onclick="fecharModalParcelas()"></div>
+
+    <div id="modal-reconciliar" class="modal">
+      <div class="modal-content">
+        <h3>Reconciliar compra</h3>
+        <div class="form-group">
+          <label for="recon-compra-id">Compra ID</label>
+          <input type="text" id="recon-compra-id" />
+        </div>
+        <div style="text-align:right; margin-top:10px;">
+          <button onclick="fecharModal('modal-reconciliar')">Cancelar</button>
+          <button id="confirmar-reconciliar">Reconciliar</button>
+        </div>
+      </div>
+    </div>
+    <div id="fundo-modal-reconciliar" class="fundo-modal" onclick="fecharModal('modal-reconciliar')"></div>
   </main>
 </div>
 
@@ -158,6 +174,27 @@
   100% { transform: rotate(360deg); }
 }
 </style>
+
+<script type="module">
+import { abrirModal, fecharModal } from './js/modais.js';
+import { reconciliarCompra, mostrarMensagem } from './js/utils.js';
+
+document.getElementById('btn-reconciliar-compra')?.addEventListener('click', () => {
+  const campo = document.getElementById('recon-compra-id');
+  const base = document.getElementById('fin-compra-id')?.value || '';
+  if (campo) campo.value = base;
+  abrirModal('modal-reconciliar');
+});
+
+document.getElementById('confirmar-reconciliar')?.addEventListener('click', async () => {
+  const compraId = document.getElementById('recon-compra-id').value.trim();
+  if (compraId) {
+    await reconciliarCompra(compraId);
+    mostrarMensagem('Compra reconciliada');
+  }
+  fecharModal('modal-reconciliar');
+});
+</script>
 
 <script type="module" src="js/firebaseConfig.js"></script>
 <script type="module" src="js/utils.js"></script>
