@@ -800,3 +800,13 @@ tr.destacar {
 .progresso.amarelo > div { background: #f59e0b; }
 .progresso.vermelho > div { background: #ef4444; }
 .barra-progresso { flex:1; margin-left:10px; }
+
+/* Badge indicando que a compra já possui programação financeira */
+.badge-info {
+  background: #e0f7fa;
+  color: #006064;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  margin-top: 10px;
+}
