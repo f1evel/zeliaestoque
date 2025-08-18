@@ -438,9 +438,11 @@ window.editarProduto = async function (id) {
 
     const finContainer = document.getElementById('financeiro-pendente-container');
     const finBtn = document.getElementById('btn-adicionar-financeiro');
+    const concBtn = document.getElementById('btn-conciliar-compra');
     if (finContainer && finBtn) {
       finContainer.style.display = 'block';
       finBtn.textContent = p.entradaFinanceiraPendente ? '📄 Adicionar entrada financeira' : '✏️ Alterar dados financeiros';
+      if (concBtn) concBtn.style.display = p.entradaFinanceiraPendente ? 'none' : 'inline-block';
     }
 
     const form = document.getElementById('form-produto');
@@ -765,6 +767,7 @@ const form = document.getElementById("form-produto");
 const btn = document.querySelector("#form-produto button[type='submit']");
 const btnCancelar = document.getElementById('cancelar-edicao');
 const btnFinanceiro = document.getElementById('btn-adicionar-financeiro');
+const btnConciliar = document.getElementById('btn-conciliar-compra');
 let listenerPadrao = null;
 
 if (barcodeParam) {
@@ -789,32 +792,51 @@ if (btnCancelar) {
 }
 
 if (btnFinanceiro) {
-  btnFinanceiro.addEventListener('click', () => {
+  btnFinanceiro.addEventListener('click', async () => {
     if (!editandoProdutoId) return;
+
     const nome = document.getElementById('nome').value.trim();
     const categoria = document.getElementById('categoria').value.trim();
     const fornecedor = document.getElementById('fornecedor').value.trim();
-    const quantidade = parseInt(document.getElementById('quantidade').value) || 0;
-    const precoCompra = parseFloat(document.getElementById('precoCompra').value.replace(',', '.')) || 0;
-    const validade = parseDataLocal(document.getElementById('validade').value);
-    const dataEntrada = parseDataLocal(document.getElementById('dataEntrada').value);
-    const lote = document.getElementById('lote')?.value?.trim() || '';
-    abrirModalEntrada({
+    const quantidadeForm = parseInt(document.getElementById('quantidade').value) || 0;
+    const precoForm = parseFloat(document.getElementById('precoCompra').value.replace(',', '.')) || 0;
+    const validadeForm = parseDataLocal(document.getElementById('validade').value);
+    const dataEntradaForm = parseDataLocal(document.getElementById('dataEntrada').value);
+    const loteForm = document.getElementById('lote')?.value?.trim() || '';
+
+    const mov = await obterUltimaMovimentacaoEntrada(editandoProdutoId);
+
+    const dados = {
       id: editandoProdutoId,
       nome,
       categoria,
       fornecedor,
       unidadeMedida: 'unidade',
-      quantidade,
-      precoCompra,
-      dataEntrada,
-      validade,
-      lote
-    });
+      quantidade: mov?.quantidade ?? quantidadeForm,
+      precoCompra: mov?.precoUnitario ?? precoForm,
+      dataEntrada: mov?.dataMovimentacao?.toDate ? mov.dataMovimentacao.toDate() : (mov?.dataMovimentacao || dataEntradaForm),
+      validade: mov?.validade?.toDate ? mov.validade.toDate() : (mov?.validade || validadeForm),
+      lote: mov?.lote || loteForm,
+      compraId: mov?.compraId,
+      movimentacaoId: mov?.id
+    };
+
+    abrirModalEntrada(dados);
+  });
+  }
+
+if (btnConciliar) {
+  btnConciliar.addEventListener('click', async () => {
+    if (!editandoProdutoId) return;
+    const compraId = await obterCompraIdAtual(editandoProdutoId);
+    if (!compraId) {
+      alert('Nenhuma compra encontrada para conciliar.');
+      return;
+    }
+    await reconciliarCompra(compraId);
+    mostrarMensagem('Compra conciliada com sucesso!');
   });
 }
-
-
 
 // 🔧 Preencher data de entrada com a data atual ao carregar a página
 const campoDataEntrada = document.getElementById("dataEntrada");
@@ -985,6 +1007,28 @@ async function atualizarQuantidadeMovimentacoes(produtoId, novaQuantidade) {
   } catch (e) {
     console.error('Erro ao atualizar quantidade nas movimentações:', e);
   }
+}
+
+// Buscar a última movimentação de entrada de um produto
+async function obterUltimaMovimentacaoEntrada(produtoId) {
+  try {
+    const empresaId = await getEmpresaIdDoUsuario();
+    const q = query(
+      collection(db, 'empresas', empresaId, 'movimentacoes'),
+      where('produtoId', '==', produtoId),
+      where('tipo', '==', 'entrada'),
+      orderBy('dataMovimentacao', 'desc'),
+      limit(1)
+    );
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      const docSnap = snap.docs[0];
+      return { id: docSnap.id, ...docSnap.data() };
+    }
+  } catch (e) {
+    console.error('Erro ao obter movimentação de entrada:', e);
+  }
+  return null;
 }
 
 // Buscar compraId mais recente de um produto
