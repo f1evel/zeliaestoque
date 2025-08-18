@@ -12,7 +12,8 @@ import {
   updateDoc,
   orderBy,
   Timestamp,
-  getDoc
+  getDoc,
+  limit
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
 import { registrarHistorico, carregarHistorico } from './historico.js';
@@ -34,7 +35,8 @@ import {
   executarComSpinner,
   parseDataLocal,
   distanciaLevenshtein,
-  formatarPreco
+  formatarPreco,
+  reconciliarCompra
 } from './utils.js';
 
 // 🔧 Formatador de datas
@@ -488,6 +490,9 @@ async function salvarAlteracoesProduto() {
     barcode
   };
 
+  const quantidadeMudou = produtoEmEdicao.quantidade !== atualizados.quantidade;
+  const precoMudou = produtoEmEdicao.precoCompra !== atualizados.precoCompra;
+
   try {
     await updateDoc(docRefEmEdicao, atualizados);
 
@@ -514,9 +519,19 @@ async function salvarAlteracoesProduto() {
       await atualizarValidadeMovimentacoes(editandoProdutoId, atualizados.validade);
     }
 
-    // 🔄 Se o preço mudou, atualiza nas movimentações relacionadas
-    if (produtoEmEdicao.precoCompra !== atualizados.precoCompra) {
+    if (quantidadeMudou) {
+      await atualizarQuantidadeMovimentacoes(editandoProdutoId, atualizados.quantidade);
+    }
+
+    if (precoMudou) {
       await atualizarPrecoMovimentacoes(editandoProdutoId, atualizados.precoCompra);
+    }
+
+    if (quantidadeMudou || precoMudou) {
+      const compraId = await obterCompraIdAtual(editandoProdutoId);
+      if (compraId) {
+        await reconciliarCompra(compraId);
+      }
     }
 
     const conv = v => {
@@ -946,6 +961,51 @@ async function atualizarPrecoMovimentacoes(produtoId, novoPreco) {
   } catch (e) {
     console.error('Erro ao atualizar preço nas movimentações:', e);
   }
+}
+
+// 🔄 Atualizar quantidade nas movimentações de entrada
+async function atualizarQuantidadeMovimentacoes(produtoId, novaQuantidade) {
+  try {
+    const empresaId = await getEmpresaIdDoUsuario();
+    const q = query(
+      collection(db, 'empresas', empresaId, 'movimentacoes'),
+      where('produtoId', '==', produtoId),
+      where('tipo', '==', 'entrada')
+    );
+    const snap = await getDocs(q);
+    const promises = [];
+    snap.forEach(docSnap => {
+      const dados = docSnap.data();
+      const ref = doc(db, 'empresas', empresaId, 'movimentacoes', docSnap.id);
+      const preco = Number(dados.precoUnitario) || 0;
+      const custoTotal = (Number(novaQuantidade) || 0) * preco;
+      promises.push(updateDoc(ref, { quantidade: novaQuantidade, custoTotal }));
+    });
+    await Promise.all(promises);
+  } catch (e) {
+    console.error('Erro ao atualizar quantidade nas movimentações:', e);
+  }
+}
+
+// Buscar compraId mais recente de um produto
+async function obterCompraIdAtual(produtoId) {
+  try {
+    const empresaId = await getEmpresaIdDoUsuario();
+    const q = query(
+      collection(db, 'empresas', empresaId, 'movimentacoes'),
+      where('produtoId', '==', produtoId),
+      where('tipo', '==', 'entrada'),
+      orderBy('dataMovimentacao', 'desc'),
+      limit(1)
+    );
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      return snap.docs[0].data().compraId || null;
+    }
+  } catch (e) {
+    console.error('Erro ao obter compraId da movimentação:', e);
+  }
+  return null;
 }
 
 // ==========================

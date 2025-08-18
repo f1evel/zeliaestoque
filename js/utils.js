@@ -1,5 +1,15 @@
 // utils.js — Funções utilitárias para o sistema Zélia
 
+import { db, getEmpresaIdDoUsuario } from "./firebaseConfig.js";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
 // ==========================
 // 🔠 Texto
 // ==========================
@@ -197,3 +207,66 @@ export function formatarDataBrasileira(data) {
   if (isNaN(d)) return '';
   return d.toLocaleDateString('pt-BR');
 }
+
+// ==========================
+// 🔄 Reconciliar compra
+// ==========================
+export async function reconciliarCompra(compraId) {
+  if (!compraId) return null;
+  const empresaId = await getEmpresaIdDoUsuario();
+
+  // a) Movimentações de entrada da compra
+  const movQuery = query(
+    collection(db, 'empresas', empresaId, 'movimentacoes'),
+    where('compraId', '==', compraId),
+    where('tipo', '==', 'entrada')
+  );
+  const movSnap = await getDocs(movQuery);
+  let totalAtual = 0;
+  movSnap.forEach(d => {
+    totalAtual += Number(d.data().custoTotal) || 0;
+  });
+
+  // c) Documento financeiro
+  const finQuery = query(
+    collection(db, 'empresas', empresaId, 'financeiro'),
+    where('compraId', '==', compraId)
+  );
+  const finSnap = await getDocs(finQuery);
+  if (finSnap.empty) return { totalAtual, mensagem: 'Financeiro não encontrado' };
+  const finDoc = finSnap.docs[0];
+  const finData = finDoc.data();
+
+  // d) Recalcular parcelas
+  const parcelas = Array.isArray(finData.parcelas) ? finData.parcelas.map(p => ({ ...p })) : [];
+  const totalPago = parcelas
+    .filter(p => p.status === 'pago')
+    .reduce((s, p) => s + (Number(p.valor) || 0), 0);
+
+  let restante = Math.max(totalAtual - totalPago, 0);
+  const pendentes = parcelas.filter(p => p.status !== 'pago');
+
+  if (pendentes.length === 0 && restante > 0) {
+    console.warn('⚠️ total atual excede parcelas pagas');
+  } else if (pendentes.length > 0) {
+    const valorCada = restante / pendentes.length;
+    parcelas.forEach(p => {
+      if (p.status !== 'pago') p.valor = valorCada;
+    });
+  }
+
+  const finRef = doc(db, 'empresas', empresaId, 'financeiro', finDoc.id);
+  await updateDoc(finRef, { valorTotal: totalAtual, parcelas });
+
+  const resumo = {
+    totalAnterior: finData.valorTotal || 0,
+    totalAtual,
+    totalPago,
+    restante
+  };
+  console.log('🔄 Reconciliar compra', compraId, resumo);
+  return resumo;
+}
+
+// Disponibiliza globalmente para chamadas manuais em páginas sem módulo
+window.reconciliarCompra = reconciliarCompra;
