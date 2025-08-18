@@ -25,6 +25,27 @@ let dadosFinanceiroAtual = null;
 let handlerTecladoEntrada = null;
 let unsubTotalCompra = null;
 
+function bloquearCamposProgramacao(bloquear) {
+  const ids = ["entrada-forma-pagamento", "entrada-numero-parcelas", "entrada-primeiro-vencimento"];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = bloquear;
+  });
+  document.querySelectorAll('#parcelas-container input[type="date"]').forEach(inp => {
+    inp.disabled = bloquear;
+  });
+}
+
+function mostrarBadgeProgramacao(existe) {
+  const badge = document.getElementById('badge-programacao');
+  const container = document.getElementById('alterar-programacao-container');
+  const check = document.getElementById('alterar-programacao-checkbox');
+  if (badge) badge.style.display = existe ? 'block' : 'none';
+  if (container) container.style.display = existe ? 'block' : 'none';
+  if (check) check.checked = false;
+  bloquearCamposProgramacao(existe);
+}
+
 // Calcula a média de preços das entradas anteriores de um produto
 async function calcularPrecoMedioEntradas(produtoId) {
   try {
@@ -95,6 +116,7 @@ export async function abrirModalEntrada(produto) {
   document.getElementById("entrada-primeiro-vencimento").value = dataEntrada
     .toISOString()
     .split("T")[0];
+  mostrarBadgeProgramacao(false);
 
   if (produto.compraId) {
     document.getElementById("entrada-compra-id").value = produto.compraId;
@@ -240,9 +262,11 @@ async function preencherDadosFinanceiro(compraId) {
       } else {
         atualizarParcelasPreview();
       }
+      mostrarBadgeProgramacao(true);
     } else {
       dadosFinanceiroAtual = null;
       atualizarParcelasPreview();
+      mostrarBadgeProgramacao(false);
     }
   } catch (e) {
     console.error("Erro ao carregar dados financeiros:", e);
@@ -353,7 +377,7 @@ window.confirmarEntradaEstoque = async function () {
     const observacoes = document.getElementById("entrada-observacoes").value.trim() || "";
     const compraId = document.getElementById("entrada-compra-id")?.value?.trim() || "";
     const identificadorPagamento = document.getElementById("entrada-identificador-pagamento")?.value?.trim() || "";
-    const numParcelas = parseInt(document.getElementById("entrada-numero-parcelas")?.value || "1");
+    let numParcelas = parseInt(document.getElementById("entrada-numero-parcelas")?.value || "1");
 
 
     if (!compraId) {
@@ -375,44 +399,26 @@ window.confirmarEntradaEstoque = async function () {
     let novoNumParcelas = numParcelas;
     let novoPrimeiroVenc = document.getElementById("entrada-primeiro-vencimento").value;
     let novaForma = formaPagamento;
+    const alterarProgramacao = document.getElementById('alterar-programacao-checkbox')?.checked;
 
     if (!verificaSnap.empty) {
       finDocExistente = verificaSnap.docs[0];
-      const continuar = confirm(
-        "⚠️ Uma compra com esse ID já existe. Deseja adicionar este novo produto a essa compra?"
-      );
-      if (!continuar) {
-        return;
-      }
-
       const finAntigo = finDocExistente.data();
-      const numAntigo = finAntigo["entrada-numero-parcelas"] || (Array.isArray(finAntigo.parcelas) ? finAntigo.parcelas.length : 1);
-      const vencAntigo = finAntigo["entrada-primeiro-vencimento"] || (Array.isArray(finAntigo.parcelas) && finAntigo.parcelas.length > 0 ? finAntigo.parcelas[0].vencimento : "");
-
-      if (finAntigo.formaPagamento !== formaPagamento) {
-        const ok = confirm(`⚠️ Você está atualizando a forma de pagamento para: ${formaPagamento.toUpperCase()}. Deseja continuar?`);
-        if (!ok) return;
-        novaForma = formaPagamento;
+      if (!alterarProgramacao) {
+        const parcelasExistentes = Array.isArray(finAntigo.parcelas) ? finAntigo.parcelas : [];
+        numParcelas = parcelasExistentes.length || 1;
+        novoNumParcelas = numParcelas;
+        novaForma = finAntigo.formaPagamento || formaPagamento;
+        novoPrimeiroVenc = parcelasExistentes[0]?.vencimento || novoPrimeiroVenc;
       } else {
-        novaForma = finAntigo.formaPagamento;
-      }
-
-      if (numAntigo !== numParcelas) {
-        const ok = confirm(`⚠️ Você alterou o número de parcelas para: ${numParcelas}. Deseja aplicar essa alteração?`);
-        if (!ok) return;
+        const aplicar = confirm("Aplicar as novas datas/forma de pagamento para toda a compra?\nCancelar cria novo compraId.");
+        if (!aplicar) {
+          await gerarNovoCompraId();
+          alert('Novo compraId gerado. Confirme novamente.');
+          return;
+        }
         parcelasAlteradas = true;
         novoNumParcelas = numParcelas;
-      } else {
-        novoNumParcelas = numAntigo;
-      }
-
-      if (vencAntigo !== novoPrimeiroVenc) {
-        const ok = confirm(`⚠️ A nova data do primeiro vencimento será: ${formatarDataBrasileira(novoPrimeiroVenc)}. Deseja confirmar?`);
-        if (!ok) return;
-        parcelasAlteradas = true;
-        novoPrimeiroVenc = novoPrimeiroVenc;
-      } else {
-        novoPrimeiroVenc = vencAntigo;
       }
     }
 
@@ -641,6 +647,8 @@ function gerarParcelasAutomaticamente(valorTotal, numParcelas, dataInicial) {
 }
 
 function atualizarParcelasPreview() {
+  const alterar = document.getElementById('alterar-programacao-checkbox')?.checked;
+  if (dadosFinanceiroAtual && !alterar) return;
   const quantidade = produtoCadastroAtual?.quantidade || 0;
   const precoUnitario = produtoCadastroAtual?.precoCompra || 0;
   const valorTotal = quantidade * precoUnitario;
@@ -681,6 +689,20 @@ document.getElementById("entrada-compra-id").addEventListener("change", async (e
   await preencherDadosFinanceiro(cid);
   await atualizarTotalProvisorio(cid);
 });
+
+const alterarCheckbox = document.getElementById('alterar-programacao-checkbox');
+if (alterarCheckbox) {
+  alterarCheckbox.addEventListener('change', async () => {
+    const alterar = alterarCheckbox.checked;
+    bloquearCamposProgramacao(!alterar);
+    const cid = document.getElementById('entrada-compra-id').value.trim();
+    if (!alterar && cid) {
+      await preencherDadosFinanceiro(cid);
+    } else {
+      atualizarParcelasPreview();
+    }
+  });
+}
 
 // Tornar funções acessíveis globalmente para os botões do modal
 window.fecharModalEntrada = fecharModalEntrada;
