@@ -109,21 +109,43 @@ export async function abrirModalEntrada(produto) {
     const forn = produto.fornecedor ? ` — Fornecedor: ${produto.fornecedor}` : "";
     nomeModal.textContent = `Produto: ${produto.nome}${forn}`;
   }
-  document.getElementById("entrada-forma-pagamento").value = "pix";
-  document.getElementById("entrada-observacoes").value = "";
-  const dataEntrada = new Date(produtoCadastroAtual.dataEntrada);
-  dataEntrada.setMonth(dataEntrada.getMonth() + 1);
-  document.getElementById("entrada-primeiro-vencimento").value = dataEntrada
-    .toISOString()
-    .split("T")[0];
-  mostrarBadgeProgramacao(false);
+
+  // Preencher campos financeiros já cadastrados, se existirem
+  document.getElementById("entrada-forma-pagamento").value = produto.formaPagamento || "pix";
+  document.getElementById("entrada-identificador-pagamento").value = produto.identificadorPagamento || "";
+  document.getElementById("entrada-observacoes").value = produto.observacoes || "";
+
+  const numParcelasEl = document.getElementById("entrada-numero-parcelas");
+  const primeiroVencEl = document.getElementById("entrada-primeiro-vencimento");
+
+  if (produto.parcelas && produto.parcelas.length > 0) {
+    dadosFinanceiroAtual = {
+      formaPagamento: produto.formaPagamento || "pix",
+      identificadorPagamento: produto.identificadorPagamento || "",
+      observacoes: produto.observacoes || "",
+      parcelas: produto.parcelas
+    };
+    if (numParcelasEl) numParcelasEl.value = produto.parcelas.length;
+    if (primeiroVencEl) primeiroVencEl.value = produto.parcelas[0].vencimento;
+    exibirParcelas(produto.parcelas);
+    mostrarBadgeProgramacao(true);
+  } else {
+    dadosFinanceiroAtual = null;
+    const dataEntrada = new Date(produtoCadastroAtual.dataEntrada);
+    dataEntrada.setMonth(dataEntrada.getMonth() + 1);
+    if (primeiroVencEl) primeiroVencEl.value = dataEntrada.toISOString().split("T")[0];
+    if (numParcelasEl) numParcelasEl.value = 1;
+    atualizarParcelasPreview();
+    mostrarBadgeProgramacao(false);
+  }
 
   if (produto.compraId) {
     document.getElementById("entrada-compra-id").value = produto.compraId;
-    await preencherDadosFinanceiro(produto.compraId);
+    if (!produto.parcelas) {
+      await preencherDadosFinanceiro(produto.compraId);
+    }
     await atualizarTotalProvisorio(produto.compraId);
   } else {
-    atualizarParcelasPreview();
     await atualizarTotalProvisorio('');
   }
 

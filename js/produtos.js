@@ -806,6 +806,12 @@ if (btnFinanceiro) {
 
     const mov = await obterUltimaMovimentacaoEntrada(editandoProdutoId);
 
+    // Buscar dados financeiros vinculados ao compraId, caso exista
+    let fin = null;
+    if (mov?.compraId) {
+      fin = await obterDadosFinanceiro(mov.compraId);
+    }
+
     const dados = {
       id: editandoProdutoId,
       nome,
@@ -818,7 +824,11 @@ if (btnFinanceiro) {
       validade: mov?.validade?.toDate ? mov.validade.toDate() : (mov?.validade || validadeForm),
       lote: mov?.lote || loteForm,
       compraId: mov?.compraId,
-      movimentacaoId: mov?.id
+      movimentacaoId: mov?.id,
+      formaPagamento: fin?.formaPagamento,
+      identificadorPagamento: fin?.identificadorPagamento,
+      observacoes: fin?.observacoes,
+      parcelas: Array.isArray(fin?.parcelas) ? fin.parcelas : undefined
     };
 
     abrirModalEntrada(dados);
@@ -1027,6 +1037,25 @@ async function obterUltimaMovimentacaoEntrada(produtoId) {
     }
   } catch (e) {
     console.error('Erro ao obter movimentação de entrada:', e);
+  }
+  return null;
+}
+
+// Buscar registro financeiro existente para um compraId
+async function obterDadosFinanceiro(compraId) {
+  if (!compraId) return null;
+  try {
+    const empresaId = await getEmpresaIdDoUsuario();
+    const q = query(
+      collection(db, 'empresas', empresaId, 'financeiro'),
+      where('compraId', '==', compraId)
+    );
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      return snap.docs[0].data();
+    }
+  } catch (e) {
+    console.error('Erro ao obter dados financeiros:', e);
   }
   return null;
 }
