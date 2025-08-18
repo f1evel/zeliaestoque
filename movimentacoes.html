@@ -144,7 +144,6 @@
 
         <div class="campo-filtro" style="display:flex;align-items:end; gap:5px;">
           <button type="button" id="botao-limpar-filtros">Limpar filtros</button>
-          <button type="button" id="btn-reconciliar-compra">Reconciliar</button>
         </div>
       </div>
       <p id="contador-movimentacoes"></p>
@@ -231,20 +230,6 @@
   </div>
   </div>
 
-  <div id="modal-reconciliar" class="modal">
-    <div class="modal-content">
-      <h3>Reconciliar compra</h3>
-      <div class="form-group">
-        <label for="recon-compra-id">Compra ID</label>
-        <input type="text" id="recon-compra-id" />
-      </div>
-      <div style="text-align:right; margin-top:10px;">
-        <button onclick="fecharModal('modal-reconciliar')">Cancelar</button>
-        <button id="confirmar-reconciliar">Reconciliar</button>
-      </div>
-    </div>
-  </div>
-  <div id="fundo-modal-reconciliar" class="fundo-modal" onclick="fecharModal('modal-reconciliar')"></div>
 
   <!-- 🔥 Scripts -->
   <script type="module" src="js/auth.js"></script>
@@ -253,26 +238,7 @@
   <script type="module" src="js/modais.js"></script>
   <script type="module" src="js/movimentacoes.js"></script>
 
-<script type="module">
-import { abrirModal, fecharModal } from './js/modais.js';
-import { reconciliarCompra, mostrarMensagem } from './js/utils.js';
 
-document.getElementById('btn-reconciliar-compra')?.addEventListener('click', () => {
-  const campo = document.getElementById('recon-compra-id');
-  const base = document.getElementById('filtro-compra-mov')?.value || '';
-  if (campo) campo.value = base;
-  abrirModal('modal-reconciliar');
-});
-
-document.getElementById('confirmar-reconciliar')?.addEventListener('click', async () => {
-  const compraId = document.getElementById('recon-compra-id').value.trim();
-  if (compraId) {
-    await reconciliarCompra(compraId);
-    mostrarMensagem('Compra reconciliada');
-  }
-  fecharModal('modal-reconciliar');
-});
-</script>
 
 </body>
 </html>

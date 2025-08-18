@@ -7,7 +7,10 @@ import {
   where,
   getDocs,
   doc,
-  updateDoc
+  updateDoc,
+  runTransaction,
+  addDoc,
+  Timestamp
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
 // ==========================
@@ -228,44 +231,94 @@ export async function reconciliarCompra(compraId) {
   });
 
   // c) Documento financeiro
-  const finQuery = query(
-    collection(db, 'empresas', empresaId, 'financeiro'),
-    where('compraId', '==', compraId)
-  );
+  const finCol = collection(db, 'empresas', empresaId, 'financeiro');
+  const finQuery = query(finCol, where('compraId', '==', compraId));
   const finSnap = await getDocs(finQuery);
-  if (finSnap.empty) return { totalAtual, mensagem: 'Financeiro não encontrado' };
-  const finDoc = finSnap.docs[0];
-  const finData = finDoc.data();
 
-  // d) Recalcular parcelas
-  const parcelas = Array.isArray(finData.parcelas) ? finData.parcelas.map(p => ({ ...p })) : [];
-  const totalPago = parcelas
-    .filter(p => p.status === 'pago')
-    .reduce((s, p) => s + (Number(p.valor) || 0), 0);
-
-  let restante = Math.max(totalAtual - totalPago, 0);
-  const pendentes = parcelas.filter(p => p.status !== 'pago');
-
-  if (pendentes.length === 0 && restante > 0) {
-    console.warn('⚠️ total atual excede parcelas pagas');
-  } else if (pendentes.length > 0) {
-    const valorCada = restante / pendentes.length;
-    parcelas.forEach(p => {
-      if (p.status !== 'pago') p.valor = valorCada;
+  if (finSnap.empty) {
+    // Se não existir doc financeiro, cria um básico para registrar o valor
+    await addDoc(finCol, {
+      tipo: 'pagar',
+      compraId,
+      valorTotal: totalAtual,
+      parcelas: [
+        {
+          numero: 1,
+          valor: totalAtual,
+          vencimento: new Date().toISOString().split('T')[0],
+          status: 'pendente'
+        }
+      ],
+      dataLancamento: Timestamp.now(),
+      status: 'pendente'
     });
+    mostrarMensagem(`Compra ${compraId} conciliada automaticamente`);
+    console.log('🔄 Reconciliar compra', compraId, { totalAtual });
+    return { totalAtual };
   }
 
+  const finDoc = finSnap.docs[0];
   const finRef = doc(db, 'empresas', empresaId, 'financeiro', finDoc.id);
-  await updateDoc(finRef, { valorTotal: totalAtual, parcelas });
 
-  const resumo = {
-    totalAnterior: finData.valorTotal || 0,
-    totalAtual,
-    totalPago,
-    restante
-  };
-  console.log('🔄 Reconciliar compra', compraId, resumo);
-  return resumo;
+  let mensagem = null;
+  await runTransaction(db, async tx => {
+    const finTx = await tx.get(finRef);
+    if (!finTx.exists()) return;
+    const finData = finTx.data();
+    const parcelas = Array.isArray(finData.parcelas)
+      ? finData.parcelas.map(p => ({ ...p }))
+      : [];
+
+    const totalPago = parcelas
+      .filter(p => p.status === 'pago')
+      .reduce((s, p) => s + (Number(p.valor) || 0), 0);
+
+    let restante = Math.max(totalAtual - totalPago, 0);
+    const pendIdx = [];
+    parcelas.forEach((p, i) => {
+      if (p.status !== 'pago') pendIdx.push(i);
+    });
+
+    // Verifica se há algo a conciliar
+    const valorPendentesAtual = pendIdx.reduce((s, i) => s + (Number(parcelas[i].valor) || 0), 0);
+    const precisaConciliar =
+      Math.round((finData.valorTotal || 0) * 100) !== Math.round(totalAtual * 100) ||
+      Math.round(valorPendentesAtual * 100) !== Math.round(restante * 100);
+
+    if (!precisaConciliar) return;
+
+    if (totalAtual < totalPago) {
+      // Overpayment
+      pendIdx.forEach(i => (parcelas[i].valor = 0));
+      mensagem = `⚠️ Pagamentos excedem total da compra ${compraId}`;
+    } else if (pendIdx.length === 0) {
+      if (restante > 0) {
+        mensagem = `⚠️ Sem parcelas pendentes para alocar R$ ${restante.toFixed(2)}`;
+      }
+    } else {
+      // Distribuição igualitária com ajuste na última parcela
+      const base = Math.floor((restante * 100) / pendIdx.length);
+      const valores = new Array(pendIdx.length).fill(base);
+      let diff = Math.round(restante * 100) - base * pendIdx.length;
+      valores[valores.length - 1] += diff;
+      pendIdx.forEach((idx, i) => {
+        parcelas[idx].valor = parseFloat((valores[i] / 100).toFixed(2));
+      });
+      mensagem = `Compra ${compraId} conciliada automaticamente`;
+    }
+
+    tx.update(finRef, { valorTotal: totalAtual, parcelas });
+    console.log('🔄 Reconciliar compra', compraId, {
+      totalAtual,
+      totalPago,
+      restante
+    });
+  });
+
+  if (mensagem) {
+    mostrarMensagem(mensagem);
+  }
+  return { totalAtual };
 }
 
 // Disponibiliza globalmente para chamadas manuais em páginas sem módulo
