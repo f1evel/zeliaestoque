@@ -13,13 +13,15 @@ import {
   orderBy,
   Timestamp,
   getDoc,
-  limit
+  limit,
+  deleteDoc
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
 import { registrarHistorico, carregarHistorico } from './historico.js';
 
 import {
-  abrirModalProdutoExiste
+  abrirModalProdutoExiste,
+  abrirModalConfirmacao
 } from './modais.js';
 
 import {
@@ -267,6 +269,7 @@ function renderizarTabela(produtos, termo = "") {
         <td>
           <button onclick="verDetalhes('${p.id}')">👁️ Detalhes</button>
           <button onclick="editarProduto('${p.id}')">✏️ Editar</button>
+          <button onclick="solicitarExclusaoProduto('${p.id}')">🗑️ Apagar</button>
         </td>
       </tr>
     `;
@@ -912,6 +915,53 @@ window.mostrarAbaHistorico = function() {
   document.getElementById('aba-detalhes').style.display = 'none';
   document.getElementById('aba-historico').style.display = 'block';
 };
+
+// ==========================
+// 🗑️ Excluir Produto
+// ==========================
+window.solicitarExclusaoProduto = function(id) {
+  abrirModalConfirmacao(
+    'Deseja realmente apagar este produto?',
+    () => excluirProduto(id)
+  );
+};
+
+async function excluirProduto(id) {
+  await executarComSpinner(async () => {
+    const empresaId = await getEmpresaIdDoUsuario();
+    const produtoRef = doc(db, 'empresas', empresaId, 'produtos', id);
+    const prodSnap = await getDoc(produtoRef);
+    if (!prodSnap.exists()) {
+      mostrarErro('❌ Produto não encontrado.');
+      return;
+    }
+
+    const movQuery = query(
+      collection(db, 'empresas', empresaId, 'movimentacoes'),
+      where('produtoId', '==', id)
+    );
+    const movSnap = await getDocs(movQuery);
+    const compraIds = new Set();
+    const promises = [];
+    movSnap.forEach(docu => {
+      const dados = docu.data();
+      if (dados.tipo === 'entrada' && dados.compraId) {
+        compraIds.add(dados.compraId);
+      }
+      promises.push(deleteDoc(docu.ref));
+    });
+    await Promise.all(promises);
+
+    await deleteDoc(produtoRef);
+
+    for (const cid of compraIds) {
+      await reconciliarCompra(cid);
+    }
+
+    mostrarMensagem('✅ Produto removido com sucesso!');
+    carregarProdutos();
+  }, '❌ Erro ao excluir produto.');
+}
 
 // ==========================
 // 📥 Importar Produtos via CSV
