@@ -269,6 +269,10 @@ window.cancelarEntradaFinanceira = function () {
 };
 
 async function preencherDadosFinanceiro(compraId) {
+  // Garante que o produto atual saiba qual compraId está sendo usado
+  if (produtoCadastroAtual) {
+    produtoCadastroAtual.compraId = compraId || undefined;
+  }
   if (!compraId) return;
   try {
     const empresaId = await getEmpresaIdDoUsuario();
@@ -387,6 +391,10 @@ window.gerarNovoCompraId = async function () {
     const id = `compra_${dataISO}_${novoNumero}`;
     const input = document.getElementById("entrada-compra-id");
     if (input) input.value = id;
+    // Atualiza o objeto atual com o novo compraId gerado
+    if (produtoCadastroAtual) {
+      produtoCadastroAtual.compraId = id;
+    }
   } catch (e) {
     console.error("Erro ao gerar compraId:", e);
   }
