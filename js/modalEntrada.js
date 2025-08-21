@@ -146,7 +146,16 @@ export async function abrirModalEntrada(produto) {
     }
     await atualizarTotalProvisorio(produto.compraId);
   } else {
-    await atualizarTotalProvisorio('');
+    const cidExistente = document
+      .getElementById("entrada-compra-id")
+      ?.value?.trim();
+    if (cidExistente) {
+      await preencherDadosFinanceiro(cidExistente);
+      await atualizarTotalProvisorio(cidExistente);
+    } else {
+      await atualizarTotalProvisorio('');
+      mostrarBadgeProgramacao(false);
+    }
   }
 
   document.getElementById("modal-entrada").style.display = "block";
@@ -269,6 +278,10 @@ window.cancelarEntradaFinanceira = function () {
 };
 
 async function preencherDadosFinanceiro(compraId) {
+  // Garante que o produto atual saiba qual compraId está sendo usado
+  if (produtoCadastroAtual) {
+    produtoCadastroAtual.compraId = compraId || undefined;
+  }
   if (!compraId) return;
   try {
     const empresaId = await getEmpresaIdDoUsuario();
@@ -387,6 +400,26 @@ window.gerarNovoCompraId = async function () {
     const id = `compra_${dataISO}_${novoNumero}`;
     const input = document.getElementById("entrada-compra-id");
     if (input) input.value = id;
+    // Atualiza o objeto atual com o novo compraId gerado
+    if (produtoCadastroAtual) {
+      produtoCadastroAtual.compraId = id;
+    }
+    // Limpa programação financeira anterior ao iniciar nova compra
+    dadosFinanceiroAtual = null;
+    document.getElementById("entrada-forma-pagamento").value = "pix";
+    document.getElementById("entrada-identificador-pagamento").value = "";
+    document.getElementById("entrada-observacoes").value = "";
+    const numParcelasEl = document.getElementById("entrada-numero-parcelas");
+    if (numParcelasEl) numParcelasEl.value = 1;
+    const primeiroVencEl = document.getElementById("entrada-primeiro-vencimento");
+    if (primeiroVencEl) {
+      const dataEntrada = new Date(produtoCadastroAtual?.dataEntrada || new Date());
+      dataEntrada.setMonth(dataEntrada.getMonth() + 1);
+      primeiroVencEl.value = dataEntrada.toISOString().split("T")[0];
+    }
+    atualizarParcelasPreview();
+    mostrarBadgeProgramacao(false);
+    await atualizarTotalProvisorio(id);
   } catch (e) {
     console.error("Erro ao gerar compraId:", e);
   }
