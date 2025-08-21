@@ -146,7 +146,16 @@ export async function abrirModalEntrada(produto) {
     }
     await atualizarTotalProvisorio(produto.compraId);
   } else {
-    await atualizarTotalProvisorio('');
+    const cidExistente = document
+      .getElementById("entrada-compra-id")
+      ?.value?.trim();
+    if (cidExistente) {
+      await preencherDadosFinanceiro(cidExistente);
+      await atualizarTotalProvisorio(cidExistente);
+    } else {
+      await atualizarTotalProvisorio('');
+      mostrarBadgeProgramacao(false);
+    }
   }
 
   document.getElementById("modal-entrada").style.display = "block";
@@ -395,6 +404,7 @@ window.gerarNovoCompraId = async function () {
     if (produtoCadastroAtual) {
       produtoCadastroAtual.compraId = id;
     }
+
   } catch (e) {
     console.error("Erro ao gerar compraId:", e);
   }
