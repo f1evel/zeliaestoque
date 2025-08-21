@@ -404,22 +404,7 @@ window.gerarNovoCompraId = async function () {
     if (produtoCadastroAtual) {
       produtoCadastroAtual.compraId = id;
     }
-    // Limpa programação financeira anterior ao iniciar nova compra
-    dadosFinanceiroAtual = null;
-    document.getElementById("entrada-forma-pagamento").value = "pix";
-    document.getElementById("entrada-identificador-pagamento").value = "";
-    document.getElementById("entrada-observacoes").value = "";
-    const numParcelasEl = document.getElementById("entrada-numero-parcelas");
-    if (numParcelasEl) numParcelasEl.value = 1;
-    const primeiroVencEl = document.getElementById("entrada-primeiro-vencimento");
-    if (primeiroVencEl) {
-      const dataEntrada = new Date(produtoCadastroAtual?.dataEntrada || new Date());
-      dataEntrada.setMonth(dataEntrada.getMonth() + 1);
-      primeiroVencEl.value = dataEntrada.toISOString().split("T")[0];
-    }
-    atualizarParcelasPreview();
-    mostrarBadgeProgramacao(false);
-    await atualizarTotalProvisorio(id);
+
   } catch (e) {
     console.error("Erro ao gerar compraId:", e);
   }

@@ -17,3 +17,4 @@ testes/
 
 # Node modules, caso use pacotes no futuro
 node_modules/
+functions/lib/
