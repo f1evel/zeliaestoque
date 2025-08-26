@@ -88,7 +88,7 @@ export async function atualizarTabelaFinanceiro() {
 export function limparFiltrosFinanceiro() {
   document.getElementById('fin-data-inicio').value = '';
   document.getElementById('fin-data-fim').value = '';
-  document.getElementById('fin-compra-id').value = '';
+  document.getElementById('fin-data-tipo').value = 'vencimento';
   document.getElementById('fin-fornecedor').value = '';
   document.getElementById('fin-forma').value = '';
   document.getElementById('fin-status').value = '';
