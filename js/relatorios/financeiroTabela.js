@@ -14,6 +14,8 @@ export function atualizarDescricaoFiltrosFinanceiro() {
   const inicio = document.getElementById('fin-data-inicio').value;
   const fim = document.getElementById('fin-data-fim').value;
   const fornecedor = document.getElementById('fin-fornecedor').value.trim();
+  const tipoEl = document.getElementById('fin-data-tipo');
+  const tipo = tipoEl && tipoEl.value === 'compra' ? 'compra' : 'vencimento';
 
   const inicioBR = formatarDataISOParaBR(inicio);
   const fimBR = formatarDataISOParaBR(fim);
@@ -21,11 +23,11 @@ export function atualizarDescricaoFiltrosFinanceiro() {
   let texto = 'Exibindo todos os dados de compras.';
 
   if (inicio || fim) {
-    texto = `Exibindo compras de ${inicioBR || '...'} até ${fimBR || '...'}`;
+    texto = `Exibindo compras por ${tipo} de ${inicioBR || '...'} até ${fimBR || '...'}`;
   }
 
   if (fornecedor) {
-    const intervalo = inicio || fim ? ` entre ${inicioBR || '...'} e ${fimBR || '...'}` : '';
+    const intervalo = inicio || fim ? ` entre ${inicioBR || '...'} e ${fimBR || '...'} (${tipo})` : '';
     texto = `Exibindo compras do fornecedor ${fornecedor}${intervalo}`;
   }
 
@@ -104,19 +106,19 @@ export function setDadosFinanceiro(novosDados) {
 export function dadosFiltradosFinanceiro() {
   const fornecedorFiltro = document.getElementById('fin-fornecedor').value;
   const formaFiltro = document.getElementById('fin-forma').value;
-  const compraFiltro = document.getElementById('fin-compra-id').value.trim();
   const statusFiltro = document.getElementById('fin-status').value;
   const catProdFiltro = document.getElementById('fin-categoria-prod').value;
   const catProdNorm = normalizarTexto(catProdFiltro);
   const inicio = document.getElementById('fin-data-inicio').value;
   const fim = document.getElementById('fin-data-fim').value;
+  const tipoEl = document.getElementById('fin-data-tipo');
+  const tipoData = tipoEl ? tipoEl.value : 'vencimento';
   const inicioData = inicio ? parseDataLocal(inicio) : null;
   const fimData = fim ? parseDataLocal(fim) : null;
 
   return dados.filter(d => {
     const fornMatch = fornecedorFiltro === '' || d.fornecedorOuCliente === fornecedorFiltro;
     const formaMatch = formaFiltro === '' || d.formaPagamento === formaFiltro;
-    const compraMatch = compraFiltro === '' || d.compraId === compraFiltro;
     let statusMatch = true;
     if (statusFiltro) {
       if (statusFiltro === 'pago') {
@@ -129,25 +131,29 @@ export function dadosFiltradosFinanceiro() {
       }
     }
     const catProdMatch = catProdNorm === '' || (Array.isArray(d.categoriasProdutos) && d.categoriasProdutos.some(c => normalizarTexto(c) === catProdNorm));
-
-    let vencMatch = true;
+    let dataMatch = true;
     if (inicioData || fimData) {
-      const vencs = [];
-      if (Array.isArray(d.parcelas)) {
-        d.parcelas.forEach(p => {
-          if (p.vencimento) vencs.push(parseDataLocal(p.vencimento));
+      if (tipoData === 'compra') {
+        const compra = d.dataLancamento instanceof Date ? d.dataLancamento : parseDataLocal(d.dataLancamento);
+        dataMatch = !!compra && (!inicioData || compra >= inicioData) && (!fimData || compra <= fimData);
+      } else {
+        const vencs = [];
+        if (Array.isArray(d.parcelas)) {
+          d.parcelas.forEach(p => {
+            if (p.vencimento) vencs.push(parseDataLocal(p.vencimento));
+          });
+        }
+        if (vencs.length === 0 && d.dataVencimento) vencs.push(parseDataLocal(d.dataVencimento));
+        dataMatch = vencs.some(v => {
+          if (!v || isNaN(v)) return false;
+          if (inicioData && v < inicioData) return false;
+          if (fimData && v > fimData) return false;
+          return true;
         });
       }
-      if (vencs.length === 0 && d.dataVencimento) vencs.push(parseDataLocal(d.dataVencimento));
-      vencMatch = vencs.some(v => {
-        if (!v || isNaN(v)) return false;
-        if (inicioData && v < inicioData) return false;
-        if (fimData && v > fimData) return false;
-        return true;
-      });
     }
 
-    return fornMatch && formaMatch && compraMatch && statusMatch && catProdMatch && vencMatch;
+    return fornMatch && formaMatch && statusMatch && catProdMatch && dataMatch;
   });
 }
 
@@ -155,7 +161,6 @@ export function dadosFiltradosFinanceiro() {
 export function gerarFiltrosFinanceiro() {
   const fornecedores = new Set();
   const formas = new Set();
-  const compras = new Set();
   const statusParcelas = new Set();
   const categoriasProdMap = new Map();
   const categoriasEntradas = obterCategoriasEntradas();
@@ -168,7 +173,6 @@ export function gerarFiltrosFinanceiro() {
   dados.forEach(d => {
     if (d.fornecedorOuCliente) fornecedores.add(d.fornecedorOuCliente);
     if (d.formaPagamento) formas.add(d.formaPagamento);
-    if (d.compraId) compras.add(d.compraId);
     if (d.statusParcelas) statusParcelas.add(d.statusParcelas);
     if (Array.isArray(d.categoriasProdutos)) {
       d.categoriasProdutos.forEach(c => {
@@ -205,9 +209,6 @@ export function gerarFiltrosFinanceiro() {
       return `<option value="${c}" title="${c}">${t}</option>`;
     }).join("");
 
-  document.getElementById('lista-compra-fin').innerHTML =
-    [...compras].sort().map(c => `<option value="${c}">`).join('');
-
   document.getElementById('fin-fornecedor').value = selFornecedor;
   document.getElementById('fin-forma').value = selForma;
   document.getElementById('fin-status').value = selStatus;
@@ -215,7 +216,7 @@ export function gerarFiltrosFinanceiro() {
   document.getElementById("fin-categoria-prod").title = document.getElementById("fin-categoria-prod").value;
 
   if (!filtrosIniciados) {
-    ['fin-fornecedor','fin-forma','fin-status','fin-categoria-prod','fin-compra-id','fin-data-inicio','fin-data-fim']
+    ['fin-fornecedor','fin-forma','fin-status','fin-categoria-prod','fin-data-inicio','fin-data-fim','fin-data-tipo']
       .forEach(id => {
         document.getElementById(id)?.addEventListener('input', gerarTabelaFinanceiro);
       });
