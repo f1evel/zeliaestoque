@@ -14,8 +14,7 @@ export function atualizarDescricaoFiltrosFinanceiro() {
   const inicio = document.getElementById('fin-data-inicio').value;
   const fim = document.getElementById('fin-data-fim').value;
   const fornecedor = document.getElementById('fin-fornecedor').value.trim();
-  const tipoEl = document.getElementById('fin-data-tipo');
-  const tipo = tipoEl && tipoEl.value === 'compra' ? 'compra' : 'vencimento';
+  const tipo = document.getElementById('fin-data-tipo').value === 'compra' ? 'compra' : 'vencimento';
 
   const inicioBR = formatarDataISOParaBR(inicio);
   const fimBR = formatarDataISOParaBR(fim);
@@ -111,8 +110,7 @@ export function dadosFiltradosFinanceiro() {
   const catProdNorm = normalizarTexto(catProdFiltro);
   const inicio = document.getElementById('fin-data-inicio').value;
   const fim = document.getElementById('fin-data-fim').value;
-  const tipoEl = document.getElementById('fin-data-tipo');
-  const tipoData = tipoEl ? tipoEl.value : 'vencimento';
+  const tipoData = document.getElementById('fin-data-tipo').value;
   const inicioData = inicio ? parseDataLocal(inicio) : null;
   const fimData = fim ? parseDataLocal(fim) : null;
 
