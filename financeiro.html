@@ -37,11 +37,12 @@
         <label for="fin-data-fim">Até</label>
         <input type="date" id="fin-data-fim" class="campo-data">
       </div>
-
-      <div class="campo-filtro">
-        <label for="fin-compra-id">CompraID</label>
-        <input type="text" id="fin-compra-id" placeholder="Buscar..." list="lista-compra-fin">
-        <datalist id="lista-compra-fin"></datalist>
+      <div class="campo-filtro estreito">
+        <label for="fin-data-tipo">Filtrar por</label>
+        <select id="fin-data-tipo">
+          <option value="vencimento">Vencimento</option>
+          <option value="compra">Compra</option>
+        </select>
       </div>
       <div class="campo-filtro estreito">
         <label for="fin-fornecedor">Fornecedor</label>
